@@ -8,7 +8,7 @@ A private mobile-first birthday universe for Michelle.
 python -m http.server 8765 --bind 127.0.0.1
 ```
 
-Open `http://127.0.0.1:8765/miss-you-app/`. The anniversary passkey is `2504`.
+Open `http://127.0.0.1:8765/miss-you-app/`. The anniversary passkey is `2502`.
 
 ## Shared widgets with Supabase
 

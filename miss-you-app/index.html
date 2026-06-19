@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#13071d">
+  <meta name="theme-color" content="#eadcff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Moonpie">
   <title>Moonpie - private universe</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;600;700&family=Italiana&display=swap" rel="stylesheet">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=33">
+  <link rel="stylesheet" href="./styles.css?v=34">
 </head>
 <body class="app-locked">
   <section class="entry-gate" id="entry-gate" aria-label="private anniversary passkey">
     <div class="gate-flower gate-lily-one" aria-hidden="true"></div>
     <div class="gate-flower gate-lily-two" aria-hidden="true"></div>
     <form class="gate-card" id="passkey-form">
-      <div class="gate-seal" aria-hidden="true">25<br><small>04</small></div>
+      <div class="gate-seal" aria-hidden="true">25<br><small>02</small></div>
       <p class="eyebrow">one date opens our universe</p>
       <h2>Hi, my love.</h2>
       <p>I kept this little world behind the day that became ours.</p>
@@ -65,7 +65,7 @@
 
   <div class="phone-shell">
     <header class="topbar">
-      <span class="topbar-spacer" aria-hidden="true"></span>
+      <button class="topbar-back hidden" id="back-button" type="button" aria-label="go back"><span>←</span><small>back</small></button>
       <div>
         <p class="eyebrow">Michelle's private universe</p>
         <h1>Open when you miss me</h1>
@@ -231,14 +231,28 @@
         <article class="game-card premium-card">
           <div class="game-topline">
             <div>
-              <p class="card-label">pop the feelings</p>
-              <h3>Emoji Bubble Pop</h3>
+              <p class="card-label">our live little rivalry</p>
+              <h3>Moonpie Bubble Rush</h3>
             </div>
             <strong id="bubble-score">0</strong>
           </div>
-          <p>Pop as many hearts, flowers, kisses, and little moons as you can before the timer ends.</p>
+          <p>Thirty seconds. The bubbles become faster every ten seconds. Pink hearts are one point, roses are three, and broken hearts steal two. Build a combo and beat the other phone.</p>
+          <div class="bubble-hud" aria-live="polite">
+            <span><small>time</small><strong id="bubble-time">30.0</strong></span>
+            <span><small>combo</small><strong id="bubble-combo">x0</strong></span>
+            <span><small>accuracy</small><strong id="bubble-accuracy">100%</strong></span>
+          </div>
           <div class="bubble-field" id="bubble-field" aria-label="emoji bubble game"></div>
-          <button class="primary-btn wide" id="start-bubbles" type="button">start 20 second round</button>
+          <button class="primary-btn wide" id="start-bubbles" type="button">start 30 second challenge</button>
+          <div class="bubble-leaderboard" id="bubble-leaderboard">
+            <p class="card-label">our best scores</p>
+            <div class="score-duel">
+              <article data-score-player="Michelle"><span>Michelle</span><strong>0</strong><small>waiting for a round</small></article>
+              <b>VS</b>
+              <article data-score-player="Michael"><span>Michael</span><strong>0</strong><small>waiting for a round</small></article>
+            </div>
+            <button class="tiny-button" id="refresh-scores" type="button">refresh our scores</button>
+          </div>
         </article>
 
         <article class="challenge-card premium-card">
@@ -315,7 +329,25 @@
       </section>
 
       <section class="screen" id="screen-care" aria-label="care">
-        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Emergency tenderness</h2></div>
+        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>You do not have to scroll around hoping to find the right comfort. Tell me what kind of moment this is and let me meet you there.</p></div>
+        <article class="care-checkin premium-card">
+          <p class="card-label">what does your heart need?</p>
+          <div class="care-modes">
+            <button type="button" data-care-mode="missing">I miss you badly</button>
+            <button type="button" data-care-mode="reassurance">I need reassurance</button>
+            <button type="button" data-care-mode="overwhelmed">everything feels heavy</button>
+            <button type="button" data-care-mode="sleep">I cannot settle</button>
+          </div>
+          <div class="care-response" id="care-response">
+            <span>💗</span>
+            <h3>I am right here.</h3>
+            <p>Choose the closest feeling. I left a different kind of softness behind each button.</p>
+          </div>
+        </article>
+        <article class="breathing-card premium-card">
+          <div class="breathing-orb" id="breathing-orb"><span>breathe<br>with me</span></div>
+          <div><p class="card-label">sixty soft seconds</p><h3>Borrow my calm</h3><p id="breathing-copy">Press start. I will count a slow breath with you and stay for three full rounds.</p><button class="secondary-btn" id="start-breathing" type="button">start breathing with me</button></div>
+        </article>
         <div class="care-list" id="care-list"></div>
         <article class="promise-card premium-card">
           <p class="card-label">promise</p>
@@ -347,7 +379,7 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./content.js?v=33"></script>
-  <script src="./app.js?v=33"></script>
+  <script src="./content.js?v=34"></script>
+  <script src="./app.js?v=34"></script>
 </body>
 </html>

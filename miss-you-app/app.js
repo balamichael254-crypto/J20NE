@@ -3,7 +3,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -19,6 +19,7 @@ let lastScrollY = 0;
 let widgetSyncTimer = null;
 let activeMicStream = null;
 let activeAudioContext = null;
+const screenHistory = [];
 
 const worlds = [
   { id: "garden", icon: "🌸", title: "Birthday Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
@@ -63,18 +64,18 @@ const comfortNotes = {
 
 const letters = [
   {
-    title: "The Night I Knew",
-    tab: "first spark",
+    title: "Every Night With You",
+    tab: "our magical nights",
     theme: "moon",
-    preview: "For the quiet moment when love stopped being a maybe and became a place.",
-    salutation: "My Moonpie,",
+    preview: "For the nights I never want to end, because every hour with you becomes my favorite hour.",
+    salutation: "My babyy,",
     body: [
-      "I do not think love always announces itself loudly. Sometimes it slips into an ordinary conversation and sits there like it has always belonged.",
-      "That is how it happened with you. You were talking about something simple, maybe something small from your day, and I caught myself wanting to keep listening forever. Not because the topic was dramatic. Because it was you. Because your voice made even the normal parts of life feel worth staying for.",
-      "I remember thinking that if the future had a sound, I wanted it to sound like you half laughing, half explaining something, while I sit there pretending I am not completely gone for you.",
-      "That night did not feel like a movie scene. It felt softer than that. It felt like recognition. Like some part of me looked up and said, there you are."
+      "I love our nights so much. I love the way the rest of the world becomes quieter and it feels like time has made one private little room just for you and me.",
+      "Even when we are talking about the smallest things, it feels magical because it is your voice, your laugh, your sleepy little protests, and your beautiful mind keeping me company. I always want one more minute, then another, then another, because there could never be enough of you for me.",
+      "Some nights we laugh until everything feels lighter. Some nights we talk softly and honestly. Some nights we are simply there together, and even that feels precious to me. You turn ordinary hours into memories I want to keep forever.",
+      "Babyy, I hope you always know how loved you are in those moments. You will always be my little babyy, my Moonpie, and my favorite person to stay awake for."
     ],
-    closing: "Still choosing that moment, still choosing you."
+    closing: "Goodnight only means I get to love you again tomorrow."
   },
   {
     title: "For When You Miss Me",
@@ -85,10 +86,10 @@ const letters = [
     body: [
       "If you opened this because missing me got loud, come closer for a minute. Put your shoulders down. Unclench your jaw. Breathe like I am beside you and not across a screen.",
       "I know distance can make love feel unfair. It asks us to be patient when all we want is one hand, one hug, one ordinary evening where nobody has to say goodbye. But distance is not stronger than us. It is just the space we keep crossing, one call, one message, one soft little promise at a time.",
-      "When you miss me, I hope you remember that I am not somewhere forgetting you. I carry you into my day in tiny ways. I think of you when something sweet happens. I think of you when I am tired. I think of you when the room goes quiet and my heart starts looking for home.",
+      "When you miss me, remember that I am never somewhere forgetting you. I carry you always into my day. I think about you all the time, and I could never get a sufficient amount of you. You are my sweet addiction, the thought my mind happily returns to again and again.",
       "So stay here for a moment. Let this letter be my hand on your cheek. I love you. I am here. We are still us."
     ],
-    closing: "Come back to this whenever the missing feels heavy."
+    closing: "Come back to this whenever the missing feels heavy. Love, Daddy."
   },
   {
     title: "Your Voice",
@@ -100,6 +101,7 @@ const letters = [
       "There is a tiny second when you first pick up and I can hear the room around you before I hear the full sentence. I love that second. It feels like the door opening.",
       "Your voice does something to me that I still do not know how to explain without sounding dramatic. It settles me. It pulls me out of my head. It makes the day feel less sharp around the edges.",
       "I love your sleepy voice. I love your playful voice. I love the voice you use when you are trying to sound fine but you want me to notice you are not. I love the little pauses, the soft protests, the way you say my name like it belongs somewhere safe.",
+      "I thought music was my favorite thing to listen to, but everything changed once I heard your voice. Even when 'you know what' is happening... aaaaah, I looove it sooo much, and III looove youuu sooo much, babyygirl.",
       "If I could keep one sound in my pocket for every hard day, I would choose your laugh. Not the polite one. The real one. The one that makes me feel like I have won something I did not know I was hoping for."
     ],
     closing: "Call me in your heart. I will answer there too."
@@ -155,7 +157,7 @@ const letters = [
     salutation: "My baby,",
     body: [
       "I love you. I am not saying it as decoration. I am saying it as a place you can rest.",
-      "You do not have to perform for my love. You do not have to be easy every day. You do not have to be cheerful before you are ready. I do not only want the polished version of you. I want the real you, the sleepy you, the unsure you, the clingy you, the brave you, the quiet you.",
+      "You do not have to perform for my love. You do not have to be easy every day. You do not have to be cheerful before you are ready. I want the real you, the sleepy you, the unsure you, the sweet girl who reaches for me when she needs extra love, the brave you, and the quiet you.",
       "If your mind ever tries to convince you that you are a burden, let this letter interrupt it. You are not a burden to me. You are someone I choose. Someone I want to understand. Someone whose feelings matter, even when they are inconvenient or messy.",
       "I cannot promise I will always say everything perfectly. I can promise I will keep trying, keep listening, keep coming closer instead of making you feel alone with what hurts."
     ],
@@ -180,7 +182,7 @@ const letters = [
     tab: "certainty",
     theme: "safe",
     preview: "A clear letter for the small scared voice that asks if I still mean it.",
-    salutation: "My precious girl,",
+    salutation: "My beautiful girl,",
     body: [
       "If a worried thought ever asks whether I still love you, let this be the answer that arrives before the fear gets comfortable.",
       "Yes. I love you when the conversation is easy. I love you when we are sleepy. I love you when we miss each other and it makes us sensitive. I love you in the quiet after the call, when the room feels too still and I wish you were beside me.",
@@ -227,13 +229,18 @@ const notices = [
 ];
 
 const dayPlan = [
-  ["8:12 AM", "I wake up before you and fail at not staring."],
-  ["9:00 AM", "Coffee, breakfast, and you stealing the better bite."],
-  ["11:30 AM", "A walk with no destination. My hand keeps finding yours."],
-  ["2:00 PM", "A little market. Flowers. Something ridiculous we buy because it made you smile."],
-  ["5:40 PM", "Golden hour photos. I pretend I only need one. I take fifty."],
-  ["8:30 PM", "Dinner somewhere soft-lit where the food is good but you are still the view."],
-  ["11:58 PM", "Almost midnight. Still us. No rushing. No leaving."]
+  ["7:42 AM", "I wake first, pull you closer, and spend a shameless minute admiring the beautiful girl asleep beside me."],
+  ["8:30 AM", "Breakfast in bed with pink lilies, your favorite things, terrible plating, and one bite I insist tastes better from my fork."],
+  ["10:15 AM", "We dress up for each other, make a tiny getting-ready playlist, and take mirror pictures before we even leave."],
+  ["11:30 AM", "A flower market date. You choose the prettiest stems while I secretly add the ones that remind me of you."],
+  ["1:00 PM", "A playful lunch with shared plates, dramatic food ratings, and a dessert ordered only because your eyes lit up."],
+  ["2:45 PM", "A surprise activity: pottery, painting, an arcade, or making something silly we can keep in our future home."],
+  ["4:30 PM", "A slow drive with our playlist, your hand in mine, spontaneous stops, and absolutely no checking the time."],
+  ["5:48 PM", "Golden-hour picnic. Fruit, cake, a blanket, handwritten notes, and fifty photographs because one could never be enough."],
+  ["7:30 PM", "We change for dinner and I get to fall for you all over again when you walk toward me."],
+  ["9:15 PM", "A soft-lit dinner where we ask each other sweet questions, remember our funniest moments, and dream out loud."],
+  ["10:45 PM", "A moonlit walk, slow dancing somewhere private, forehead kisses, and the kind of hug that resets the whole heart."],
+  ["11:58 PM", "We end the day wrapped together, trading wishes for our next year and refusing to let the last two minutes hurry us."]
 ];
 
 const places = [
@@ -336,12 +343,22 @@ const reasons = [
 ];
 
 const careSteps = [
-  ["1", "Put one hand on your chest and take three slower breaths than you want to."],
-  ["2", "Drink water. Tiny rule. I am bossy because I love you."],
-  ["3", "Send me one honest sentence if you can: 'I miss you and need softness.'"],
-  ["4", "Open one letter. Do not rush it. Let me love you at reading speed."],
-  ["5", "If it is late, sleep. Missing me does not require staying awake as proof."]
+  ["01", "Come closer", "Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours."],
+  ["02", "Tell me the true thing", "You never have to package your feelings neatly for me. Send: 'Babyy, I need you close today.' That is already enough."],
+  ["03", "Let your body feel safer", "Drink some water, loosen your shoulders, unclench your jaw, and find the softest thing within reach."],
+  ["04", "Borrow my voice", "Open Every Night With You or Your Voice and read it slowly. Every sentence is me sitting beside you for a minute."],
+  ["05", "Make the room gentler", "Lower one bright light, play one of our songs, and let this lilac little universe stay open beside you."],
+  ["06", "Give the ache somewhere to go", "Write one tiny widget, draw a heart, or leave me the exact sentence you wish I could hear right now."],
+  ["07", "Choose one future", "Open Our Worlds and pick where we are going tonight. Imagine the first ten minutes there together."],
+  ["08", "Rest without proving anything", "If it is late, let yourself sleep. You never have to stay awake to prove you miss me. I will still love you in the morning."]
 ];
+
+const careResponses = {
+  missing: ["💗", "I miss you too, babyy.", "Do not fight the feeling. Come sit with me here. Picture my arms around you, my cheek against your hair, and the first long airport hug waiting for us. Send me one tiny note if you want me to know this moment found you."],
+  reassurance: ["🌸", "You are still my girl.", "Nothing about a quiet hour, a delayed reply, or a difficult mood changes how beautiful and important you are to me. You do not need to earn the answer again. I love you, I choose you, and you will always be my little babyy."],
+  overwhelmed: ["🪷", "Only the next tiny thing.", "You do not have to solve the whole day right now. Put both feet down. Name three things you can see, two things you can feel, and one sound near you. Then drink a little water. I am proud of you for making this minute gentler."],
+  sleep: ["💕", "Let the night hold you softly.", "You are allowed to stop for today. Put the phone close, lower the light, and imagine me whispering goodnight until your breathing becomes slow. I am not disappearing while you sleep. I will still be yours in the morning."]
+};
 
 const challenges = [
   ["Voice-note dare", "Send one voice note where you say exactly what you miss, no making it neat."],
@@ -503,16 +520,21 @@ function flowerPageTransition() {
   setTimeout(() => veil.remove(), 1350);
 }
 
-function openScreen(name) {
-  const changed = document.body.dataset.world && document.body.dataset.world !== name;
+function openScreen(name, options = {}) {
+  const current = document.body.dataset.world || "home";
+  const changed = current !== name;
+  if (changed && !options.fromBack) screenHistory.push(current);
   state.lastWorld = name;
   saveState();
   document.body.dataset.world = name;
+  const backButton = $("#back-button");
+  if (backButton) backButton.classList.toggle("hidden", name === "home");
   $$(".screen").forEach(s => s.classList.toggle("active", s.id === `screen-${name}`));
   $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.open === name));
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
   if (name === "garden") requestAnimationFrame(resizeGardenTree);
+  if (name === "games") fetchBubbleScores();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
       if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
@@ -520,6 +542,14 @@ function openScreen(name) {
   }
   if (changed) flowerPageTransition();
   revealNav(2600);
+}
+
+function goBack() {
+  if ($("#letter-modal")?.open) return $("#letter-modal").close();
+  if ($("#world-modal")?.open) return $("#world-modal").close();
+  let destination = screenHistory.pop() || "home";
+  if (destination === document.body.dataset.world) destination = "home";
+  openScreen(destination, { fromBack: true });
 }
 
 function setMood(mood) {
@@ -926,70 +956,241 @@ function renderBirthday() {
 }
 
 function renderCare() {
-  $("#care-list").innerHTML = careSteps.map(([n, text]) => `
-    <article class="care-step"><span>${n}</span><p>${text}</p></article>
+  $("#care-list").innerHTML = careSteps.map(([n, title, text]) => `
+    <article class="care-step"><span>${n}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div></article>
   `).join("");
+}
+
+function showCareResponse(mode) {
+  const response = careResponses[mode];
+  if (!response) return;
+  $$("[data-care-mode]").forEach(button => button.classList.toggle("active", button.dataset.careMode === mode));
+  $("#care-response").innerHTML = `<span>${response[0]}</span><h3>${escapeHtml(response[1])}</h3><p>${escapeHtml(response[2])}</p>`;
+  burstAt(window.innerWidth / 2, Math.min(window.innerHeight * .62, 520), 8);
+}
+
+let breathingTimer = null;
+function startBreathingCare() {
+  if (breathingTimer) return;
+  const orb = $("#breathing-orb");
+  const copy = $("#breathing-copy");
+  const button = $("#start-breathing");
+  const phases = [
+    { label: "breathe in", seconds: 4, className: "inhale" },
+    { label: "hold softly", seconds: 2, className: "hold" },
+    { label: "breathe out", seconds: 6, className: "exhale" }
+  ];
+  let round = 1;
+  let phaseIndex = 0;
+  let remaining = phases[0].seconds;
+  button.disabled = true;
+  const paint = () => {
+    const phase = phases[phaseIndex];
+    orb.className = `breathing-orb ${phase.className}`;
+    orb.innerHTML = `<span>${phase.label}<br><strong>${remaining}</strong></span>`;
+    copy.textContent = `Round ${round} of 3. Stay with my count, babyy.`;
+  };
+  paint();
+  breathingTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      phaseIndex += 1;
+      if (phaseIndex >= phases.length) {
+        phaseIndex = 0;
+        round += 1;
+        if (round > 3) {
+          clearInterval(breathingTimer);
+          breathingTimer = null;
+          orb.className = "breathing-orb complete";
+          orb.innerHTML = "<span>still here<br>with you</span>";
+          copy.textContent = "Three full breaths. Your body did something kind for you. I am proud of you.";
+          button.disabled = false;
+          button.textContent = "breathe together again";
+          flowerConfetti(18);
+          return;
+        }
+      }
+      remaining = phases[phaseIndex].seconds;
+    }
+    paint();
+  }, 1000);
 }
 
 function renderGames() {
   const challenge = challenges[state.challengeIndex % challenges.length];
   $("#challenge-title").textContent = challenge[0];
   $("#challenge-text").textContent = challenge[1];
-  $("#bubble-score").textContent = state.bestBubbleScore ? `best ${state.bestBubbleScore}` : "0";
+  $("#bubble-score").textContent = "0";
+  renderBubbleLeaderboard(state.bubbleBestByProfile || {});
 }
 
 let bubbleScore = 0;
 let bubbleTimer = null;
-let bubbleStop = null;
+let bubbleClock = null;
+let bubbleRoundActive = false;
+let bubbleRoundStarted = 0;
+let bubbleSpawned = 0;
+let bubbleHits = 0;
+let bubbleMisses = 0;
+let bubbleCombo = 0;
+let bubbleMaxCombo = 0;
+const SCORE_API = "../api/scores?room=moonpie-score-v1";
+
+function updateBubbleHud() {
+  $("#bubble-score").textContent = String(bubbleScore);
+  $("#bubble-combo").textContent = `x${bubbleCombo}`;
+  const attempts = bubbleHits + bubbleMisses;
+  $("#bubble-accuracy").textContent = `${attempts ? Math.round((bubbleHits / attempts) * 100) : 100}%`;
+}
+
+function renderBubbleLeaderboard(scores = {}) {
+  ["Michelle", "Michael"].forEach(profile => {
+    const card = $(`[data-score-player="${profile}"]`);
+    if (!card) return;
+    const result = scores[profile];
+    card.querySelector("strong").textContent = String(result?.score || 0);
+    card.querySelector("small").textContent = result?.score
+      ? `${Math.round(result.accuracy || 0)}% accuracy · x${result.maxCombo || 0} combo`
+      : "waiting for a round";
+    card.classList.toggle("leading", Number(result?.score || 0) === Math.max(...Object.values(scores).map(item => Number(item?.score || 0)), 1));
+  });
+}
+
+async function fetchBubbleScores() {
+  try {
+    const response = await fetch(SCORE_API, { cache: "no-store", headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("scoreboard unavailable");
+    const data = await response.json();
+    const scores = {};
+    (data.scores || []).forEach(result => { if (result?.profile) scores[result.profile] = result; });
+    state.bubbleBestByProfile = scores;
+    saveState();
+    renderBubbleLeaderboard(scores);
+  } catch {
+    renderBubbleLeaderboard(state.bubbleBestByProfile || {});
+  }
+}
+
+async function submitBubbleScore(result) {
+  const current = state.bubbleBestByProfile?.[state.profile];
+  if (!current || result.score >= Number(current.score || 0)) {
+    state.bubbleBestByProfile = { ...(state.bubbleBestByProfile || {}), [state.profile]: { ...result, profile: state.profile } };
+    renderBubbleLeaderboard(state.bubbleBestByProfile);
+    saveState();
+  }
+  try {
+    await fetch(SCORE_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...result, profile: state.profile }) });
+    await fetchBubbleScores();
+  } catch { toast("score saved here; shared board will reconnect"); }
+}
 
 function startBubbleGame() {
   const field = $("#bubble-field");
   if (!field) return;
-  clearInterval(bubbleTimer);
-  clearTimeout(bubbleStop);
+  clearTimeout(bubbleTimer);
+  clearInterval(bubbleClock);
   field.innerHTML = "";
   bubbleScore = 0;
-  $("#bubble-score").textContent = "0";
-  $("#start-bubbles").textContent = "pop them, Moonpie";
-  bubbleTimer = setInterval(spawnBubble, 520);
-  bubbleStop = setTimeout(endBubbleGame, 20000);
+  bubbleSpawned = 0;
+  bubbleHits = 0;
+  bubbleMisses = 0;
+  bubbleCombo = 0;
+  bubbleMaxCombo = 0;
+  bubbleRoundActive = true;
+  bubbleRoundStarted = performance.now();
+  $("#start-bubbles").disabled = true;
+  $("#start-bubbles").textContent = "round in progress · go babyy!";
+  $("#bubble-time").textContent = "30.0";
+  updateBubbleHud();
+  scheduleBubble();
+  bubbleClock = setInterval(() => {
+    const remaining = Math.max(0, 30 - (performance.now() - bubbleRoundStarted) / 1000);
+    $("#bubble-time").textContent = remaining.toFixed(1);
+    if (remaining <= 0) endBubbleGame();
+  }, 100);
   burstAt(window.innerWidth / 2, window.innerHeight / 2, 14);
+}
+
+function scheduleBubble() {
+  if (!bubbleRoundActive) return;
+  const elapsed = (performance.now() - bubbleRoundStarted) / 1000;
+  spawnBubble();
+  const delay = elapsed < 10 ? 480 : elapsed < 20 ? 315 : 185;
+  bubbleTimer = setTimeout(scheduleBubble, delay);
 }
 
 function spawnBubble() {
   const field = $("#bubble-field");
+  if (!field || !bubbleRoundActive) return;
+  if (field.querySelectorAll(".love-bubble").length > 15) return;
   const bubble = document.createElement("button");
   bubble.className = "love-bubble";
   bubble.type = "button";
-  bubble.textContent = pick(bubbleEmojis);
-  bubble.style.left = `${8 + Math.random() * 78}%`;
-  bubble.style.setProperty("--rise", `${7.5 + Math.random() * 3.2}s`);
-  bubble.style.setProperty("--wiggle", `${(Math.random() - .5) * 70}px`);
-  const pop = event => popBubble(bubble, event);
-  bubble.addEventListener("pointerdown", pop, { once: true });
-  bubble.addEventListener("click", pop, { once: true });
+  const roll = Math.random();
+  const kind = roll < .12 ? { emoji: "💔", points: -2, className: "danger" }
+    : roll > .84 ? { emoji: pick(["🌹", "🌸", "🪷"]), points: 3, className: "bonus" }
+      : { emoji: pick(["💗", "💕", "💖", "❤️", "💋"]), points: 1, className: "heart" };
+  const elapsed = (performance.now() - bubbleRoundStarted) / 1000;
+  const duration = Math.max(2.25, 5.3 - elapsed * .085 + Math.random() * 1.2);
+  bubble.classList.add(`bubble-${kind.className}`);
+  bubble.dataset.points = String(kind.points);
+  bubble.textContent = kind.emoji;
+  bubble.style.left = `${3 + Math.random() * 84}%`;
+  bubble.style.setProperty("--rise", `${duration}s`);
+  bubble.style.setProperty("--wiggle", `${(Math.random() - .5) * 120}px`);
+  bubble.style.setProperty("--size", `${kind.className === "bonus" ? 48 + Math.random() * 18 : 42 + Math.random() * 26}px`);
+  bubble.addEventListener("pointerdown", event => popBubble(bubble, event), { once: true });
   field.appendChild(bubble);
-  setTimeout(() => bubble.remove(), 11000);
+  bubbleSpawned += 1;
+  setTimeout(() => {
+    if (!bubble.isConnected || bubble.dataset.popped === "true") return;
+    if (Number(bubble.dataset.points) > 0 && bubbleRoundActive) {
+      bubbleMisses += 1;
+      bubbleCombo = 0;
+      updateBubbleHud();
+    }
+    bubble.remove();
+  }, duration * 1000);
 }
 
 function popBubble(bubble, event) {
   if (!bubble || bubble.dataset.popped === "true") return;
   event?.preventDefault?.();
   bubble.dataset.popped = "true";
-  bubbleScore += 1;
-  $("#bubble-score").textContent = String(bubbleScore);
+  const points = Number(bubble.dataset.points || 1);
+  bubbleHits += 1;
+  if (points < 0) {
+    bubbleScore = Math.max(0, bubbleScore + points);
+    bubbleCombo = 0;
+  } else {
+    bubbleCombo += 1;
+    bubbleMaxCombo = Math.max(bubbleMaxCombo, bubbleCombo);
+    bubbleScore += points + Math.floor(bubbleCombo / 6);
+  }
+  updateBubbleHud();
   const rect = bubble.getBoundingClientRect();
   burstAt(event?.clientX || rect.x + rect.width / 2, event?.clientY || rect.y + rect.height / 2, 7);
   bubble.remove();
 }
 
 function endBubbleGame() {
-  clearInterval(bubbleTimer);
+  if (!bubbleRoundActive) return;
+  bubbleRoundActive = false;
+  clearTimeout(bubbleTimer);
+  clearInterval(bubbleClock);
   bubbleTimer = null;
-  $("#start-bubbles").textContent = "start 20 second round";
+  bubbleClock = null;
+  $$(".love-bubble", $("#bubble-field")).forEach(bubble => bubble.remove());
+  $("#bubble-time").textContent = "0.0";
+  $("#start-bubbles").disabled = false;
+  $("#start-bubbles").textContent = "play another 30 second round";
   state.bestBubbleScore = Math.max(state.bestBubbleScore || 0, bubbleScore);
   saveState();
-  toast(`score: ${bubbleScore}. best: ${state.bestBubbleScore}`);
+  const attempts = bubbleHits + bubbleMisses;
+  const result = { score: bubbleScore, accuracy: attempts ? Math.round((bubbleHits / attempts) * 100) : 0, maxCombo: bubbleMaxCombo };
+  submitBubbleScore(result);
+  flowerConfetti(bubbleScore >= 30 ? 28 : 14);
+  toast(`${state.profile}: ${bubbleScore} points · ${result.accuracy}% accuracy · x${bubbleMaxCombo} combo`);
 }
 
 function nextChallenge() {
@@ -1138,7 +1339,7 @@ function setupOpeningRitual() {
   $("#passkey-form")?.addEventListener("submit", event => {
     event.preventDefault();
     const input = $("#passkey-input");
-    if (input.value !== "2504") {
+    if (input.value !== "2502") {
       $("#passkey-error").textContent = "That date did not open it. Think of the day that became ours.";
       input.value = "";
       input.focus();
@@ -1627,8 +1828,12 @@ function setupEvents() {
   $("#save-doodle").addEventListener("click", saveDoodle);
   $("#refresh-widgets")?.addEventListener("click", () => fetchSharedWidgets({ quiet: false }));
   $("#start-bubbles").addEventListener("click", startBubbleGame);
+  $("#refresh-scores")?.addEventListener("click", fetchBubbleScores);
   $("#next-challenge").addEventListener("click", nextChallenge);
   $("#love-dice").addEventListener("click", rollLoveDice);
+  $("#back-button")?.addEventListener("click", goBack);
+  $("#start-breathing")?.addEventListener("click", startBreathingCare);
+  $$("[data-care-mode]").forEach(button => button.addEventListener("click", () => showCareResponse(button.dataset.careMode)));
   $("#soft-mode")?.addEventListener("click", () => {
     state.softMode = !state.softMode;
     document.body.classList.toggle("soft-mode", state.softMode);

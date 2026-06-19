@@ -1,11 +1,11 @@
-const CACHE_NAME = "moonpie-miss-you-v33";
+const CACHE_NAME = "moonpie-miss-you-v34";
 const ASSETS = [
   "./",
   "./index.html",
-  "./?v=33",
-  "./styles.css?v=33",
-  "./content.js?v=33",
-  "./app.js?v=33",
+  "./?v=34",
+  "./styles.css?v=34",
+  "./content.js?v=34",
+  "./app.js?v=34",
   "./manifest.webmanifest",
   "./icon.svg"
 ];
