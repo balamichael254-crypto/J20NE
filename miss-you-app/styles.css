@@ -26,7 +26,7 @@
 body[data-world="home"],body[data-world="atlas"]{--scene-bg-a:#090315;--scene-bg-b:#321653;--scene-bg-c:#12051e;--scene-glow-a:rgba(255,168,210,.42);--scene-glow-b:rgba(190,157,255,.34);--scene-glow-c:rgba(255,226,242,.22);--scene-detail:"💕  🌸  ✨  💗  🎀  🪷  "}
 body[data-world="garden"],body[data-world="birthday"]{--scene-bg-a:#210713;--scene-bg-b:#6b2446;--scene-bg-c:#170412;--scene-glow-a:rgba(255,143,189,.52);--scene-glow-b:rgba(255,224,138,.22);--scene-glow-c:rgba(255,255,255,.18);--scene-detail:"🌸  💕  🌺  ❤️  🪷  💗  "}
 body[data-world="letters"],body[data-world="poems"]{--scene-bg-a:#05091e;--scene-bg-b:#25306f;--scene-bg-c:#160724;--scene-glow-a:rgba(255,184,220,.22);--scene-glow-b:rgba(185,148,255,.42);--scene-glow-c:rgba(157,220,255,.16);--scene-detail:"✨  💗  🌙  💕  ✨  🌸  "}
-body[data-world="places"],body[data-world="distance"]{--scene-bg-a:#061629;--scene-bg-b:#164a67;--scene-bg-c:#1c0b34;--scene-glow-a:rgba(157,220,255,.3);--scene-glow-b:rgba(255,175,215,.28);--scene-glow-c:rgba(255,255,255,.14);--scene-detail:"🌊  💗  🛫  🌸  ❤️  ✨  "}
+body[data-world="places"],body[data-world="distance"]{--scene-bg-a:#2c2040;--scene-bg-b:#8973ad;--scene-bg-c:#66517f;--scene-glow-a:rgba(236,225,255,.48);--scene-glow-b:rgba(211,187,245,.5);--scene-glow-c:rgba(255,210,232,.26);--scene-detail:"💗  ✨  🛫  🌸  ❤️  🪷  "}
 body[data-world="songs"],body[data-world="memory"]{--scene-bg-a:#09020d;--scene-bg-b:#4b1235;--scene-bg-c:#190725;--scene-glow-a:rgba(255,143,189,.38);--scene-glow-b:rgba(255,224,138,.2);--scene-glow-c:rgba(185,148,255,.2);--scene-detail:"🎵  💕  📷  🌸  💗  ✨  "}
 body[data-world="doodles"],body[data-world="games"]{--scene-bg-a:#120526;--scene-bg-b:#6b3aa0;--scene-bg-c:#2a0a35;--scene-glow-a:rgba(255,143,189,.42);--scene-glow-b:rgba(255,224,244,.26);--scene-glow-c:rgba(255,255,255,.16);--scene-detail:"🎀  💗  🌸  💋  ❤️  ✨  "}
 body[data-world="care"],body[data-world="notices"],body[data-world="promises"],body[data-world="reasons"],body[data-world="day"]{--scene-bg-a:#10091f;--scene-bg-b:#50325f;--scene-bg-c:#1a0821;--scene-glow-a:rgba(255,224,244,.32);--scene-glow-b:rgba(255,143,189,.3);--scene-glow-c:rgba(255,224,138,.16);--scene-detail:"🪷  💕  🌸  💗  ❤️  ✨  "}
@@ -69,12 +69,38 @@ button,input,textarea{font:inherit}
 button{border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cosmos-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 .cosmos-bg:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:38px 38px;opacity:.12;mask-image:linear-gradient(#000,transparent 84%)}
+.cosmos-bg:after{
+  content:"";position:absolute;left:-22%;right:-22%;bottom:-20vh;height:66vh;opacity:0;
+  border-radius:48% 52% 0 0/10% 12% 0 0;
+  background:
+    radial-gradient(ellipse at 24% 4%,rgba(255,255,255,.3) 0 1.5%,transparent 5%),
+    radial-gradient(ellipse at 68% 8%,rgba(230,215,255,.28) 0 1.2%,transparent 4.5%),
+    repeating-radial-gradient(ellipse at 50% -18%,transparent 0 30px,rgba(241,232,255,.16) 32px 34px,transparent 37px 64px),
+    linear-gradient(180deg,rgba(242,232,255,.16),rgba(186,164,220,.38) 28%,rgba(151,124,194,.48) 72%,rgba(82,62,108,.78));
+  box-shadow:0 -18px 70px rgba(226,210,255,.2),inset 0 20px 54px rgba(248,239,255,.16);
+  transform:translate3d(0,12px,0) rotate(-1deg);transition:opacity .7s ease
+}
+body[data-world="places"] .cosmos-bg:after,body[data-world="distance"] .cosmos-bg:after{opacity:.96;animation:oceanTide 13s ease-in-out infinite alternate}
+body[data-world="places"] .topbar,body[data-world="distance"] .topbar{background:linear-gradient(180deg,rgba(40,27,57,.95),rgba(104,82,133,.72),transparent)}
+body[data-world="places"] .tabbar,body[data-world="distance"] .tabbar{background:linear-gradient(145deg,rgba(70,50,93,.84),rgba(103,78,132,.78));border-color:rgba(239,226,255,.24);box-shadow:0 24px 70px rgba(47,31,66,.34),inset 0 1px 0 rgba(255,255,255,.1)}
+body[data-world="places"] .cosmos-bg:before,body[data-world="distance"] .cosmos-bg:before{
+  background-image:
+    repeating-radial-gradient(ellipse at 45% 4%,transparent 0 22px,rgba(245,236,255,.24) 24px 26px,transparent 29px 55px),
+    radial-gradient(circle,rgba(255,255,255,.44) 0 1px,transparent 2px);
+  background-size:150px 84px,54px 62px;opacity:.28;
+  mask-image:linear-gradient(transparent 2%,#000 20%,#000 82%,transparent 100%);
+  animation:waterLight 20s linear infinite
+}
 .cosmos-bg span{position:absolute;width:170px;height:170px;border-radius:50%;filter:blur(24px);opacity:.3;animation:floatGlow 16s ease-in-out infinite alternate}
 .cosmos-bg span:nth-child(1){left:-52px;top:110px;background:var(--pink)}
 .cosmos-bg span:nth-child(2){right:-42px;top:300px;background:var(--lilac);animation-delay:-4s}
 .cosmos-bg span:nth-child(3){left:42px;bottom:160px;background:var(--blue);animation-delay:-8s}
 .cosmos-bg span:nth-child(4){right:60px;bottom:20px;background:var(--gold);animation-delay:-12s}
+body[data-world="places"] .cosmos-bg span:nth-child(3),body[data-world="distance"] .cosmos-bg span:nth-child(3){background:#d8c5fa}
+body[data-world="places"] .cosmos-bg span:nth-child(4),body[data-world="distance"] .cosmos-bg span:nth-child(4){background:#f2d8ff}
 @keyframes floatGlow{to{transform:translate3d(12px,-28px,0) scale(1.18)}}
+@keyframes oceanTide{to{transform:translate3d(2.5%,-24px,0) rotate(1deg) scaleX(1.035)}}
+@keyframes waterLight{to{background-position:150px 84px,-108px 124px}}
 .phone-shell{position:relative;z-index:1;min-height:100dvh;max-width:520px;margin:0 auto;padding:18px 16px calc(128px + env(safe-area-inset-bottom))}
 .topbar{position:sticky;top:0;z-index:20;margin:0 -16px;padding:10px 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(180deg,rgba(17,6,25,.96),rgba(17,6,25,.72),transparent);backdrop-filter:blur(18px)}
 .topbar-spacer{width:80px;height:46px;flex:0 0 80px}
@@ -193,12 +219,14 @@ body.doodle-expanded .tabbar{opacity:0;pointer-events:none}
 .place-rail{display:flex;gap:14px;overflow-x:auto;margin:0 -16px;padding:0 16px 18px;scroll-snap-type:x mandatory}
 .place-card{flex:0 0 84%;scroll-snap-align:center;border-radius:32px;overflow:hidden;background:var(--paper);color:var(--paper-ink);box-shadow:var(--shadow)}
 .place-img{height:230px;background-size:cover;background-position:center;position:relative}
+.place-img:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(112deg,transparent 25%,rgba(246,237,255,.32) 43%,rgba(224,204,255,.22) 51%,transparent 68%);transform:translateX(-115%);animation:waterShimmer 8s ease-in-out infinite}
 .place-img:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.4))}
+@keyframes waterShimmer{55%,100%{transform:translateX(115%)}}
 .place-card div:not(.place-img){padding:16px}.place-card p{color:#6d5574}
 .promise-row span{display:block;color:var(--gold);font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;font-weight:950}.promise-row p{margin:8px 0 0;color:#fff}
-.distance-globe{height:230px;display:grid;place-items:center;text-align:center;margin-bottom:14px;padding:24px}
+.distance-globe{height:230px;display:grid;place-items:center;text-align:center;margin-bottom:14px;padding:24px;background:radial-gradient(circle at 36% 24%,rgba(255,255,255,.3),transparent 12%),repeating-radial-gradient(ellipse at 50% 105%,transparent 0 24px,rgba(243,232,255,.16) 26px 28px,transparent 31px 52px),linear-gradient(160deg,rgba(207,190,235,.4),rgba(171,145,211,.4) 58%,rgba(91,68,120,.58));border-color:rgba(242,230,255,.28);box-shadow:inset 0 0 60px rgba(244,235,255,.12),0 22px 60px rgba(59,39,81,.26)}
 .distance-globe:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 0 44px rgba(181,148,255,.18)}
-.orbit-dot{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--pink);box-shadow:0 0 20px var(--pink)}.orbit-dot.one{left:32%;top:44%}.orbit-dot.two{right:30%;top:56%;background:var(--blue);box-shadow:0 0 20px var(--blue)}
+.orbit-dot{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--pink);box-shadow:0 0 20px var(--pink)}.orbit-dot.one{left:32%;top:44%}.orbit-dot.two{right:30%;top:56%;background:#d8c2ff;box-shadow:0 0 20px #d8c2ff}
 .orbit-line{position:absolute;width:150px;height:60px;border-top:1px dashed rgba(255,255,255,.35);border-radius:50%;transform:rotate(12deg)}
 .distance-globe p{position:relative;z-index:2;margin-top:150px;color:#fff;font-weight:900}
 .beacon-card .signal{width:12px;height:12px;border-radius:50%;background:var(--pink);box-shadow:0 0 0 9px rgba(255,143,189,.12),0 0 26px var(--pink);margin-bottom:10px}
@@ -298,11 +326,15 @@ body.doodle-expanded .tabbar{opacity:0;pointer-events:none}
 .screen.active:before{content:"";position:absolute;inset:54px -18px auto -18px;height:210px;border-radius:46px;background:radial-gradient(circle at 20% 40%,rgba(255,255,255,.13),transparent 32%),radial-gradient(circle at 82% 16%,rgba(255,143,189,.16),transparent 30%);filter:blur(.2px);opacity:.9;pointer-events:none;z-index:-1}
 #screen-home:before{display:none}
 #screen-letters .section-head,#screen-poems .section-head{padding-top:26px;background:linear-gradient(180deg,rgba(9,15,47,.18),transparent);border-radius:28px}
-#screen-places .section-head:before,#screen-distance .section-head:before{content:"";position:absolute;left:-14px;right:-14px;bottom:0;height:80px;border-radius:999px;background:linear-gradient(90deg,transparent,rgba(157,220,255,.18),rgba(255,143,189,.14),transparent);filter:blur(10px);pointer-events:none}
+#screen-places .section-head:before,#screen-distance .section-head:before{content:"";position:absolute;left:-14px;right:-14px;bottom:0;height:80px;border-radius:999px;background:linear-gradient(90deg,transparent,rgba(226,207,255,.22),rgba(255,184,219,.14),transparent);filter:blur(10px);pointer-events:none}
+#screen-places .section-head,#screen-distance .section-head{padding:24px 16px 22px;border:1px solid rgba(242,230,255,.2);border-radius:30px;background:linear-gradient(145deg,rgba(245,237,255,.16),rgba(210,189,239,.15),rgba(119,91,153,.17));box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 54px rgba(64,43,86,.18);overflow:hidden}
+#screen-places .section-head:after,#screen-distance .section-head:after{content:"";right:-26px;top:-32px;width:190px;height:130px;opacity:.46;background:repeating-radial-gradient(ellipse at 50% 100%,transparent 0 19px,rgba(245,236,255,.25) 21px 23px,transparent 25px 43px);transform:rotate(-8deg);animation:waterHeader 10s ease-in-out infinite alternate}
+@keyframes waterHeader{to{transform:translateX(-18px) translateY(8px) rotate(-3deg)}}
 #screen-doodles .section-head:after{opacity:.2;transform:rotate(-8deg)}
 #screen-games .section-head:after{content:"💗";font-size:4.8rem;background:none;opacity:.15;right:8px;top:26px;transform:rotate(-14deg)}
 #screen-care .section-head,#screen-notices .section-head,#screen-promises .section-head{background:linear-gradient(145deg,rgba(255,248,251,.08),rgba(255,143,189,.06));border-radius:30px;padding-left:12px}
 .world-tile{background:radial-gradient(circle at 82% 18%,rgba(255,255,255,.75),transparent 24%),linear-gradient(145deg,#fffaf3,#ffe0ef 60%,#efe4ff);border:1px solid rgba(196,160,224,.25);transform:rotate(calc((var(--i) - 5) * .18deg))}
+.world-tile.tone-place,.world-tile.tone-distance{background:radial-gradient(circle at 84% 12%,rgba(255,255,255,.82),transparent 22%),repeating-radial-gradient(ellipse at 55% 112%,transparent 0 19px,rgba(196,169,228,.2) 21px 23px,transparent 25px 42px),linear-gradient(145deg,#fffaff,#eee6ff 52%,#e4d7f7);border-color:rgba(189,161,219,.32)}
 .atlas-grid .world-tile:nth-child(odd){transform:rotate(-.7deg)}.atlas-grid .world-tile:nth-child(even){transform:rotate(.7deg)}
 .song-list{display:grid;gap:14px;padding-bottom:12px}
 .song-card{display:grid;grid-template-columns:68px 1fr;gap:14px;align-items:center;padding:16px;background:linear-gradient(145deg,#fff9f3,#ffe0ef);color:#2a1235;transform:rotate(var(--r));border-color:rgba(196,160,224,.26)}
@@ -312,7 +344,7 @@ body.doodle-expanded .tabbar{opacity:0;pointer-events:none}
 .letter-card{transform:rotate(-.8deg)}.letter-card:nth-child(even){transform:rotate(.9deg)}
 .poem-card{background:radial-gradient(circle at 88% 0,rgba(255,255,255,.12),transparent 30%),linear-gradient(160deg,#07021a,#16083f 58%,#09031e)}
 .poem-card pre{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.15rem;color:#f4e8ff}
-.place-card{background:radial-gradient(circle at 88% 16%,rgba(157,220,255,.34),transparent 24%),linear-gradient(145deg,#fffaf3,#e9f8ff 46%,#ffe0ef);transform:rotate(-.5deg);position:relative;overflow:hidden}
+.place-card{background:radial-gradient(circle at 88% 16%,rgba(220,201,248,.38),transparent 24%),linear-gradient(145deg,#fffaf8,#eee6ff 46%,#ffe3f0);transform:rotate(-.5deg);position:relative;overflow:hidden}
 .place-card:after{content:"future postcard";position:absolute;right:14px;top:12px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.54);color:#7a5077;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;font-weight:950}
 .place-card h3{color:#351943}.place-card p{color:#6a526f}
 .timeline-row{background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,143,189,.09));position:relative;overflow:hidden}.timeline-row:after{content:"❤️";position:absolute;right:16px;bottom:10px;opacity:.14;font-size:2rem}
@@ -374,6 +406,9 @@ body.soft-mode{filter:none}
   body:after{display:none}
   .cosmos-bg span{filter:blur(20px);opacity:.18;animation-duration:26s}
   .cosmos-bg span:nth-child(3),.cosmos-bg span:nth-child(4){display:none}
+  body[data-world="places"] .cosmos-bg:before,body[data-world="distance"] .cosmos-bg:before{opacity:.18;animation-duration:32s}
+  body[data-world="places"] .cosmos-bg:after,body[data-world="distance"] .cosmos-bg:after{opacity:.78;animation-duration:20s}
+  .place-img:before{animation-duration:12s}
   .intro-loader{display:none}
   .premium-card,.hero-card,.widget-preview,.draw-card,.sync-card,.distance-globe,.reason-oracle,.birthday-card,.opening-garden,.garden-stage,.bouquet-card{backdrop-filter:none;box-shadow:0 16px 44px rgba(4,1,14,.32)}
   .premium-card:after,.hero-card:after,.tree-sparkle-field{display:none}

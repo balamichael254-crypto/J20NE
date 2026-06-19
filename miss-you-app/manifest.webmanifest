@@ -2,7 +2,7 @@
   "name": "Moonpie - When You Miss Me",
   "short_name": "Moonpie",
   "description": "A private little universe I made for the moments you miss me.",
-  "start_url": "./?v=29",
+  "start_url": "./?v=31",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
