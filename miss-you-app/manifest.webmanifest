@@ -1,8 +1,8 @@
 {
   "name": "Moonpie - When You Miss Me",
   "short_name": "Moonpie",
-  "description": "A private little app for the moments Michelle misses you.",
-  "start_url": "./?v=28",
+  "description": "A private little universe I made for the moments you miss me.",
+  "start_url": "./?v=29",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

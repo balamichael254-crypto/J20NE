@@ -36,7 +36,7 @@ const worlds = [
 
 const comfortNotes = {
   soft: [
-    "Come closer in your head. I am probably smiling at my phone somewhere, thinking about the same girl.",
+    "Come closer in your head. I am probably smiling at my phone somewhere, thinking about you too.",
     "You do not have to be brave for this minute. Let me be the soft place. Breathe in. I love you. Breathe out. Still yours.",
     "Distance is loud, but it is not bigger than us. It is just the room between two people already walking toward each other."
   ],
@@ -68,7 +68,7 @@ const letters = [
       "I do not think love always announces itself loudly. Sometimes it slips into an ordinary conversation and sits there like it has always belonged.",
       "That is how it happened with you. You were talking about something simple, maybe something small from your day, and I caught myself wanting to keep listening forever. Not because the topic was dramatic. Because it was you. Because your voice made even the normal parts of life feel worth staying for.",
       "I remember thinking that if the future had a sound, I wanted it to sound like you half laughing, half explaining something, while I sit there pretending I am not completely gone for you.",
-      "That night did not feel like a movie scene. It felt softer than that. It felt like recognition. Like some part of me looked up and said, there she is."
+      "That night did not feel like a movie scene. It felt softer than that. It felt like recognition. Like some part of me looked up and said, there you are."
     ],
     closing: "Still choosing that moment, still choosing you."
   },
@@ -189,7 +189,7 @@ const letters = [
     title: "This Little Universe",
     tab: "why I built this",
     theme: "stars",
-    preview: "For when she wonders why this place exists at all.",
+    preview: "For when you wonder why I made this little place for you.",
     salutation: "Moonpie,",
     body: [
       "I built this because sometimes love needs somewhere to wait. Not because a website can replace my arms, but because I wanted you to have a place where my care does not disappear when I am busy, asleep, or far away.",
@@ -263,11 +263,11 @@ const promises = [
 ];
 
 const distanceBeacons = [
-  ["If she opens this at night", "Tell her: I am probably missing her too. The dark just makes it easier to hear."],
-  ["If she is waiting for a reply", "Tell her: silence is not absence. Sometimes I am just living the day that leads me back to her."],
-  ["If she wants my hand", "Tell her: put your palm on the screen. I know it is silly. Do it anyway."],
-  ["If she feels far", "Tell her: far is a measurement. Us is a decision."],
-  ["If goodbye hurt", "Tell her: goodbyes are proof that hello still matters."]
+  ["If you opened this at night", "I am probably missing you too. The dark just makes it easier to hear."],
+  ["If you are waiting for my reply", "My silence is not absence. Sometimes I am just living the day that leads me back to you."],
+  ["If you want my hand", "Put your palm on the screen. I know it is silly. Do it anyway."],
+  ["If you feel far away", "Far is a measurement. Us is a decision."],
+  ["If goodbye hurt", "Goodbyes are proof that our next hello still matters."]
 ];
 
 const memories = [
@@ -342,7 +342,7 @@ const careSteps = [
 const challenges = [
   ["Voice-note dare", "Send one voice note where you say exactly what you miss, no making it neat."],
   ["Photo scavenger hunt", "Find something pink, something soft, and something that reminds you of us. Send all three."],
-  ["Two-minute date", "Start a timer. For two minutes, both of you text only tiny future plans."],
+  ["Two-minute date", "Start a timer. For two minutes, we can text only tiny future plans."],
   ["The food treaty", "Name the snack you would steal from me first. I get to object dramatically."],
   ["Sleepy promise", "Before sleeping, send one sentence future-you wants to wake up remembering."],
   ["Airport scene", "Describe the first ten seconds when we finally see each other again."]
@@ -787,7 +787,7 @@ function bloomGarden() {
   gardenCelebrationTimer = setTimeout(() => {
     flowerConfetti(44);
     burstAt(window.innerWidth / 2, window.innerHeight / 2, 16);
-    toast("the garden bloomed for her");
+    toast("look, Moonpie. Your garden is blooming");
   }, GARDEN_BLOOM_DURATION - 1200);
 }
 
@@ -932,7 +932,7 @@ function replayBirthday() {
 function renderWidgets() {
   const list = $("#widget-list");
   if (!state.widgets.length) {
-    list.innerHTML = `<article class="saved-widget"><strong>No widgets saved yet.</strong><p>Make one tiny thing she can reopen when missing you gets loud.</p></article>`;
+    list.innerHTML = `<article class="saved-widget"><strong>No widgets saved yet.</strong><p>I have not left you a tiny note here yet.</p></article>`;
     return;
   }
   list.innerHTML = state.widgets.map((widget, index) => ({ ...widget, index })).slice().reverse().map(w => `
@@ -948,7 +948,7 @@ function renderLatestWidget() {
   const latest = state.widgets[state.widgets.length - 1];
   const box = $("#latest-widget");
   if (!latest) {
-    box.innerHTML = `<div class="card-label">latest widget</div><p>No widget yet. Write or draw one for future-her.</p>`;
+    box.innerHTML = `<div class="card-label">latest widget</div><p>No widget yet. I will leave something here for the next time you miss me.</p>`;
     return;
   }
   box.innerHTML = `<div class="card-label">latest widget</div>${latest.type === "doodle" ? `<img src="${latest.value}" alt="latest doodle">` : `<p>${escapeHtml(latest.value)}</p>`}`;
