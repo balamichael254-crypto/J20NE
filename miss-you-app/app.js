@@ -1,8 +1,9 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, challengeIndex: 0 };
+const defaultState = { mood: "soft", widgets: [], openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -15,6 +16,9 @@ let gardenCelebrationTimer = null;
 const GARDEN_BLOOM_DURATION = 9200;
 let navIdleTimer = null;
 let lastScrollY = 0;
+let widgetSyncTimer = null;
+let activeMicStream = null;
+let activeAudioContext = null;
 
 const worlds = [
   { id: "garden", icon: "🌸", title: "Birthday Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
@@ -357,6 +361,29 @@ const dicePrompts = [
   "Write a fake postcard from one future place we will visit."
 ];
 
+const futureWorlds = expansion.worlds || [];
+const handMessages = expansion.handMessages || [];
+if (expansion.extraLetters?.length) letters.push(...expansion.extraLetters);
+if (expansion.poems?.length) poems.splice(0, poems.length, ...expansion.poems);
+if (expansion.notices?.length) notices.splice(0, notices.length, ...expansion.notices);
+if (expansion.reasons?.length) reasons.splice(0, reasons.length, ...expansion.reasons);
+if (expansion.memories?.length) memories.splice(0, memories.length, ...expansion.memories);
+if (expansion.songs?.length) songs.splice(0, songs.length, ...expansion.songs);
+const placesWorld = worlds.find(world => world.id === "places");
+if (placesWorld) placesWorld.count = futureWorlds.length || places.length;
+const poemsWorld = worlds.find(world => world.id === "poems");
+if (poemsWorld) poemsWorld.count = poems.length;
+const lettersWorld = worlds.find(world => world.id === "letters");
+if (lettersWorld) lettersWorld.count = letters.length;
+const noticesWorld = worlds.find(world => world.id === "notices");
+if (noticesWorld) noticesWorld.count = notices.length;
+const reasonsWorld = worlds.find(world => world.id === "reasons");
+if (reasonsWorld) reasonsWorld.count = reasons.length;
+const memoryWorld = worlds.find(world => world.id === "memory");
+if (memoryWorld) memoryWorld.count = memories.length;
+const songsWorld = worlds.find(world => world.id === "songs");
+if (songsWorld) songsWorld.count = songs.length;
+
 const bubbleEmojis = ["💗", "💕", "🌸", "💋", "🌙", "✨", "🎀", "🪷", "❤️", "💖"];
 const celebrationPieces = ["💗", "🌸", "🎀", "✨", "💕", "🪷", "❤️", "💖"];
 
@@ -376,6 +403,37 @@ function escapeHtml(value) {
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
+}
+
+function shuffledIndexes(length, avoidFirst = -1) {
+  const deck = Array.from({ length }, (_, index) => index);
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  if (deck.length > 1 && deck[0] === avoidFirst) [deck[0], deck[1]] = [deck[1], deck[0]];
+  return deck;
+}
+
+function nextComfort(mood) {
+  const list = comfortNotes[mood] || comfortNotes.soft;
+  const previous = Number(state.lastComfortByMood?.[mood] ?? -1);
+  const choices = list.map((_, index) => index).filter(index => index !== previous);
+  const index = pick(choices.length ? choices : [0]);
+  state.lastComfortByMood = { ...(state.lastComfortByMood || {}), [mood]: index };
+  return list[index];
+}
+
+function nextReason() {
+  if (!Array.isArray(state.reasonDeck) || state.reasonDeck.length !== reasons.length || state.reasonCursor >= state.reasonDeck.length) {
+    state.reasonDeck = shuffledIndexes(reasons.length, Number(state.lastReasonIndex ?? -1));
+    state.reasonCursor = 0;
+  }
+  const index = state.reasonDeck[state.reasonCursor++];
+  state.lastReasonIndex = index;
+  saveState();
+  $("#reason-text").textContent = reasons[index];
+  return index;
 }
 
 function toast(message) {
@@ -427,7 +485,26 @@ function finishIntro() {
   }, 680);
 }
 
+function flowerPageTransition() {
+  if (document.body.classList.contains("app-locked") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const veil = document.createElement("div");
+  veil.className = "page-flower-transition";
+  const flowers = ["🌸", "🌸", "🌸", "🪷", "🌹", "🌸", "💗", "🌸"];
+  flowers.forEach((flower, index) => {
+    const petal = document.createElement("i");
+    petal.textContent = flower;
+    petal.style.left = `${5 + index * 12}%`;
+    petal.style.setProperty("--delay", `${index * .035}s`);
+    petal.style.setProperty("--fall", `${1.25 + (index % 3) * .15}s`);
+    petal.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (20 + index * 3)}px`);
+    veil.appendChild(petal);
+  });
+  document.body.appendChild(veil);
+  setTimeout(() => veil.remove(), 1350);
+}
+
 function openScreen(name) {
+  const changed = document.body.dataset.world && document.body.dataset.world !== name;
   state.lastWorld = name;
   saveState();
   document.body.dataset.world = name;
@@ -436,6 +513,12 @@ function openScreen(name) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
   if (name === "garden") requestAnimationFrame(resizeGardenTree);
+  if (name === "songs") {
+    $$(".spotify-card iframe[data-src]").forEach(frame => {
+      if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
+    });
+  }
+  if (changed) flowerPageTransition();
   revealNav(2600);
 }
 
@@ -444,7 +527,8 @@ function setMood(mood) {
   state.mood = mood;
   saveState();
   $$(".mood-chip").forEach(btn => btn.classList.toggle("active", btn.dataset.mood === mood));
-  $("#comfort-note").textContent = pick(comfortNotes[mood]);
+  $("#comfort-note").textContent = nextComfort(mood);
+  saveState();
 }
 
 function renderAtlas() {
@@ -486,11 +570,11 @@ function renderLetters() {
 }
 
 function renderPoems() {
-  $("#poem-list").innerHTML = poems.map(([title, body]) => `
+  $("#poem-list").innerHTML = poems.map(([title, form, body]) => `
     <article class="poem-card premium-card">
-      <p class="card-label">after midnight</p>
-      <h3>${title}</h3>
-      <pre>${body}</pre>
+      <p class="card-label">${escapeHtml(form || "after midnight")}</p>
+      <h3>${escapeHtml(title)}</h3>
+      <pre>${escapeHtml(body)}</pre>
     </article>
   `).join("");
 }
@@ -514,28 +598,47 @@ function renderDay() {
 }
 
 function renderPlaces() {
-  $("#place-rail").innerHTML = places.map(([name, img, text]) => `
-    <article class="place-card">
-      <div class="place-img" style="background-image:url('${img}')"></div>
-      <div>
-        <p class="card-label">future coordinate</p>
-        <h3>${name}</h3>
-        <p>${text}</p>
-      </div>
-    </article>
+  const list = futureWorlds.length ? futureWorlds : places.map(([name, image, intro]) => ({ name, intro, eyebrow: "future coordinate", photos: [image], moments: [] }));
+  $("#place-rail").innerHTML = list.map((place, index) => `
+    <button class="world-portal" type="button" data-world-portal="${index}">
+      <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="lazy">
+      <span class="world-portal-copy">
+        <span class="portal-number">world ${String(index + 1).padStart(2, "0")}</span>
+        <h3>${escapeHtml(place.name)}</h3>
+        <p>${escapeHtml(place.eyebrow)}</p>
+        <small>enter this world · ${place.photos.length} scenes · ${place.moments.length} moments</small>
+      </span>
+    </button>
   `).join("");
 }
 
+function openFutureWorld(index) {
+  const place = futureWorlds[index];
+  if (!place) return;
+  const modal = $("#world-modal");
+  $("#world-modal-body").innerHTML = `
+    <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
+      <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of twenty futures I keep imagining with you.</p></div>
+    </section>
+    <p class="world-intro">${escapeHtml(place.intro)}</p>
+    <div class="world-gallery">${place.photos.map((image, photoIndex) => `<img src="${escapeHtml(image)}" alt="${escapeHtml(place.name)} scene ${photoIndex + 1}" loading="lazy">`).join("")}</div>
+    <div class="world-moments">${place.moments.map(([title, text], momentIndex) => `<article class="world-moment"><span>experience ${String(momentIndex + 1).padStart(2, "0")}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div>
+  `;
+  document.body.classList.add("focus-mode");
+  modal.showModal();
+  flowerPageTransition();
+}
+
 function renderSongs() {
-  $("#song-list").innerHTML = songs.map(([name, artist, note], i) => `
-    <article class="song-card premium-card" style="--r:${[-1.5,1,-.5,1.8,-1,1.2,-1.7][i % 7]}deg">
-      <div class="song-art">♪</div>
-      <div>
+  $("#song-list").innerHTML = songs.map(([name, artist, note, spotifyId], i) => `
+    <article class="song-card spotify-card premium-card">
+      <div class="song-note">
         <p class="card-label">track ${String(i + 1).padStart(2, "0")}</p>
-        <h3>${name}</h3>
-        <strong>${artist}</strong>
-        <p>${note}</p>
+        <h3>${escapeHtml(name)}</h3>
+        <strong>${escapeHtml(artist)}</strong>
+        <p>${escapeHtml(note)}</p>
       </div>
+      ${spotifyId ? `<iframe title="Play ${escapeHtml(name)} on Spotify" data-src="https://open.spotify.com/embed/track/${encodeURIComponent(spotifyId)}?utm_source=generator&theme=0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
     </article>
   `).join("");
 }
@@ -560,7 +663,7 @@ function renderDistance() {
 }
 
 function renderReasons() {
-  $("#reason-text").textContent = pick(reasons);
+  nextReason();
   $("#reason-stack").innerHTML = reasons.map((r, i) => `<div class="reason-chip">${i + 1}. ${r}</div>`).join("");
 }
 
@@ -797,8 +900,8 @@ function renderBirthday() {
       <p class="card-label">step 1</p>
       <div class="cake-mini cake-lit" aria-label="birthday cake with candles"><span></span><span></span><span></span></div>
       <h2>Blow the candles, Michelle.</h2>
-      <p>Take one tiny breath. Pretend I am beside you counting down badly because I am too excited.</p>
-      <button class="primary-btn wide" id="blow-candles" type="button">blow the candles</button>
+      <p>Let the microphone hear one gentle birthday breath. Nothing is recorded.</p>
+      <button class="primary-btn wide" id="blow-candles" type="button">listen for my breath</button>
     </div>
 
     <div class="birthday-stage hidden" data-birthday-stage="wish">
@@ -907,6 +1010,154 @@ function showBirthdayStage(stage) {
   });
 }
 
+function seedOpeningFlowers() {
+  const field = $("#opening-petals");
+  if (!field || field.childElementCount) return;
+  const flowers = ["🌸", "🌸", "🌸", "🌸", "🪷", "🌹", "🌸", "💗", "🌸", "🌺", "🌸", "🌸"];
+  flowers.forEach((flower, index) => {
+    const piece = document.createElement("i");
+    piece.textContent = flower;
+    piece.style.left = `${3 + (index * 8.4) % 94}%`;
+    piece.style.fontSize = `${.9 + (index % 4) * .18}rem`;
+    piece.style.setProperty("--fall", `${5.5 + (index % 5) * .8}s`);
+    piece.style.setProperty("--delay", `${-1 * (index % 7) * .7}s`);
+    piece.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (25 + index * 3)}px`);
+    field.appendChild(piece);
+  });
+}
+
+function cleanupMicrophone() {
+  activeMicStream?.getTracks?.().forEach(track => track.stop());
+  activeMicStream = null;
+  activeAudioContext?.close?.().catch(() => {});
+  activeAudioContext = null;
+}
+
+async function listenForBlow({ meter, status, fallback, onBlow }) {
+  cleanupMicrophone();
+  if (!navigator.mediaDevices?.getUserMedia) {
+    if (status) status.textContent = "This browser cannot listen for a breath. Use the gentle tap instead.";
+    fallback?.classList.remove("hidden");
+    return;
+  }
+  try {
+    if (status) status.textContent = "Listening now. Take a breath, then blow gently toward the microphone...";
+    activeMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    activeAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    await activeAudioContext.resume?.();
+    const analyser = activeAudioContext.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = .2;
+    const source = activeAudioContext.createMediaStreamSource(activeMicStream);
+    source.connect(analyser);
+    const samples = new Uint8Array(analyser.fftSize);
+    let baseline = .018;
+    let frames = 0;
+    let strongFrames = 0;
+    let completed = false;
+    const started = performance.now();
+    const stopAt = started + 16000;
+
+    const sample = () => {
+      if (completed || !activeMicStream) return;
+      analyser.getByteTimeDomainData(samples);
+      let sum = 0;
+      for (const value of samples) {
+        const normalized = (value - 128) / 128;
+        sum += normalized * normalized;
+      }
+      const rms = Math.sqrt(sum / samples.length);
+      frames += 1;
+      if (frames < 35) baseline = baseline * .9 + rms * .1;
+      const threshold = Math.max(.075, baseline * 3.25);
+      if (meter) meter.style.width = `${Math.min(100, 8 + rms / Math.max(threshold, .01) * 78)}%`;
+      strongFrames = rms > threshold && performance.now() - started > 650 ? strongFrames + 1 : Math.max(0, strongFrames - 1);
+      if (strongFrames >= 3) {
+        completed = true;
+        if (status) status.textContent = "I heard you. Your candles are going out...";
+        cleanupMicrophone();
+        onBlow();
+        return;
+      }
+      if (performance.now() > stopAt) {
+        if (status) status.textContent = "I did not catch it clearly. Try once more or use the gentle tap.";
+        fallback?.classList.remove("hidden");
+        if (fallback) {
+          fallback.dataset.blowFallback = "true";
+          if (fallback.id === "blow-candles") fallback.textContent = "tap gently to blow them out";
+        }
+        cleanupMicrophone();
+        return;
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  } catch {
+    cleanupMicrophone();
+    if (status) status.textContent = "Microphone permission was not available. Your wish still counts; use the gentle tap.";
+    fallback?.classList.remove("hidden");
+    if (fallback) {
+      fallback.dataset.blowFallback = "true";
+      if (fallback.id === "blow-candles") fallback.textContent = "tap gently to blow them out";
+    }
+  }
+}
+
+function completeOpeningBlow() {
+  const cake = $("#opening-cake");
+  if (cake?.classList.contains("cake-blown")) return;
+  cake?.classList.add("cake-blown");
+  navigator.vibrate?.([35, 45, 35]);
+  flowerConfetti(90);
+  burstAt(window.innerWidth / 2, window.innerHeight * .36, 18);
+  setTimeout(() => {
+    $("#opening-listen")?.classList.add("hidden");
+    $("#opening-reveal")?.classList.remove("hidden");
+    flowerConfetti(72);
+  }, 950);
+}
+
+function enterUniverse() {
+  const opening = $("#birthday-opening");
+  opening?.classList.add("leaving");
+  document.body.classList.remove("app-locked");
+  flowerPageTransition();
+  setTimeout(() => opening?.remove(), 700);
+}
+
+function setupOpeningRitual() {
+  seedOpeningFlowers();
+  let selectedProfile = state.profile || "Michelle";
+  $$(".profile-option").forEach(button => {
+    button.classList.toggle("active", button.dataset.profile === selectedProfile);
+    button.addEventListener("click", () => {
+      selectedProfile = button.dataset.profile;
+      $$(".profile-option").forEach(option => option.classList.toggle("active", option === button));
+    });
+  });
+  $("#passkey-form")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const input = $("#passkey-input");
+    if (input.value !== "2504") {
+      $("#passkey-error").textContent = "That date did not open it. Think of the day that became ours.";
+      input.value = "";
+      input.focus();
+      $(".gate-card")?.classList.remove("wrong-key");
+      requestAnimationFrame(() => $(".gate-card")?.classList.add("wrong-key"));
+      return;
+    }
+    state.profile = selectedProfile;
+    saveState();
+    $("#passkey-error").textContent = "";
+    $("#entry-gate")?.classList.add("leaving");
+    $("#birthday-opening")?.classList.remove("hidden");
+    setTimeout(() => $("#entry-gate")?.remove(), 650);
+  });
+  $("#allow-microphone")?.addEventListener("click", () => listenForBlow({ meter: $("#mic-meter-fill"), status: $("#mic-status"), fallback: $("#tap-blow-fallback"), onBlow: completeOpeningBlow }));
+  $("#tap-blow-fallback")?.addEventListener("click", completeOpeningBlow);
+  $("#enter-universe")?.addEventListener("click", enterUniverse);
+}
+
 function blowCandles() {
   const cake = $(".cake-mini");
   cake?.classList.remove("cake-lit");
@@ -914,6 +1165,16 @@ function blowCandles() {
   burstAt(window.innerWidth / 2, 250, 10);
   toast("make a wish, birthday girl");
   setTimeout(() => showBirthdayStage("wish"), 700);
+}
+
+function listenForBirthdayBlow() {
+  const button = $("#blow-candles");
+  if (button) button.textContent = "listening... blow gently";
+  listenForBlow({
+    status: button?.previousElementSibling,
+    fallback: button,
+    onBlow: blowCandles
+  });
 }
 
 function sealBirthdayWish() {
@@ -938,6 +1199,7 @@ function renderWidgets() {
   list.innerHTML = state.widgets.map((widget, index) => ({ ...widget, index })).slice().reverse().map(w => `
     <article class="saved-widget">
       <button class="delete-widget" type="button" data-delete-widget="${w.id || w.createdAt || w.index}" aria-label="delete widget">delete</button>
+      <span class="shared-widget-sender">from ${escapeHtml(w.sender || "one of us")}</span>
       ${w.type === "doodle" ? `<img src="${w.value}" alt="saved handwritten widget">` : `<p>${escapeHtml(w.value)}</p>`}
       <time>${new Date(w.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</time>
     </article>
@@ -951,7 +1213,7 @@ function renderLatestWidget() {
     box.innerHTML = `<div class="card-label">latest widget</div><p>No widget yet. I will leave something here for the next time you miss me.</p>`;
     return;
   }
-  box.innerHTML = `<div class="card-label">latest widget</div>${latest.type === "doodle" ? `<img src="${latest.value}" alt="latest doodle">` : `<p>${escapeHtml(latest.value)}</p>`}`;
+  box.innerHTML = `<div class="card-label">latest widget · from ${escapeHtml(latest.sender || "one of us")}</div>${latest.type === "doodle" ? `<img src="${latest.value}" alt="latest doodle">` : `<p>${escapeHtml(latest.value)}</p>`}`;
 }
 
 let canvas, ctx, strokes = [], activeStroke = null;
@@ -1040,13 +1302,15 @@ function saveDoodle() {
   resizeCanvas();
   if (!strokes.length) return toast("draw something first");
   const createdAt = Date.now();
-  state.widgets.push({ id: `doodle-${createdAt}`, type: "doodle", value: canvas.toDataURL("image/png"), createdAt });
+  const widget = { id: `doodle-${createdAt}`, type: "doodle", value: canvas.toDataURL("image/webp", .72), createdAt, sender: state.profile || "Michelle" };
+  state.widgets.push(widget);
   strokes = [];
   redrawCanvas();
   saveState();
   renderWidgets();
   renderLatestWidget();
   showLoveNotification(state.widgets[state.widgets.length - 1], "Handwritten widget saved");
+  pushSharedWidget(widget);
   burstAt(window.innerWidth / 2, window.innerHeight - 150, 12);
   toast("handwritten widget saved");
 }
@@ -1065,12 +1329,14 @@ function saveTextWidget() {
   const text = $("#widget-text").value.trim();
   if (!text) return toast("write a tiny note first");
   const createdAt = Date.now();
-  state.widgets.push({ id: `text-${createdAt}`, type: "text", value: text, createdAt });
+  const widget = { id: `text-${createdAt}`, type: "text", value: text, createdAt, sender: state.profile || "Michelle" };
+  state.widgets.push(widget);
   $("#widget-text").value = "";
   saveState();
   renderWidgets();
   renderLatestWidget();
   showLoveNotification(state.widgets[state.widgets.length - 1], "Love widget saved");
+  pushSharedWidget(widget);
   burstAt(window.innerWidth / 2, window.innerHeight - 150, 10);
   toast("text widget saved");
 }
@@ -1082,6 +1348,7 @@ function deleteWidget(id) {
   saveState();
   renderWidgets();
   renderLatestWidget();
+  deleteSharedWidget(id);
   toast("widget deleted");
 }
 
@@ -1122,7 +1389,7 @@ async function showLoveNotification(widget, title = "Moonpie miss-you widget") {
     badge: "./icon.svg",
     tag: "moonpie-widget",
     renotify: true,
-    data: { url: "./?v=28" }
+    data: { url: "./?v=32" }
   };
   try {
     const registration = await navigator.serviceWorker?.ready;
@@ -1141,54 +1408,123 @@ function sendTestNudge() {
   toast(("Notification" in window && Notification.permission === "granted") ? "test nudge sent" : "allow nudges first");
 }
 
-function exportPacket() {
-  const packet = btoa(unescape(encodeURIComponent(JSON.stringify({ widgets: state.widgets }))));
-  navigator.clipboard?.writeText(packet).then(() => toast("packet copied")).catch(() => {
-    $("#import-data").value = packet;
-    toast("packet placed in the box");
-  });
+const WIDGET_API = "../api/widgets?room=moonpie-2504";
+
+function setSyncStatus(message, connected = false) {
+  const status = $("#sync-status");
+  if (!status) return;
+  status.textContent = message;
+  $("#shared-shelf-card")?.classList.toggle("sync-connected", connected);
 }
 
-function importPacket() {
+function mergeWidgets(remoteWidgets = []) {
+  const merged = new Map();
+  [...state.widgets, ...remoteWidgets].forEach(widget => {
+    if (!widget?.id || !widget?.value) return;
+    merged.set(String(widget.id), widget);
+  });
+  state.widgets = [...merged.values()].sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0)).slice(-80);
+  saveState();
+  renderWidgets();
+  renderLatestWidget();
+}
+
+async function fetchSharedWidgets({ quiet = false } = {}) {
   try {
-    const raw = $("#import-data").value.trim();
-    const data = JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if (!Array.isArray(data.widgets)) throw new Error("bad packet");
-    const imported = data.widgets.map((widget, index) => ({
-      ...widget,
-      id: widget.id || `imported-${Date.now()}-${index}`,
-      createdAt: widget.createdAt || Date.now()
-    }));
-    state.widgets = [...state.widgets, ...imported].slice(-40);
-    $("#import-data").value = "";
-    saveState();
-    renderWidgets();
-    renderLatestWidget();
-    showLoveNotification(imported[imported.length - 1], "New love widget arrived");
-    toast("packet imported");
+    const response = await fetch(WIDGET_API, { cache: "no-store", headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("sync unavailable");
+    const data = await response.json();
+    const beforeLatest = state.widgets[state.widgets.length - 1]?.id;
+    const remoteWidgets = Array.isArray(data.widgets) ? data.widgets : [];
+    const remoteIds = new Set(remoteWidgets.map(widget => String(widget.id)));
+    const localOnly = state.widgets.filter(widget => widget?.id && !remoteIds.has(String(widget.id)));
+    mergeWidgets(remoteWidgets);
+    localOnly.slice(-20).forEach(widget => pushSharedWidget(widget));
+    const latest = state.widgets[state.widgets.length - 1];
+    setSyncStatus(`Connected as ${state.profile || "Michelle"}. Notes from both phones appear here automatically.`, true);
+    if (!quiet && latest?.id && latest.id !== beforeLatest && latest.sender !== state.profile) {
+      showLoveNotification(latest, `A new note from ${latest.sender || "your love"}`);
+      toast(`new love note from ${latest.sender || "your person"}`);
+    }
+    return true;
   } catch {
-    toast("that packet did not work");
+    setSyncStatus("Saved safely on this phone. Shared sync will reconnect when the cloud room is available.", false);
+    return false;
   }
+}
+
+async function pushSharedWidget(widget) {
+  try {
+    const response = await fetch(WIDGET_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widget }) });
+    if (!response.ok) throw new Error("sync unavailable");
+    setSyncStatus(`Sent from ${widget.sender}. It will appear on the other phone.`, true);
+  } catch {
+    setSyncStatus("Saved on this phone. I will keep trying to send it to the shared shelf.", false);
+  }
+}
+
+async function deleteSharedWidget(id) {
+  try {
+    await fetch(WIDGET_API, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+  } catch { /* local deletion still succeeds */ }
+}
+
+function setupWidgetSync() {
+  fetchSharedWidgets({ quiet: true });
+  clearInterval(widgetSyncTimer);
+  widgetSyncTimer = setInterval(() => {
+    if (document.visibilityState === "visible") fetchSharedWidgets({ quiet: false });
+  }, 15000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") fetchSharedWidgets({ quiet: false });
+  });
 }
 
 function setupHoldOrb() {
   const orb = $("#hold-orb");
   let timer = null;
+  let pulseTimer = null;
+  const showMessage = () => {
+    if (!handMessages.length) return;
+    if (!Array.isArray(state.handDeck) || state.handDeck.length !== handMessages.length || state.handCursor >= state.handDeck.length) {
+      state.handDeck = shuffledIndexes(handMessages.length, Number(state.lastHandIndex ?? -1));
+      state.handCursor = 0;
+    }
+    const index = state.handDeck[state.handCursor++];
+    state.lastHandIndex = index;
+    const [title, text] = handMessages[index];
+    $("#hand-response-title").textContent = title;
+    $("#hand-response-text").textContent = text;
+    const card = $("#hand-response");
+    card.classList.remove("hidden", "revealed");
+    requestAnimationFrame(() => card.classList.add("revealed"));
+    $("#daily-line").textContent = "Keep holding. I am matching your heartbeat from here.";
+    saveState();
+    navigator.vibrate?.([45, 80, 45, 110, 55]);
+    burstAt(window.innerWidth * .72, 360, 8);
+  };
   const start = () => {
     orb.classList.add("holding");
+    orb.querySelector("span").textContent = "stay";
+    orb.querySelector("small").textContent = "feel the pulse";
     navigator.vibrate?.([25, 30, 25]);
+    pulseTimer = setInterval(() => navigator.vibrate?.(18), 720);
     timer = setTimeout(() => {
-      $("#daily-line").textContent = "There. My hand is in yours for this minute. Stay as long as you need, my love.";
-      toast("still here");
-    }, 850);
+      showMessage();
+    }, 1450);
   };
   const stop = () => {
     orb.classList.remove("holding");
+    orb.querySelector("span").textContent = "hold";
+    orb.querySelector("small").textContent = "my hand";
     clearTimeout(timer);
+    clearInterval(pulseTimer);
   };
   orb.addEventListener("pointerdown", start);
   orb.addEventListener("pointerup", stop);
   orb.addEventListener("pointerleave", stop);
+  orb.addEventListener("pointercancel", stop);
+  $("#another-hand-message")?.addEventListener("click", showMessage);
 }
 
 function setupInstall() {
@@ -1258,8 +1594,11 @@ function setupEvents() {
   document.body.addEventListener("click", event => {
     const open = event.target.closest("[data-open]");
     if (open) openScreen(open.dataset.open);
+    const portal = event.target.closest("[data-world-portal]");
+    if (portal) openFutureWorld(Number(portal.dataset.worldPortal));
     if (event.target.closest("#bloom-garden,#seed-heart")) bloomGarden();
-    if (event.target.closest("#blow-candles")) blowCandles();
+    const birthdayBlow = event.target.closest("#blow-candles");
+    if (birthdayBlow) birthdayBlow.dataset.blowFallback === "true" ? blowCandles() : listenForBirthdayBlow();
     if (event.target.closest("#seal-wish")) sealBirthdayWish();
     if (event.target.closest("#replay-birthday")) replayBirthday();
     const expressive = event.target.closest(".primary-btn,.world-tile,.letter-card,.mood-chip");
@@ -1267,7 +1606,7 @@ function setupEvents() {
   });
   $$(".mood-chip").forEach(btn => btn.addEventListener("click", () => setMood(btn.dataset.mood)));
   $("#new-comfort").addEventListener("click", () => setMood(selectedMood));
-  $("#new-reason").addEventListener("click", () => $("#reason-text").textContent = pick(reasons));
+  $("#new-reason").addEventListener("click", nextReason);
   $("#save-text-widget").addEventListener("click", saveTextWidget);
   $("#clear-text-widget").addEventListener("click", () => $("#widget-text").value = "");
   $("#enable-notifications")?.addEventListener("click", requestLoveNotifications);
@@ -1281,8 +1620,7 @@ function setupEvents() {
   $("#undo-doodle").addEventListener("click", () => { strokes.pop(); redrawCanvas(); });
   $("#expand-doodle")?.addEventListener("click", toggleDoodleExpand);
   $("#save-doodle").addEventListener("click", saveDoodle);
-  $("#export-data").addEventListener("click", exportPacket);
-  $("#import-packet").addEventListener("click", importPacket);
+  $("#refresh-widgets")?.addEventListener("click", () => fetchSharedWidgets({ quiet: false }));
   $("#start-bubbles").addEventListener("click", startBubbleGame);
   $("#next-challenge").addEventListener("click", nextChallenge);
   $("#love-dice").addEventListener("click", rollLoveDice);
@@ -1311,6 +1649,11 @@ function setupEvents() {
     revealNav(1800);
   });
   $("#close-letter").addEventListener("click", () => $("#letter-modal").close());
+  $("#world-modal")?.addEventListener("close", () => {
+    document.body.classList.remove("focus-mode");
+    revealNav(1800);
+  });
+  $("#close-world")?.addEventListener("click", () => $("#world-modal").close());
 }
 
 async function registerServiceWorker() {
@@ -1346,6 +1689,8 @@ function init() {
   setupEvents();
   setupSmartNav();
   setupInstall();
+  setupOpeningRitual();
+  setupWidgetSync();
   const requestedScreen = new URLSearchParams(location.search).get("open");
   if (requestedScreen && worlds.some(world => world.id === requestedScreen)) openScreen(requestedScreen);
   finishIntro();

@@ -10,19 +10,53 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;600;700&family=Italiana&display=swap" rel="stylesheet">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=31">
+  <link rel="stylesheet" href="./styles.css?v=32">
 </head>
-<body>
-  <div class="intro-loader" id="intro-loader" aria-live="polite" aria-label="opening Moonpie's private universe">
-    <div class="loader-card">
-      <div class="loader-orbit" aria-hidden="true">
-        <span>🌸</span><span>💗</span><span>🪷</span><span>❤️</span>
+<body class="app-locked">
+  <section class="entry-gate" id="entry-gate" aria-label="private anniversary passkey">
+    <div class="gate-flower gate-lily-one" aria-hidden="true"></div>
+    <div class="gate-flower gate-lily-two" aria-hidden="true"></div>
+    <form class="gate-card" id="passkey-form">
+      <div class="gate-seal" aria-hidden="true">25<br><small>04</small></div>
+      <p class="eyebrow">one date opens our universe</p>
+      <h2>Hi, my love.</h2>
+      <p>I kept this little world behind the day that became ours.</p>
+      <label for="passkey-input">Our anniversary</label>
+      <input id="passkey-input" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" placeholder="••••" aria-describedby="passkey-hint passkey-error">
+      <p class="gate-hint" id="passkey-hint">Four numbers. One very important day.</p>
+      <div class="profile-choice" aria-label="who is opening the app">
+        <button class="profile-option active" type="button" data-profile="Michelle">Michelle</button>
+        <button class="profile-option" type="button" data-profile="Michael">Michael</button>
       </div>
-      <p class="eyebrow">for Moonpie only</p>
-      <h2>Opening your little universe</h2>
-      <p>folding lilies, letters, games, wishes, and soft places into your phone...</p>
-      <div class="loader-bar" aria-hidden="true"><i></i></div>
-    </div>
+      <p class="gate-error" id="passkey-error" role="alert"></p>
+      <button class="primary-btn wide" type="submit">open what I made for you</button>
+    </form>
+  </section>
+
+  <section class="birthday-opening hidden" id="birthday-opening" aria-label="birthday candle ceremony">
+    <div class="opening-petals" id="opening-petals" aria-hidden="true"></div>
+    <article class="opening-ritual-card">
+      <p class="eyebrow">before your universe opens</p>
+      <div class="opening-cake cake-lit" id="opening-cake" aria-label="birthday cake with five lit candles">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="opening-listen" id="opening-listen">
+        <h2>Make one birthday wish.</h2>
+        <p>Allow the microphone, take a breath, and blow gently toward your phone. I will take care of the flowers.</p>
+        <button class="primary-btn wide" id="allow-microphone" type="button">allow microphone and blow</button>
+        <div class="mic-meter" aria-label="microphone breath meter"><i id="mic-meter-fill"></i></div>
+        <p class="mic-status" id="mic-status">Your microphone only listens for the sound of your breath. Nothing is recorded.</p>
+        <button class="secondary-btn wide hidden" id="tap-blow-fallback" type="button">blow them out with a tap</button>
+      </div>
+      <div class="opening-reveal hidden" id="opening-reveal">
+        <img src="../assets/lily-bouquet.png" alt="A birthday bouquet of pink lilies and roses">
+        <p class="script-kicker">your wish is on its way</p>
+        <h2>Happy birthday, Moonpie.</h2>
+        <p>The candles are out. The lilies are opening. Your little universe is ready.</p>
+        <button class="primary-btn wide" id="enter-universe" type="button">enter your universe</button>
+      </div>
+    </article>
+  </section>
   </div>
 
   <div class="cosmos-bg" aria-hidden="true">
@@ -156,6 +190,13 @@
           <p>I’ll leave tiny things here for you. Doodles, soft reminders, and little “come here” notes.</p>
         </article>
 
+        <article class="hand-response premium-card hidden" id="hand-response" aria-live="polite">
+          <p class="card-label">my hand found yours</p>
+          <h3 id="hand-response-title"></h3>
+          <p id="hand-response-text"></p>
+          <button class="secondary-btn" id="another-hand-message" type="button">hold me a little longer</button>
+        </article>
+
         <article class="phone-bridge premium-card">
           <p class="card-label">keep it close</p>
           <h3>Add Moonpie to your phone</h3>
@@ -177,13 +218,11 @@
 
         <div class="widget-list" id="widget-list"></div>
 
-        <article class="sync-card premium-card">
-          <p class="card-label">two-person mode</p>
-          <h3>Share a love packet</h3>
-          <p>Until live sync exists, copy this packet and send it. Paste theirs here to import.</p>
-          <button class="secondary-btn" id="export-data" type="button">copy packet</button>
-          <textarea id="import-data" rows="2" placeholder="paste packet here"></textarea>
-          <button class="primary-btn" id="import-packet" type="button">import packet</button>
+        <article class="sync-card premium-card" id="shared-shelf-card">
+          <p class="card-label">our shared little shelf</p>
+          <h3>What you leave here reaches the other phone.</h3>
+          <p id="sync-status">Connecting our two phones...</p>
+          <button class="secondary-btn" id="refresh-widgets" type="button">check for a new note</button>
         </article>
       </section>
 
@@ -235,12 +274,12 @@
       </section>
 
       <section class="screen world-screen" id="screen-places" aria-label="places">
-        <div class="section-head"><p class="eyebrow">our future has a map</p><h2>Our Worlds</h2><p>Places waiting for us, written like we are already walking there.</p></div>
+        <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Tap a place and step inside. Every world holds its own gallery, atmosphere, and little life waiting for us.</p></div>
         <div class="place-rail" id="place-rail"></div>
       </section>
 
       <section class="screen world-screen" id="screen-songs" aria-label="songs">
-        <div class="section-head"><p class="eyebrow">listen while you miss me</p><h2>Songs That Are You</h2><p>A soft playlist room, because the old birthday world had music in its bones.</p></div>
+        <div class="section-head"><p class="eyebrow">press play and stay awhile</p><h2>Songs That Are You</h2><p>Real Spotify players, with the reason each song keeps finding its way back to you.</p></div>
         <div class="song-list" id="song-list"></div>
       </section>
 
@@ -302,7 +341,13 @@
     <div id="modal-body"></div>
   </dialog>
 
+  <dialog class="world-dialog" id="world-modal">
+    <button class="modal-close" id="close-world" type="button" aria-label="close world">×</button>
+    <div id="world-modal-body"></div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./app.js?v=31"></script>
+  <script src="./content.js?v=32"></script>
+  <script src="./app.js?v=32"></script>
 </body>
 </html>
