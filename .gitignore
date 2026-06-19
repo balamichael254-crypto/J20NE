@@ -5,3 +5,7 @@ michelle_final_v4.html
 node_modules/
 test-results/
 playwright-report/
+.env
+.env.local
+.env.*.local
+!.env.example

@@ -3,7 +3,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -1302,7 +1302,7 @@ function saveDoodle() {
   resizeCanvas();
   if (!strokes.length) return toast("draw something first");
   const createdAt = Date.now();
-  const widget = { id: `doodle-${createdAt}`, type: "doodle", value: canvas.toDataURL("image/webp", .72), createdAt, sender: state.profile || "Michelle" };
+  const widget = { id: `doodle-${createdAt}`, type: "doodle", value: canvas.toDataURL("image/webp", .72), createdAt, sender: state.profile || "Michelle", syncPending: true };
   state.widgets.push(widget);
   strokes = [];
   redrawCanvas();
@@ -1329,7 +1329,7 @@ function saveTextWidget() {
   const text = $("#widget-text").value.trim();
   if (!text) return toast("write a tiny note first");
   const createdAt = Date.now();
-  const widget = { id: `text-${createdAt}`, type: "text", value: text, createdAt, sender: state.profile || "Michelle" };
+  const widget = { id: `text-${createdAt}`, type: "text", value: text, createdAt, sender: state.profile || "Michelle", syncPending: true };
   state.widgets.push(widget);
   $("#widget-text").value = "";
   saveState();
@@ -1417,9 +1417,9 @@ function setSyncStatus(message, connected = false) {
   $("#shared-shelf-card")?.classList.toggle("sync-connected", connected);
 }
 
-function mergeWidgets(remoteWidgets = []) {
+function mergeWidgets(remoteWidgets = [], pendingWidgets = []) {
   const merged = new Map();
-  [...state.widgets, ...remoteWidgets].forEach(widget => {
+  [...remoteWidgets, ...pendingWidgets].forEach(widget => {
     if (!widget?.id || !widget?.value) return;
     merged.set(String(widget.id), widget);
   });
@@ -1436,10 +1436,12 @@ async function fetchSharedWidgets({ quiet = false } = {}) {
     const data = await response.json();
     const beforeLatest = state.widgets[state.widgets.length - 1]?.id;
     const remoteWidgets = Array.isArray(data.widgets) ? data.widgets : [];
-    const remoteIds = new Set(remoteWidgets.map(widget => String(widget.id)));
-    const localOnly = state.widgets.filter(widget => widget?.id && !remoteIds.has(String(widget.id)));
-    mergeWidgets(remoteWidgets);
-    localOnly.slice(-20).forEach(widget => pushSharedWidget(widget));
+    const pendingWidgets = state.widgetCloudMigrated
+      ? state.widgets.filter(widget => widget?.syncPending)
+      : state.widgets.map(widget => ({ ...widget, syncPending: true }));
+    state.widgetCloudMigrated = true;
+    mergeWidgets(remoteWidgets, pendingWidgets);
+    pendingWidgets.slice(-20).forEach(widget => pushSharedWidget(widget));
     const latest = state.widgets[state.widgets.length - 1];
     setSyncStatus(`Connected as ${state.profile || "Michelle"}. Notes from both phones appear here automatically.`, true);
     if (!quiet && latest?.id && latest.id !== beforeLatest && latest.sender !== state.profile) {
@@ -1457,6 +1459,9 @@ async function pushSharedWidget(widget) {
   try {
     const response = await fetch(WIDGET_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widget }) });
     if (!response.ok) throw new Error("sync unavailable");
+    const local = state.widgets.find(item => String(item.id) === String(widget.id));
+    if (local) local.syncPending = false;
+    saveState();
     setSyncStatus(`Sent from ${widget.sender}. It will appear on the other phone.`, true);
   } catch {
     setSyncStatus("Saved on this phone. I will keep trying to send it to the shared shelf.", false);

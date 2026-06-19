@@ -10,25 +10,25 @@ python -m http.server 8765 --bind 127.0.0.1
 
 Open `http://127.0.0.1:8765/miss-you-app/`. The anniversary passkey is `2504`.
 
-## Shared widgets on Vercel
+## Shared widgets with Supabase
 
-The web app stores every widget locally first. Cross-device sync uses `api/widgets.js` and an Upstash Redis store attached to the Vercel project.
+Every widget is saved on the current phone first. Cross-device sync uses the Vercel function at `api/widgets.js` and a Supabase Postgres table.
 
-Set either environment-variable pair in Vercel:
-
-```text
-KV_REST_API_URL
-KV_REST_API_TOKEN
-```
-
-or:
+1. Create or open the Supabase project.
+2. Open **SQL Editor**, paste `supabase/setup.sql`, and run it once.
+3. In **Project Settings > API**, copy the project URL and service-role key.
+4. Add these server-side environment variables to the Vercel project for Production, Preview, and Development:
 
 ```text
-UPSTASH_REDIS_REST_URL
-UPSTASH_REDIS_REST_TOKEN
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Redeploy after adding the variables. The app then checks the shared shelf every 15 seconds and whenever it returns to the foreground. GitHub Pages can host the static experience, but it cannot run the sync API; use the Vercel deployment for two-phone widgets.
+5. Redeploy the latest commit.
+
+The service-role key is used only inside the Vercel function and must never be added to browser JavaScript or committed to Git. Row Level Security is enabled without public policies, so browser clients cannot read the table directly. The app checks the shared shelf every 15 seconds and whenever it returns to the foreground.
+
+The old GitHub Pages workflow was removed because Pages cannot execute the sync API. Vercel should deploy directly from the connected GitHub repository.
 
 ## Verification
 

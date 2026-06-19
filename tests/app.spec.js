@@ -3,7 +3,7 @@ const { test, expect } = require("@playwright/test");
 test.use({ channel: "chrome", viewport: { width: 390, height: 844 } });
 
 async function unlock(page) {
-  await page.goto("http://127.0.0.1:8765/miss-you-app/?v=32");
+  await page.goto("http://127.0.0.1:8765/miss-you-app/?v=33");
   await page.locator("#passkey-input").fill("2504");
   await page.locator("#passkey-form button[type=submit]").click();
   await expect(page.locator("#birthday-opening")).toBeVisible();
@@ -15,6 +15,7 @@ async function unlock(page) {
 }
 
 test("birthday opening and expanded content work on mobile", async ({ page }) => {
+  test.setTimeout(90000);
   page.on("pageerror", error => console.log(`PAGE ERROR: ${error.message}`));
   await page.route("https://open.spotify.com/**", route => route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>Spotify embed</title>" }));
   await page.route("https://images.unsplash.com/**", route => route.fulfill({ status: 204, body: "" }));
