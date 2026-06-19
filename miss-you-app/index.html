@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#13071d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Moonpie">
+  <title>Moonpie - private universe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;600;700&family=Italiana&display=swap" rel="stylesheet">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=28">
+</head>
+<body>
+  <div class="intro-loader" id="intro-loader" aria-live="polite" aria-label="opening Moonpie's private universe">
+    <div class="loader-card">
+      <div class="loader-orbit" aria-hidden="true">
+        <span>🌸</span><span>💗</span><span>🪷</span><span>❤️</span>
+      </div>
+      <p class="eyebrow">for Moonpie only</p>
+      <h2>Opening her little universe</h2>
+      <p>folding lilies, letters, games, wishes, and soft places into her phone...</p>
+      <div class="loader-bar" aria-hidden="true"><i></i></div>
+    </div>
+  </div>
+
+  <div class="cosmos-bg" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="phone-shell">
+    <header class="topbar">
+      <span class="topbar-spacer" aria-hidden="true"></span>
+      <div>
+        <p class="eyebrow">Michelle's private universe</p>
+        <h1>Open when you miss me</h1>
+      </div>
+      <span class="topbar-spacer" aria-hidden="true"></span>
+    </header>
+
+    <main>
+      <section class="screen active" id="screen-home" aria-label="home">
+        <section class="opening-garden home-garden" aria-label="birthday garden preview">
+          <div class="garden-copy">
+            <p class="script-kicker">for the love of my life</p>
+            <h2>Moonpie</h2>
+            <p>This is not just an app. It is the little garden from the birthday universe, folded into her phone.</p>
+            <button class="primary-btn" data-open="garden" type="button">open the garden</button>
+          </div>
+        </section>
+
+        <article class="hero-card">
+          <div class="hero-copy">
+            <p class="mini">tap once, breathe twice</p>
+            <h2>Hi, my Moonpie.</h2>
+            <p id="daily-line">If missing me feels loud today, come sit here for a minute. I left the light on.</p>
+          </div>
+          <button class="pulse-orb" id="hold-orb" type="button" aria-label="hold my hand">
+            <span>hold</span>
+            <small>my hand</small>
+          </button>
+        </article>
+
+        <div class="mood-row" aria-label="choose how you feel">
+          <button class="mood-chip active" data-mood="soft" type="button">soft</button>
+          <button class="mood-chip" data-mood="heavy" type="button">heavy</button>
+          <button class="mood-chip" data-mood="sleepy" type="button">sleepy</button>
+          <button class="mood-chip" data-mood="clingy" type="button">clingy</button>
+        </div>
+
+        <article class="comfort-card premium-card">
+          <div class="card-label">right now</div>
+          <h3 id="comfort-title">A tiny rescue note</h3>
+          <p id="comfort-note"></p>
+          <button class="primary-btn" id="new-comfort" type="button">give me another</button>
+        </article>
+
+        <section class="home-section">
+          <div class="section-row">
+            <div>
+              <p class="eyebrow">the whole universe</p>
+              <h2>All the rooms</h2>
+            </div>
+            <button class="pill-link" data-open="atlas" type="button">open atlas</button>
+          </div>
+          <div class="world-strip" id="home-worlds"></div>
+        </section>
+
+        <article class="widget-preview" id="latest-widget"></article>
+      </section>
+
+      <section class="screen" id="screen-atlas" aria-label="atlas">
+        <div class="section-head">
+          <p class="eyebrow">not basic cards</p>
+          <h2>Her universe atlas</h2>
+          <p>Every section from the birthday world, reshaped for phone hands and missing-you moments.</p>
+        </div>
+        <div class="atlas-grid" id="atlas-grid"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-garden" aria-label="garden">
+        <div class="section-head garden-head">
+          <p class="eyebrow">the original magic, restored</p>
+          <h2>Her Birthday Garden</h2>
+          <p>Tree, lilies, bouquet, falling petals, and the soft little world that made the original feel alive.</p>
+        </div>
+        <article class="garden-stage premium-card" id="garden-stage">
+          <div class="garden-copy">
+            <p class="script-kicker">I planted one small thing here for you.</p>
+            <h3>Tap the heart. Let it bloom.</h3>
+            <p>The tree grows into a heart because subtlety left the room the moment I started loving you.</p>
+            <button class="primary-btn" id="bloom-garden" type="button">bloom the heart tree</button>
+          </div>
+          <div class="heart-tree big-tree" aria-label="heart tree that grows into bloom">
+            <canvas class="love-tree-canvas" id="garden-tree-canvas" aria-label="animated heart tree"></canvas>
+            <div class="tree-sparkle-field" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <button class="seed-heart" id="seed-heart" type="button" aria-label="bloom tree">&#9829;</button>
+          </div>
+        </article>
+        <article class="bouquet-card premium-card">
+          <img class="bouquet-img" src="../assets/lily-bouquet.png" alt="A bouquet of pink lilies and roses">
+          <div>
+            <p class="card-label">real flowers</p>
+            <h3>For you, Moonpie.</h3>
+            <p>Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen" id="screen-doodles" aria-label="doodles">
+        <div class="section-head">
+          <p class="eyebrow">tiny notes from me</p>
+          <h2>Widget studio</h2>
+          <p>Little notes and doodles she can come back to when missing me gets loud.</p>
+        </div>
+
+        <div class="draw-card premium-card">
+          <div class="draw-tools">
+            <span>handwrite one</span>
+            <input id="ink-color" type="color" value="#9b4de3" aria-label="ink color">
+            <button class="secondary-btn tiny icon-btn" id="expand-doodle" type="button" aria-label="make drawing bigger">⛶</button>
+            <button class="secondary-btn tiny" id="undo-doodle" type="button">undo</button>
+            <button class="secondary-btn tiny" id="clear-doodle" type="button">clear</button>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="doodle-canvas" aria-label="drawing canvas"></canvas>
+            <div class="canvas-hint">draw here, babyy</div>
+          </div>
+          <button class="primary-btn wide" id="save-doodle" type="button">save handwritten widget</button>
+        </div>
+
+        <article class="widget-live premium-card">
+          <p class="card-label">saved for later</p>
+          <h3>Her pocket comfort shelf</h3>
+          <p>I’ll leave tiny things here for you. Doodles, soft reminders, and little “come here” notes.</p>
+        </article>
+
+        <article class="phone-bridge premium-card">
+          <p class="card-label">keep it close</p>
+          <h3>Add Moonpie to your phone</h3>
+          <p>So when you miss me, you do not have to search. You just open this little place I made for you.</p>
+          <div class="phone-actions">
+            <button class="secondary-btn" id="phone-install" type="button">add to phone</button>
+            <button class="primary-btn" id="enable-notifications" type="button">allow nudges</button>
+          </div>
+          <button class="secondary-btn wide" id="send-test-nudge" type="button">send test miss-you nudge</button>
+          <p class="phone-status" id="phone-status">Waiting to be added to your phone.</p>
+        </article>
+
+        <label class="field-label" for="widget-text">typed widget</label>
+        <textarea id="widget-text" rows="3" maxlength="160" placeholder="I miss you too, babyy. Drink water. I am still yours."></textarea>
+        <div class="button-row">
+          <button class="primary-btn" id="save-text-widget" type="button">save text widget</button>
+          <button class="secondary-btn" id="clear-text-widget" type="button">clear</button>
+        </div>
+
+        <div class="widget-list" id="widget-list"></div>
+
+        <article class="sync-card premium-card">
+          <p class="card-label">two-person mode</p>
+          <h3>Share a love packet</h3>
+          <p>Until live sync exists, copy this packet and send it. Paste theirs here to import.</p>
+          <button class="secondary-btn" id="export-data" type="button">copy packet</button>
+          <textarea id="import-data" rows="2" placeholder="paste packet here"></textarea>
+          <button class="primary-btn" id="import-packet" type="button">import packet</button>
+        </article>
+      </section>
+
+      <section class="screen world-screen" id="screen-games" aria-label="games">
+        <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>Small games for when she wants something cute to tap instead of just staring at the chat.</p></div>
+        <article class="game-card premium-card">
+          <div class="game-topline">
+            <div>
+              <p class="card-label">pop the feelings</p>
+              <h3>Emoji Bubble Pop</h3>
+            </div>
+            <strong id="bubble-score">0</strong>
+          </div>
+          <p>Pop as many hearts, flowers, kisses, and little moons as you can before the timer ends.</p>
+          <div class="bubble-field" id="bubble-field" aria-label="emoji bubble game"></div>
+          <button class="primary-btn wide" id="start-bubbles" type="button">start 20 second round</button>
+        </article>
+
+        <article class="challenge-card premium-card">
+          <p class="card-label">our little dare jar</p>
+          <h3 id="challenge-title">Tonight's challenge</h3>
+          <p id="challenge-text"></p>
+          <div class="button-row">
+            <button class="secondary-btn" id="next-challenge" type="button">new challenge</button>
+            <button class="primary-btn" id="love-dice" type="button">roll love dice</button>
+          </div>
+          <p class="dice-result" id="dice-result">Roll it when you want a tiny mission.</p>
+        </article>
+      </section>
+
+      <section class="screen world-screen" id="screen-letters" aria-label="letters">
+        <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Longer pieces for when she needs your voice in paragraph form.</p></div>
+        <div class="letter-list" id="letter-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-poems" aria-label="poems">
+        <div class="section-head"><p class="eyebrow">after midnight</p><h2>Poems</h2><p>Small poems with room to breathe.</p></div>
+        <div class="poem-list" id="poem-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-notices" aria-label="tiny things">
+        <div class="section-head"><p class="eyebrow">I notice everything</p><h2>Tiny Things</h2><p>All the little details that make her her.</p></div>
+        <div class="notice-list" id="notice-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-day" aria-label="one perfect day">
+        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>A day she can scroll through like it already belongs to both of you.</p></div>
+        <div class="day-timeline" id="day-timeline"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-places" aria-label="places">
+        <div class="section-head"><p class="eyebrow">our future has a map</p><h2>Our Worlds</h2><p>Places waiting for us, written like we are already walking there.</p></div>
+        <div class="place-rail" id="place-rail"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-songs" aria-label="songs">
+        <div class="section-head"><p class="eyebrow">listen while you miss me</p><h2>Songs That Are You</h2><p>A soft playlist room, because the old birthday world had music in its bones.</p></div>
+        <div class="song-list" id="song-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-promises" aria-label="promises">
+        <div class="section-head"><p class="eyebrow">kept here for you</p><h2>Promises</h2><p>Not vague romance. Specific things I intend to keep.</p></div>
+        <div class="promise-list" id="promise-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-distance" aria-label="distance">
+        <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>Little beacons for when the distance starts acting too powerful.</p></div>
+        <div class="distance-globe premium-card"><div class="orbit-dot one"></div><div class="orbit-dot two"></div><div class="orbit-line"></div><p>Far is a measurement. Us is a decision.</p></div>
+        <div class="distance-list" id="distance-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-reasons" aria-label="reasons">
+        <div class="section-head"><p class="eyebrow">pluck one from the sky</p><h2>100 Reasons</h2></div>
+        <article class="reason-oracle premium-card">
+          <div class="star">✦</div>
+          <p id="reason-text"></p>
+          <button class="primary-btn" id="new-reason" type="button">another reason</button>
+        </article>
+        <div class="reason-stack" id="reason-stack"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-memory" aria-label="memories">
+        <div class="section-head"><p class="eyebrow">the bits I keep</p><h2>Our Little World</h2><p>Memory polaroids for the tiny private mythology.</p></div>
+        <div class="memory-list" id="memory-list"></div>
+      </section>
+
+      <section class="screen world-screen" id="screen-birthday" aria-label="birthday wish">
+        <div class="section-head"><p class="eyebrow">save this one for last</p><h2>Birthday Wish</h2></div>
+        <article class="birthday-card premium-card" id="birthday-wish"></article>
+      </section>
+
+      <section class="screen" id="screen-care" aria-label="care">
+        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Emergency tenderness</h2></div>
+        <div class="care-list" id="care-list"></div>
+        <article class="promise-card premium-card">
+          <p class="card-label">promise</p>
+          <h3>I am not gone.</h3>
+          <p>I am in the next message, the next call, the future kitchen, the airport hug, the ordinary morning we are still walking toward.</p>
+        </article>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="main navigation">
+      <button class="tab active" data-open="home" type="button">🏠<span>home</span></button>
+      <button class="tab" data-open="atlas" type="button">🪐<span>atlas</span></button>
+      <button class="tab" data-open="doodles" type="button">✍️<span>create</span></button>
+      <button class="tab" data-open="care" type="button">🫶<span>care</span></button>
+      <button class="tab" data-open="birthday" type="button">🎂<span>wish</span></button>
+    </nav>
+  </div>
+
+  <dialog id="letter-modal">
+    <button class="modal-close" id="close-letter" type="button" aria-label="close letter">×</button>
+    <p class="eyebrow">letter</p>
+    <h2 id="modal-title"></h2>
+    <div id="modal-body"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js?v=28"></script>
+</body>
+</html>

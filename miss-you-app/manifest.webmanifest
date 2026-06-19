@@ -1,0 +1,33 @@
+{
+  "name": "Moonpie - When You Miss Me",
+  "short_name": "Moonpie",
+  "description": "A private little app for the moments Michelle misses you.",
+  "start_url": "./?v=28",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#160821",
+  "theme_color": "#160821",
+  "shortcuts": [
+    {
+      "name": "Open Widget Studio",
+      "short_name": "Widgets",
+      "url": "./?open=doodles",
+      "description": "Write or read a tiny love widget."
+    },
+    {
+      "name": "Open When Missing Me",
+      "short_name": "Miss Me",
+      "url": "./?open=care",
+      "description": "A soft place for missing-you moments."
+    }
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
