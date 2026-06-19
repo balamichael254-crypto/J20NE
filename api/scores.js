@@ -12,6 +12,16 @@ const bodyOf = request => {
   try { return JSON.parse(request.body); } catch { return {}; }
 };
 
+const storageFailureCode = error => {
+  const message = String(error?.message || error).toLowerCase();
+  if (/401|403|invalid api key|invalid jwt|jwt expired/.test(message)) return "supabase_auth_rejected";
+  if (/pgrst205|42p01|relation .* does not exist|404/.test(message)) return "supabase_table_missing";
+  if (/42501|permission denied|row-level security/.test(message)) return "supabase_permission_denied";
+  if (/fetch failed|enotfound|econnrefused|timeout/.test(message)) return "supabase_unreachable";
+  if (/400|pgrst100|failed to parse/.test(message)) return "supabase_query_rejected";
+  return "supabase_request_failed";
+};
+
 module.exports = async function handler(request, response) {
   const supabaseUrl = String(process.env.SUPABASE_URL || "").replace(/\/$/, "");
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -77,6 +87,6 @@ module.exports = async function handler(request, response) {
     return json(response, 405, { error: "method not allowed" });
   } catch (error) {
     console.error("bubble scoreboard failed", error);
-    return json(response, 500, { error: "scoreboard unavailable" });
+    return json(response, 503, { error: "scoreboard unavailable", reason: storageFailureCode(error) });
   }
 };
