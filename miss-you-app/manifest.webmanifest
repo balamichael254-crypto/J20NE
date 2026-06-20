@@ -2,12 +2,12 @@
   "name": "Moonpie - When You Miss Me",
   "short_name": "Moonpie",
   "description": "A private little universe I made for the moments you miss me.",
-  "start_url": "./?v=32",
+  "start_url": "./?v=35",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#160821",
-  "theme_color": "#160821",
+  "background_color": "#d9c2ee",
+  "theme_color": "#d9c2ee",
   "shortcuts": [
     {
       "name": "Open Widget Studio",

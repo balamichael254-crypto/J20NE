@@ -3,7 +3,7 @@ const { test, expect } = require("@playwright/test");
 test.use({ channel: "chrome", viewport: { width: 390, height: 844 } });
 
 async function unlock(page) {
-  await page.goto("http://127.0.0.1:8765/miss-you-app/?v=34");
+  await page.goto("http://127.0.0.1:8765/miss-you-app/?v=35");
   await page.locator("#passkey-input").fill("2502");
   await page.locator("#passkey-form button[type=submit]").click();
   await expect(page.locator("#birthday-opening")).toBeVisible();
@@ -19,7 +19,6 @@ test("birthday opening and expanded content work on mobile", async ({ page }) =>
   page.on("pageerror", error => console.log(`PAGE ERROR: ${error.message}`));
   await page.route("https://open.spotify.com/**", route => route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>Spotify embed</title>" }));
   await page.route("https://images.unsplash.com/**", route => route.fulfill({ status: 204, body: "" }));
-  await page.route("https://loremflickr.com/**", route => route.fulfill({ status: 204, body: "" }));
   await unlock(page);
 
   await page.locator('[data-open="places"]').first().click();
@@ -32,6 +31,10 @@ test("birthday opening and expanded content work on mobile", async ({ page }) =>
 
   await page.locator('[data-open="poems"]').first().evaluate(element => element.click());
   await expect(page.locator(".poem-card")).toHaveCount(12);
+  await page.reload();
+  await expect(page.locator("#entry-gate")).toHaveCount(0);
+  await expect(page.locator("#birthday-opening")).toHaveCount(0);
+  await expect(page.locator("#screen-poems")).toBeVisible();
 
   await page.locator('[data-open="letters"]').first().evaluate(element => element.click());
   await expect(page.locator(".letter-card")).toHaveCount(16);
@@ -55,7 +58,6 @@ test("final personal copy, care room, back navigation, and bubble rush work", as
   test.setTimeout(90000);
   await page.route("**/api/widgets**", route => route.fulfill({ status: 200, contentType: "application/json", body: '{"widgets":[]}' }));
   await page.route("**/api/scores**", route => route.fulfill({ status: 200, contentType: "application/json", body: '{"scores":[]}' }));
-  await page.route("https://loremflickr.com/**", route => route.fulfill({ status: 204, body: "" }));
   await unlock(page);
 
   await page.locator('[data-open="notices"]').first().evaluate(element => element.click());

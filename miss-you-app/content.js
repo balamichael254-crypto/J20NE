@@ -1,10 +1,12 @@
 (function () {
   const photo = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1100&q=78`;
-  const flickr = (tags, lock) => `https://loremflickr.com/1100/820/${tags}?lock=${lock}`;
-  const romanticGallery = (hero, tags, seed) => [
-    hero ? photo(hero) : flickr(`${tags},couple`, seed),
-    flickr(`${tags},romantic,couple`, seed + 1),
-    flickr(`${tags},love,together`, seed + 2)
+  // Fixed photographs keep every world accurate. Random image feeds repeatedly
+  // mixed countries and people, which is unacceptable in a personal keepsake.
+  const romanticGallery = hero => hero ? [photo(hero)] : [];
+  const airportGallery = [
+    "https://live.staticflickr.com/4751/25470314767_7a113c2653_b.jpg",
+    "https://live.staticflickr.com/5065/5602632014_9b503a4360_b.jpg",
+    "https://live.staticflickr.com/8205/8222283792_cf90837186_b.jpg"
   ];
 
   const galleries = {
@@ -25,7 +27,7 @@
   });
 
   const worlds = [
-    world("The First Airport Hug", "where distance finally loses", "The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.", romanticGallery(null, "airport,reunion,hug", 250), [
+    world("The First Airport Hug", "where distance finally loses", "The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.", airportGallery, [
       ["The sighting", "I find you in the crowd and forget how walking normally works. You smile, I laugh from pure disbelief, and the room becomes background."],
       ["The hug", "No polite little greeting. I hold you until both of us stop feeling like people who live inside a screen."],
       ["The first drive", "Your hand stays in mine between the seats. We keep looking at each other because being real is still surprising."],

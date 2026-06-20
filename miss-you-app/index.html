@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;600;700&family=Italiana&display=swap" rel="stylesheet">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=34">
+  <link rel="stylesheet" href="./styles.css?v=35">
 </head>
 <body class="app-locked">
   <section class="entry-gate" id="entry-gate" aria-label="private anniversary passkey">
@@ -64,6 +64,10 @@
   </div>
 
   <div class="phone-shell">
+    <div class="mobile-atmosphere" aria-hidden="true">
+      <span class="liquid-orbit liquid-orbit-one"></span><span class="liquid-orbit liquid-orbit-two"></span><span class="liquid-orbit liquid-orbit-three"></span>
+      <i class="flora-bubble flora-one">🪷</i><i class="flora-bubble flora-two">🌹</i><i class="flora-bubble flora-three">🌷</i><i class="flora-bubble flora-four">🪻</i><i class="flora-bubble flora-five">🌸</i><i class="flora-bubble flora-six">🌺</i>
+    </div>
     <header class="topbar">
       <button class="topbar-back hidden" id="back-button" type="button" aria-label="go back"><span>←</span><small>back</small></button>
       <div>
@@ -199,7 +203,7 @@
 
         <article class="phone-bridge premium-card">
           <p class="card-label">keep it close</p>
-          <h3>Add Moonpie to your phone</h3>
+          <h3>I love you</h3>
           <p>So when you miss me, you do not have to search. You just open this little place I made for you.</p>
           <div class="phone-actions">
             <button class="secondary-btn" id="phone-install" type="button">add to phone</button>
@@ -236,7 +240,8 @@
             </div>
             <strong id="bubble-score">0</strong>
           </div>
-          <p>Thirty seconds. The bubbles become faster every ten seconds. Pink hearts are one point, roses are three, and broken hearts steal two. Build a combo and beat the other phone.</p>
+          <p>Watch the cue, then catch only that kind. The grid accelerates, wrong and empty taps cost points, and every miss breaks your combo. Beat the other phone cleanly.</p>
+          <p class="bubble-cue" id="bubble-cue">Catch pink hearts now</p>
           <div class="bubble-hud" aria-live="polite">
             <span><small>time</small><strong id="bubble-time">30.0</strong></span>
             <span><small>combo</small><strong id="bubble-combo">x0</strong></span>
@@ -379,7 +384,7 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./content.js?v=34"></script>
-  <script src="./app.js?v=34"></script>
+  <script src="./content.js?v=35"></script>
+  <script src="./app.js?v=35"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
-const CACHE_NAME = "moonpie-miss-you-v34";
+const CACHE_NAME = "moonpie-miss-you-v35";
 const ASSETS = [
   "./",
   "./index.html",
-  "./?v=34",
-  "./styles.css?v=34",
-  "./content.js?v=34",
-  "./app.js?v=34",
+  "./?v=35",
+  "./styles.css?v=35",
+  "./content.js?v=35",
+  "./app.js?v=35",
   "./manifest.webmanifest",
   "./icon.svg"
 ];
@@ -24,6 +24,14 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
+      return response;
+    }).catch(() => caches.match("./index.html")));
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => caches.match("./index.html")))
   );

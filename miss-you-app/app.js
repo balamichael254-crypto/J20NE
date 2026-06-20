@@ -3,7 +3,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "letters", bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -506,18 +506,20 @@ function flowerPageTransition() {
   if (document.body.classList.contains("app-locked") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const veil = document.createElement("div");
   veil.className = "page-flower-transition";
-  const flowers = ["🌸", "🌸", "🌸", "🪷", "🌹", "🌸", "💗", "🌸"];
+  const flowers = ["🌸", "🌹", "🌷", "🪻", "🪷", "🌺", "💗", "🌸", "🌹", "🌷"];
   flowers.forEach((flower, index) => {
     const petal = document.createElement("i");
     petal.textContent = flower;
-    petal.style.left = `${5 + index * 12}%`;
-    petal.style.setProperty("--delay", `${index * .035}s`);
-    petal.style.setProperty("--fall", `${1.25 + (index % 3) * .15}s`);
-    petal.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (20 + index * 3)}px`);
+    petal.className = `flower-flight flight-${index % 4}`;
+    petal.style.left = `${4 + index * 10}%`;
+    petal.style.top = `${12 + (index % 3) * 24}%`;
+    petal.style.setProperty("--delay", `${index * .025}s`);
+    petal.style.setProperty("--size", `${2.3 + (index % 4) * .55}rem`);
+    petal.style.setProperty("--sway", `${(index % 2 ? 1 : -1) * (80 + index * 7)}px`);
     veil.appendChild(petal);
   });
   document.body.appendChild(veil);
-  setTimeout(() => veil.remove(), 1350);
+  setTimeout(() => veil.remove(), 1800);
 }
 
 function openScreen(name, options = {}) {
@@ -631,7 +633,7 @@ function renderPlaces() {
   const list = futureWorlds.length ? futureWorlds : places.map(([name, image, intro]) => ({ name, intro, eyebrow: "future coordinate", photos: [image], moments: [] }));
   $("#place-rail").innerHTML = list.map((place, index) => `
     <button class="world-portal" type="button" data-world-portal="${index}">
-      <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="lazy">
+      <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
       <span class="world-portal-copy">
         <span class="portal-number">world ${String(index + 1).padStart(2, "0")}</span>
         <h3>${escapeHtml(place.name)}</h3>
@@ -651,7 +653,7 @@ function openFutureWorld(index) {
       <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of twenty futures I keep imagining with you.</p></div>
     </section>
     <p class="world-intro">${escapeHtml(place.intro)}</p>
-    <div class="world-gallery">${place.photos.map((image, photoIndex) => `<img src="${escapeHtml(image)}" alt="${escapeHtml(place.name)} scene ${photoIndex + 1}" loading="lazy">`).join("")}</div>
+    ${place.photos.length > 1 ? `<div class="world-gallery gallery-count-${place.photos.length}">${place.photos.map((image, photoIndex) => `<figure><img src="${escapeHtml(image)}" alt="${escapeHtml(place.name)} scene ${photoIndex + 1}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>${photoIndex === 0 ? "the world waiting for us" : "the moment distance finally loses"}</figcaption></figure>`).join("")}</div>` : ""}
     <div class="world-moments">${place.moments.map(([title, text], momentIndex) => `<article class="world-moment"><span>experience ${String(momentIndex + 1).padStart(2, "0")}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div>
   `;
   document.body.classList.add("focus-mode");
@@ -755,6 +757,27 @@ function buildGardenPetals() {
     });
   }
 
+  const branchCanopy = [
+    [78, 151], [94, 187], [111, 219], [246, 129], [231, 163], [212, 202],
+    [114, 98], [126, 129], [207, 70], [198, 105], [146, 64], [180, 54],
+    [95, 232], [118, 250], [244, 212], [222, 233]
+  ];
+  branchCanopy.forEach(([anchorX, anchorY], branchIndex) => {
+    for (let i = 0; i < 10; i += 1) {
+      petals.push({
+        x: anchorX + (rand() - .5) * 34,
+        y: anchorY + (rand() - .5) * 30,
+        fromX: 158 + (rand() - .5) * 24,
+        fromY: 320 - rand() * 58,
+        size: 5.2 + rand() * 7.2,
+        rot: (rand() - .5) * 1.9,
+        color: colors[(branchIndex + i) % colors.length],
+        delay: .12 + rand() * .44,
+        shine: rand() > .58
+      });
+    }
+  });
+
   return petals;
 }
 
@@ -798,7 +821,7 @@ function drawCurve(ctx, curve, progress, width, color) {
   ctx.restore();
 }
 
-function drawHeartPetal(ctx, x, y, size, rotation, color, alpha, scale = 1) {
+function drawHeartPetal(ctx, x, y, size, rotation, color, alpha, scale = 1, glow = false) {
   if (alpha <= 0) return;
   const s = size * scale;
   ctx.save();
@@ -807,6 +830,10 @@ function drawHeartPetal(ctx, x, y, size, rotation, color, alpha, scale = 1) {
   ctx.scale(s, s);
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
+  if (glow) {
+    ctx.shadowColor = color;
+    ctx.shadowBlur = .85;
+  }
   ctx.strokeStyle = "rgba(255,255,255,.24)";
   ctx.lineWidth = .08;
   ctx.beginPath();
@@ -869,7 +896,7 @@ function drawGardenTree(progress = 0.16) {
       if (appear <= 0) return;
       const x = petal.fromX + (petal.x - petal.fromX) * appear + Math.sin(performance.now() / 650 + index) * wind * appear * .18;
       const y = petal.fromY + (petal.y - petal.fromY) * appear - Math.sin(appear * Math.PI) * 22;
-      drawHeartPetal(ctx, x, y, petal.size, petal.rot + wind * .016, petal.color, .1 + appear * .9, .28 + appear * .8);
+      drawHeartPetal(ctx, x, y, petal.size, petal.rot + wind * .016, petal.color, .1 + appear * .9, .28 + appear * .8, petal.shine);
       if (petal.shine && appear > .82) {
         drawHeartPetal(ctx, x - 1.5, y - 1.8, petal.size * .38, petal.rot, "#fff0f4", (appear - .82) * 1.2, .75);
       }
@@ -894,10 +921,14 @@ function animateGardenTree() {
   const start = performance.now();
   const duration = GARDEN_BLOOM_DURATION;
   gardenProgress = 0;
+  let lastPaint = -Infinity;
 
   function tick(now) {
     gardenProgress = easeInOut((now - start) / duration);
-    drawGardenTree(gardenProgress);
+    if (now - lastPaint >= 32 || gardenProgress >= 1) {
+      drawGardenTree(gardenProgress);
+      lastPaint = now;
+    }
     if (gardenProgress < 1) {
       gardenAnimationFrame = requestAnimationFrame(tick);
     } else {
@@ -1034,13 +1065,18 @@ let bubbleHits = 0;
 let bubbleMisses = 0;
 let bubbleCombo = 0;
 let bubbleMaxCombo = 0;
+let bubbleWrongTaps = 0;
+let bubbleOccupiedSlots = new Set();
+let bubbleTarget = "heart";
 const SCORE_API = "../api/scores?room=moonpie-score-v1";
 
 function updateBubbleHud() {
   $("#bubble-score").textContent = String(bubbleScore);
   $("#bubble-combo").textContent = `x${bubbleCombo}`;
-  const attempts = bubbleHits + bubbleMisses;
+  const attempts = bubbleHits + bubbleMisses + bubbleWrongTaps;
   $("#bubble-accuracy").textContent = `${attempts ? Math.round((bubbleHits / attempts) * 100) : 100}%`;
+  const cue = $("#bubble-cue");
+  if (cue) cue.textContent = bubbleTarget === "flower" ? "Catch flowers now" : "Catch pink hearts now";
 }
 
 function renderBubbleLeaderboard(scores = {}) {
@@ -1096,6 +1132,9 @@ function startBubbleGame() {
   bubbleMisses = 0;
   bubbleCombo = 0;
   bubbleMaxCombo = 0;
+  bubbleWrongTaps = 0;
+  bubbleOccupiedSlots = new Set();
+  bubbleTarget = "heart";
   bubbleRoundActive = true;
   bubbleRoundStarted = performance.now();
   $("#start-bubbles").disabled = true;
@@ -1114,41 +1153,58 @@ function startBubbleGame() {
 function scheduleBubble() {
   if (!bubbleRoundActive) return;
   const elapsed = (performance.now() - bubbleRoundStarted) / 1000;
+  const nextTarget = Math.floor(elapsed / 4) % 2 ? "flower" : "heart";
+  if (nextTarget !== bubbleTarget) {
+    bubbleTarget = nextTarget;
+    $$(".love-bubble", $("#bubble-field")).forEach(bubble => bubble.remove());
+    bubbleOccupiedSlots.clear();
+    updateBubbleHud();
+  }
   spawnBubble();
-  const delay = elapsed < 10 ? 480 : elapsed < 20 ? 315 : 185;
+  const delay = elapsed < 8 ? 560 : elapsed < 17 ? 400 : elapsed < 24 ? 285 : 205;
   bubbleTimer = setTimeout(scheduleBubble, delay);
 }
 
 function spawnBubble() {
   const field = $("#bubble-field");
   if (!field || !bubbleRoundActive) return;
-  if (field.querySelectorAll(".love-bubble").length > 15) return;
+  const columns = 4;
+  const rows = 4;
+  const available = Array.from({ length: columns * rows }, (_, index) => index).filter(index => !bubbleOccupiedSlots.has(index));
+  if (!available.length) return;
+  const slot = pick(available);
+  bubbleOccupiedSlots.add(slot);
   const bubble = document.createElement("button");
   bubble.className = "love-bubble";
   bubble.type = "button";
   const roll = Math.random();
-  const kind = roll < .12 ? { emoji: "💔", points: -2, className: "danger" }
-    : roll > .84 ? { emoji: pick(["🌹", "🌸", "🪷"]), points: 3, className: "bonus" }
-      : { emoji: pick(["💗", "💕", "💖", "❤️", "💋"]), points: 1, className: "heart" };
+  const kind = roll < .24 ? { emoji: pick(["💔", "☁️", "🫧"]), points: -3, className: "danger", target: "decoy" }
+    : roll < .58 ? { emoji: pick(["🌹", "🌸", "🪷", "🌷", "🪻"]), points: 3, className: "bonus", target: "flower" }
+      : { emoji: pick(["💗", "💕", "💖", "❤️", "💋"]), points: 2, className: "heart", target: "heart" };
   const elapsed = (performance.now() - bubbleRoundStarted) / 1000;
-  const duration = Math.max(2.25, 5.3 - elapsed * .085 + Math.random() * 1.2);
+  const duration = Math.max(.78, 1.95 - elapsed * .038 + Math.random() * .34);
   bubble.classList.add(`bubble-${kind.className}`);
   bubble.dataset.points = String(kind.points);
+  bubble.dataset.target = kind.target;
+  bubble.dataset.slot = String(slot);
   bubble.textContent = kind.emoji;
-  bubble.style.left = `${3 + Math.random() * 84}%`;
-  bubble.style.setProperty("--rise", `${duration}s`);
-  bubble.style.setProperty("--wiggle", `${(Math.random() - .5) * 120}px`);
-  bubble.style.setProperty("--size", `${kind.className === "bonus" ? 48 + Math.random() * 18 : 42 + Math.random() * 26}px`);
+  const column = slot % columns;
+  const row = Math.floor(slot / columns);
+  bubble.style.left = `${5 + column * 24}%`;
+  bubble.style.top = `${14 + row * 21}%`;
+  bubble.style.setProperty("--life", `${duration}s`);
+  bubble.style.setProperty("--size", `${kind.className === "bonus" ? 54 : 48}px`);
   bubble.addEventListener("pointerdown", event => popBubble(bubble, event), { once: true });
   field.appendChild(bubble);
   bubbleSpawned += 1;
   setTimeout(() => {
     if (!bubble.isConnected || bubble.dataset.popped === "true") return;
-    if (Number(bubble.dataset.points) > 0 && bubbleRoundActive) {
+    if (bubble.dataset.target === bubbleTarget && bubbleRoundActive) {
       bubbleMisses += 1;
       bubbleCombo = 0;
       updateBubbleHud();
     }
+    bubbleOccupiedSlots.delete(slot);
     bubble.remove();
   }, duration * 1000);
 }
@@ -1156,17 +1212,21 @@ function spawnBubble() {
 function popBubble(bubble, event) {
   if (!bubble || bubble.dataset.popped === "true") return;
   event?.preventDefault?.();
+  event?.stopPropagation?.();
   bubble.dataset.popped = "true";
   const points = Number(bubble.dataset.points || 1);
-  bubbleHits += 1;
-  if (points < 0) {
-    bubbleScore = Math.max(0, bubbleScore + points);
+  const correctTarget = bubble.dataset.target === bubbleTarget;
+  if (points < 0 || !correctTarget) {
+    bubbleScore = Math.max(0, bubbleScore - (points < 0 ? Math.abs(points) : 2));
     bubbleCombo = 0;
+    bubbleWrongTaps += 1;
   } else {
+    bubbleHits += 1;
     bubbleCombo += 1;
     bubbleMaxCombo = Math.max(bubbleMaxCombo, bubbleCombo);
     bubbleScore += points + Math.floor(bubbleCombo / 6);
   }
+  bubbleOccupiedSlots.delete(Number(bubble.dataset.slot));
   updateBubbleHud();
   const rect = bubble.getBoundingClientRect();
   burstAt(event?.clientX || rect.x + rect.width / 2, event?.clientY || rect.y + rect.height / 2, 7);
@@ -1186,7 +1246,7 @@ function endBubbleGame() {
   $("#start-bubbles").textContent = "play another 30 second round";
   state.bestBubbleScore = Math.max(state.bestBubbleScore || 0, bubbleScore);
   saveState();
-  const attempts = bubbleHits + bubbleMisses;
+  const attempts = bubbleHits + bubbleMisses + bubbleWrongTaps;
   const result = { score: bubbleScore, accuracy: attempts ? Math.round((bubbleHits / attempts) * 100) : 0, maxCombo: bubbleMaxCombo };
   submitBubbleScore(result);
   flowerConfetti(bubbleScore >= 30 ? 28 : 14);
@@ -1214,15 +1274,16 @@ function showBirthdayStage(stage) {
 function seedOpeningFlowers() {
   const field = $("#opening-petals");
   if (!field || field.childElementCount) return;
-  const flowers = ["🌸", "🌸", "🌸", "🌸", "🪷", "🌹", "🌸", "💗", "🌸", "🌺", "🌸", "🌸"];
+  const flowers = ["🌸", "🌹", "🌷", "🪻", "🪷", "🌺", "💗", "🌸", "🌹", "🌷", "🪻", "🪷"];
   flowers.forEach((flower, index) => {
     const piece = document.createElement("i");
     piece.textContent = flower;
-    piece.style.left = `${3 + (index * 8.4) % 94}%`;
-    piece.style.fontSize = `${.9 + (index % 4) * .18}rem`;
-    piece.style.setProperty("--fall", `${5.5 + (index % 5) * .8}s`);
-    piece.style.setProperty("--delay", `${-1 * (index % 7) * .7}s`);
-    piece.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (25 + index * 3)}px`);
+    piece.className = `opening-flower flower-path-${index % 4}`;
+    piece.style.left = `${4 + (index * 8.2) % 92}%`;
+    piece.style.top = `${8 + (index % 4) * 21}%`;
+    piece.style.fontSize = `${2.4 + (index % 4) * .65}rem`;
+    piece.style.setProperty("--delay", `${-1 * (index % 6) * .55}s`);
+    piece.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (55 + index * 5)}px`);
     field.appendChild(piece);
   });
 }
@@ -1322,11 +1383,19 @@ function enterUniverse() {
   const opening = $("#birthday-opening");
   opening?.classList.add("leaving");
   document.body.classList.remove("app-locked");
+  state.hasEnteredUniverse = true;
+  saveState();
   flowerPageTransition();
   setTimeout(() => opening?.remove(), 700);
 }
 
 function setupOpeningRitual() {
+  if (state.hasEnteredUniverse) {
+    document.body.classList.remove("app-locked");
+    $("#entry-gate")?.remove();
+    $("#birthday-opening")?.remove();
+    return;
+  }
   seedOpeningFlowers();
   let selectedProfile = state.profile || "Michelle";
   $$(".profile-option").forEach(button => {
@@ -1590,7 +1659,7 @@ async function showLoveNotification(widget, title = "Moonpie miss-you widget") {
     badge: "./icon.svg",
     tag: "moonpie-widget",
     renotify: true,
-    data: { url: "./?v=32" }
+    data: { url: "./?v=35" }
   };
   try {
     const registration = await navigator.serviceWorker?.ready;
@@ -1828,6 +1897,13 @@ function setupEvents() {
   $("#save-doodle").addEventListener("click", saveDoodle);
   $("#refresh-widgets")?.addEventListener("click", () => fetchSharedWidgets({ quiet: false }));
   $("#start-bubbles").addEventListener("click", startBubbleGame);
+  $("#bubble-field")?.addEventListener("pointerdown", event => {
+    if (!bubbleRoundActive || event.target.closest(".love-bubble")) return;
+    bubbleScore = Math.max(0, bubbleScore - 1);
+    bubbleCombo = 0;
+    bubbleWrongTaps += 1;
+    updateBubbleHud();
+  });
   $("#refresh-scores")?.addEventListener("click", fetchBubbleScores);
   $("#next-challenge").addEventListener("click", nextChallenge);
   $("#love-dice").addEventListener("click", rollLoveDice);
@@ -1902,7 +1978,8 @@ function init() {
   setupOpeningRitual();
   setupWidgetSync();
   const requestedScreen = new URLSearchParams(location.search).get("open");
-  if (requestedScreen && worlds.some(world => world.id === requestedScreen)) openScreen(requestedScreen);
+  const resumeScreen = requestedScreen || (state.hasEnteredUniverse ? state.lastWorld : "home");
+  if (resumeScreen && worlds.some(world => world.id === resumeScreen)) openScreen(resumeScreen, { fromBack: true });
   finishIntro();
   registerServiceWorker();
 }
