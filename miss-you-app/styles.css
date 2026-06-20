@@ -1,3 +1,10 @@
+@font-face{font-family:"Lora";src:url("./assets/fonts/lora-400.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"Lora";src:url("./assets/fonts/lora-600.woff2") format("woff2");font-style:normal;font-weight:600;font-display:swap}
+@font-face{font-family:"Cormorant Garamond";src:url("./assets/fonts/cormorant-600.woff2") format("woff2");font-style:normal;font-weight:600;font-display:swap}
+@font-face{font-family:"Cormorant Garamond";src:url("./assets/fonts/cormorant-italic-400.woff2") format("woff2");font-style:italic;font-weight:400;font-display:swap}
+@font-face{font-family:"Dancing Script";src:url("./assets/fonts/dancing-600.woff2") format("woff2");font-style:normal;font-weight:600;font-display:swap}
+@font-face{font-family:"Italiana";src:url("./assets/fonts/italiana-400.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
+
 :root{
   --bg:#110619;
   --bg2:#251037;
@@ -109,7 +116,7 @@ h1,h2,h3,p{margin-top:0}
 h1{margin:0;font-size:clamp(1.12rem,5.4vw,1.48rem);line-height:1.04;letter-spacing:-.045em}
 h1,h2{font-family:"Italiana","Playfair Display",serif;font-weight:400}
 h2{font-size:clamp(2.15rem,11vw,3.15rem);line-height:.9;letter-spacing:-.035em;margin-bottom:10px}
-h3{font-family:"Playfair Display",serif;font-size:1.15rem;margin-bottom:8px;letter-spacing:-.02em}
+h3{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.15rem;font-weight:600;margin-bottom:8px;letter-spacing:-.02em}
 p{line-height:1.55;color:var(--muted)}
 .ghost-btn,.secondary-btn,.primary-btn,.pill-link{min-height:44px;border-radius:999px;padding:0 16px;font-weight:900;letter-spacing:-.02em;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .ghost-btn{background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
@@ -580,4 +587,10 @@ body:not(.app-locked) .poem-card pre{color:#3d244a;text-shadow:none;font-weight:
   .premium-card:after,.hero-card:after{display:block}
   .tree-sparkle-field{display:block;opacity:.62}
   .topbar{background:linear-gradient(180deg,rgba(228,207,243,.96),rgba(224,196,235,.78),transparent)!important}
+  .liquid-orbit-three,.flora-five,.flora-six{display:none}
+  .mobile-atmosphere:before{animation:none;opacity:.7}
+  .flora-bubble{will-change:auto;animation-duration:22s;opacity:.42}
+  .liquid-orbit{animation-duration:26s}
+  .world-portal,.premium-card,.letter-card,.poem-card,.notice-note{content-visibility:auto;contain-intrinsic-size:auto 360px}
+  .world-portal img{transition:none}
 }

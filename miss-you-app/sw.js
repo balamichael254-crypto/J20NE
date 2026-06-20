@@ -1,13 +1,19 @@
-const CACHE_NAME = "moonpie-miss-you-v35";
+const CACHE_NAME = "moonpie-miss-you-v37";
 const ASSETS = [
   "./",
   "./index.html",
-  "./?v=35",
-  "./styles.css?v=35",
-  "./content.js?v=35",
-  "./app.js?v=35",
+  "./?v=37",
+  "./styles.css?v=37",
+  "./content.js?v=37",
+  "./app.js?v=37",
   "./manifest.webmanifest",
-  "./icon.svg"
+  "./icon.svg",
+  "./assets/fonts/lora-400.woff2",
+  "./assets/fonts/lora-600.woff2",
+  "./assets/fonts/cormorant-600.woff2",
+  "./assets/fonts/cormorant-italic-400.woff2",
+  "./assets/fonts/dancing-600.woff2",
+  "./assets/fonts/italiana-400.woff2"
 ];
 
 self.addEventListener("install", event => {
@@ -24,6 +30,17 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.includes("/assets/worlds/")) {
+    event.respondWith(caches.open(CACHE_NAME).then(async cache => {
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+      const response = await fetch(event.request);
+      if (response.ok) cache.put(event.request, response.clone());
+      return response;
+    }));
+    return;
+  }
   if (event.request.mode === "navigate") {
     event.respondWith(fetch(event.request).then(response => {
       const copy = response.clone();

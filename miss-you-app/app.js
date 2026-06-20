@@ -20,6 +20,8 @@ let widgetSyncTimer = null;
 let activeMicStream = null;
 let activeAudioContext = null;
 const screenHistory = [];
+const renderedScreens = new Set(["home", "atlas"]);
+let widgetSyncStarted = false;
 
 const worlds = [
   { id: "garden", icon: "🌸", title: "Birthday Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
@@ -244,11 +246,11 @@ const dayPlan = [
 ];
 
 const places = [
-  ["Airport Arrival", "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80", "The doors open, you look around, and the whole world narrows to one hug."],
-  ["Santorini", "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=900&q=80", "White terraces, lilac sky, and me taking too many pictures of you."],
-  ["The Maldives", "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=900&q=80", "No schedule. Water everywhere. You wake up and I stop noticing the ocean."],
-  ["Paris at Midnight", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=80", "The tower sparkles and I pretend I did not arrange it for you."],
-  ["Our Tiny Kitchen", "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=900&q=80", "Coffee, sleepy hair, stealing bites, arguing lovingly about the last piece."]
+  ["Airport Arrival", "./assets/worlds/airport-hug-1.webp", "The doors open, you look around, and the whole world narrows to one hug."],
+  ["Santorini", "./assets/worlds/santorini-1.webp", "White terraces, lilac sky, and me taking too many pictures of you."],
+  ["The Maldives", "./assets/worlds/maldives-1.webp", "No schedule. Water everywhere. You wake up and I stop noticing the ocean."],
+  ["Paris at Midnight", "./assets/worlds/paris-1.webp", "The tower sparkles and I pretend I did not arrange it for you."],
+  ["Our Tiny Kitchen", "./assets/worlds/kitchen-1.webp", "Coffee, sleepy hair, stealing bites, arguing lovingly about the last piece."]
 ];
 
 const songs = [
@@ -522,7 +524,31 @@ function flowerPageTransition() {
   setTimeout(() => veil.remove(), 1800);
 }
 
+function ensureScreenRendered(name) {
+  if (renderedScreens.has(name)) return;
+  const renderers = {
+    garden: setupGardenTree,
+    letters: renderLetters,
+    poems: renderPoems,
+    notices: renderNotices,
+    day: renderDay,
+    places: renderPlaces,
+    songs: renderSongs,
+    promises: renderPromises,
+    distance: renderDistance,
+    reasons: renderReasons,
+    memory: renderMemory,
+    birthday: renderBirthday,
+    care: renderCare,
+    games: renderGames,
+    doodles: () => { renderWidgets(); setupCanvas(); }
+  };
+  renderers[name]?.();
+  renderedScreens.add(name);
+}
+
 function openScreen(name, options = {}) {
+  ensureScreenRendered(name);
   const current = document.body.dataset.world || "home";
   const changed = current !== name;
   if (changed && !options.fromBack) screenHistory.push(current);
@@ -633,7 +659,7 @@ function renderPlaces() {
   const list = futureWorlds.length ? futureWorlds : places.map(([name, image, intro]) => ({ name, intro, eyebrow: "future coordinate", photos: [image], moments: [] }));
   $("#place-rail").innerHTML = list.map((place, index) => `
     <button class="world-portal" type="button" data-world-portal="${index}">
-      <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
+      <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="${index < 2 ? "eager" : "lazy"}" fetchpriority="${index < 2 ? "high" : "low"}" decoding="async" width="960" height="720" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
       <span class="world-portal-copy">
         <span class="portal-number">world ${String(index + 1).padStart(2, "0")}</span>
         <h3>${escapeHtml(place.name)}</h3>
@@ -650,10 +676,10 @@ function openFutureWorld(index) {
   const modal = $("#world-modal");
   $("#world-modal-body").innerHTML = `
     <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
-      <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of twenty futures I keep imagining with you.</p></div>
+      <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of the futures I keep imagining with you.</p></div>
     </section>
     <p class="world-intro">${escapeHtml(place.intro)}</p>
-    ${place.photos.length > 1 ? `<div class="world-gallery gallery-count-${place.photos.length}">${place.photos.map((image, photoIndex) => `<figure><img src="${escapeHtml(image)}" alt="${escapeHtml(place.name)} scene ${photoIndex + 1}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>${photoIndex === 0 ? "the world waiting for us" : "the moment distance finally loses"}</figcaption></figure>`).join("")}</div>` : ""}
+    ${place.photos.length > 1 ? `<div class="world-gallery"><figure><img src="${escapeHtml(place.photos[1])}" alt="A second scene from ${escapeHtml(place.name)}" loading="eager" decoding="async" width="960" height="720" onerror="this.closest('figure').remove()"><figcaption>one more view from our little world</figcaption></figure></div>` : ""}
     <div class="world-moments">${place.moments.map(([title, text], momentIndex) => `<article class="world-moment"><span>experience ${String(momentIndex + 1).padStart(2, "0")}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div>
   `;
   document.body.classList.add("focus-mode");
@@ -736,7 +762,7 @@ function buildGardenPetals() {
   const petals = [];
   let guard = 0;
 
-  while (petals.length < 680 && guard < 16000) {
+  while (petals.length < 560 && guard < 14000) {
     guard += 1;
     const x = rand() * 2.62 - 1.31;
     const y = rand() * 2.44 - 1.18;
@@ -763,7 +789,7 @@ function buildGardenPetals() {
     [95, 232], [118, 250], [244, 212], [222, 233]
   ];
   branchCanopy.forEach(([anchorX, anchorY], branchIndex) => {
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 8; i += 1) {
       petals.push({
         x: anchorX + (rand() - .5) * 34,
         y: anchorY + (rand() - .5) * 30,
@@ -784,7 +810,8 @@ function buildGardenPetals() {
 function resizeGardenTree() {
   if (!gardenTreeCanvas) return;
   const rect = gardenTreeCanvas.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 620 ? 1.35 : 2);
+  gardenTreeCanvas.dataset.dpr = String(dpr);
   const width = Math.max(1, Math.round(rect.width * dpr));
   const height = Math.max(1, Math.round(rect.height * dpr));
   if (gardenTreeCanvas.width !== width || gardenTreeCanvas.height !== height) {
@@ -851,7 +878,7 @@ function drawHeartPetal(ctx, x, y, size, rotation, color, alpha, scale = 1, glow
 function drawGardenTree(progress = 0.16) {
   if (!gardenTreeCanvas || !gardenTreeCtx) return;
   const ctx = gardenTreeCtx;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Number(gardenTreeCanvas.dataset.dpr || 1);
   const w = gardenTreeCanvas.width / dpr;
   const h = gardenTreeCanvas.height / dpr;
   const scale = Math.min(w / 320, h / 390);
@@ -907,6 +934,7 @@ function drawGardenTree(progress = 0.16) {
 }
 
 function setupGardenTree() {
+  if (gardenTreeCanvas) return;
   gardenTreeCanvas = $("#garden-tree-canvas");
   if (!gardenTreeCanvas) return;
   gardenTreeCtx = gardenTreeCanvas.getContext("2d");
@@ -1385,6 +1413,7 @@ function enterUniverse() {
   document.body.classList.remove("app-locked");
   state.hasEnteredUniverse = true;
   saveState();
+  setupWidgetSync();
   flowerPageTransition();
   setTimeout(() => opening?.remove(), 700);
 }
@@ -1489,6 +1518,7 @@ function renderLatestWidget() {
 let canvas, ctx, strokes = [], activeStroke = null;
 
 function setupCanvas() {
+  if (canvas) return;
   canvas = $("#doodle-canvas");
   if (!canvas) return;
   ctx = canvas.getContext("2d");
@@ -1659,7 +1689,7 @@ async function showLoveNotification(widget, title = "Moonpie miss-you widget") {
     badge: "./icon.svg",
     tag: "moonpie-widget",
     renotify: true,
-    data: { url: "./?v=35" }
+    data: { url: "./?v=37" }
   };
   try {
     const registration = await navigator.serviceWorker?.ready;
@@ -1745,6 +1775,8 @@ async function deleteSharedWidget(id) {
 }
 
 function setupWidgetSync() {
+  if (widgetSyncStarted) return;
+  widgetSyncStarted = true;
   fetchSharedWidgets({ quiet: true });
   clearInterval(widgetSyncTimer);
   widgetSyncTimer = setInterval(() => {
@@ -1954,29 +1986,13 @@ function init() {
   document.body.classList.toggle("soft-mode", state.softMode);
   renderAtlas();
   setMood(selectedMood);
-  renderLetters();
-  renderPoems();
-  renderNotices();
-  renderDay();
-  renderPlaces();
-  renderSongs();
-  renderPromises();
-  renderDistance();
-  renderReasons();
-  renderMemory();
-  renderBirthday();
-  renderCare();
-  renderGames();
-  renderWidgets();
   renderLatestWidget();
-  setupCanvas();
-  setupGardenTree();
   setupHoldOrb();
   setupEvents();
   setupSmartNav();
   setupInstall();
   setupOpeningRitual();
-  setupWidgetSync();
+  if (state.hasEnteredUniverse) setupWidgetSync();
   const requestedScreen = new URLSearchParams(location.search).get("open");
   const resumeScreen = requestedScreen || (state.hasEnteredUniverse ? state.lastWorld : "home");
   if (resumeScreen && worlds.some(world => world.id === resumeScreen)) openScreen(resumeScreen, { fromBack: true });

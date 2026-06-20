@@ -1,153 +1,134 @@
 (function () {
-  const photo = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1100&q=78`;
-  // Fixed photographs keep every world accurate. Random image feeds repeatedly
-  // mixed countries and people, which is unacceptable in a personal keepsake.
-  const romanticGallery = hero => hero ? [photo(hero)] : [];
-  const airportGallery = [
-    "https://live.staticflickr.com/4751/25470314767_7a113c2653_b.jpg",
-    "https://live.staticflickr.com/5065/5602632014_9b503a4360_b.jpg",
-    "https://live.staticflickr.com/8205/8222283792_cf90837186_b.jpg"
-  ];
-
-  const galleries = {
-    airport: ["photo-1436491865332-7a61a109cc05", "photo-1529074963764-98f45c47344b", "photo-1483450388369-9ed95738483c"],
-    islands: ["photo-1514282401047-d79a71a590e8", "photo-1507525428034-b723cf961d3e", "photo-1540202404-a2f29016b523"],
-    europe: ["photo-1533105079780-92b9be482077", "photo-1502602898657-3e91760cbb34", "photo-1523906834658-6e24ef2386f9"],
-    garden: ["photo-1528360983277-13d401cdc186", "photo-1490750967868-88aa4486c946", "photo-1501004318641-b39e6451bec6"],
-    mountains: ["photo-1500534314209-a25ddb2bd429", "photo-1464822759023-fed622ff2c3b", "photo-1483347756197-71ef80e95f73"],
-    city: ["photo-1522083165195-3424ed129620", "photo-1513635269975-59663e0ac1ad", "photo-1529260830199-42c24126f198"],
-    warm: ["photo-1597212618440-806262de4f6b", "photo-1533104816931-20fa691ff6ca", "photo-1533669955142-6a73332af4db"],
-    home: ["photo-1556911220-bff31c812dba", "photo-1522771739844-6a9f6d5f14af", "photo-1493663284031-b7e3aefcae8e"]
-  };
+  const gallery = slug => [`./assets/worlds/${slug}-1.webp`, `./assets/worlds/${slug}-2.webp`];
 
   const world = (name, eyebrow, intro, gallery, moments, palette) => ({
     name, eyebrow, intro, palette,
-    photos: gallery.map(item => String(item).startsWith("http") ? item : photo(item)),
+    photos: gallery,
     moments
   });
 
   const worlds = [
-    world("The First Airport Hug", "where distance finally loses", "The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.", airportGallery, [
+    world("The First Airport Hug", "where distance finally loses", "The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.", gallery("airport-hug"), [
       ["The sighting", "I find you in the crowd and forget how walking normally works. You smile, I laugh from pure disbelief, and the room becomes background."],
       ["The hug", "No polite little greeting. I hold you until both of us stop feeling like people who live inside a screen."],
       ["The first drive", "Your hand stays in mine between the seats. We keep looking at each other because being real is still surprising."],
       ["The first ordinary hour", "We buy water, argue about snacks, and discover that even airport traffic feels romantic when goodbye is not waiting at the end of it."]
     ], "rose"),
-    world("Santorini in Lilac Light", "white walls, lavender sky", "We wake where the sea holds every shade of blue, but sunset belongs to lilac. I take too many pictures of you, then put the phone away because no photograph can keep the way you look when the light turns soft.", romanticGallery("photo-1533105079780-92b9be482077", "santorini,sunset", 260), [
+    world("Santorini in Lilac Light", "white walls, lavender sky", "We wake where the sea holds every shade of blue, but sunset belongs to lilac. I take too many pictures of you, then put the phone away because no photograph can keep the way you look when the light turns soft.", gallery("santorini"), [
       ["Cliffside breakfast", "Warm bread, fruit, coffee, and your sleepy face across a tiny table above the water."],
       ["The wandering hour", "We follow narrow white lanes with no map, choosing every turn by whichever doorway has the prettiest flowers."],
       ["A dress for sunset", "You wear something that moves in the wind. I spend the whole evening pretending the sky is what has me speechless."],
       ["Midnight balcony", "Bare feet, one blanket, and the sound of the sea below us while we talk about the life waiting after the holiday."]
     ], "lilac"),
-    world("Maldives, No Schedule", "a room floating on water", "Here the day has no sharp edges. The floor is warm, the water is clear, and time is measured by swims, fruit, naps, kisses, and whether your hair is still wet.", romanticGallery("photo-1514282401047-d79a71a590e8", "maldives,beach", 270), [
+    world("Maldives, No Schedule", "a room floating on water", "Here the day has no sharp edges. The floor is warm, the water is clear, and time is measured by swims, fruit, naps, kisses, and whether your hair is still wet.", gallery("maldives"), [
       ["Water-villa morning", "We open the curtains and the ocean is already at the door. You step outside before breakfast because waiting would be ridiculous."],
       ["The slow swim", "No race and nowhere to reach. We float beside each other, fingers touching whenever the water drifts us apart."],
       ["Dinner on the sand", "Lanterns, bare feet, and a table close enough to the tide that the sea keeps trying to join us."],
       ["Stars with no city", "We lie outside after midnight and choose constellations badly. I name one Moonpie and refuse correction."]
     ], "pearl"),
-    world("Paris After Midnight", "the city when it whispers", "Not rushed Paris. Ours begins after dinner, when the streets shine from rain and the city becomes quiet enough for our footsteps to sound like part of the music.", romanticGallery("photo-1502602898657-3e91760cbb34", "paris,eiffel", 280), [
+    world("Paris After Midnight", "the city when it whispers", "Not rushed Paris. Ours begins after dinner, when the streets shine from rain and the city becomes quiet enough for our footsteps to sound like part of the music.", gallery("paris"), [
       ["The tiny cafe", "You choose the prettier pastry. I claim I only want one bite and immediately become a liar."],
       ["A bridge at midnight", "We stop above the river without needing a reason. The lights shake on the water and I kiss your forehead slowly."],
       ["The tower sparkles", "I watch your face instead. Paris has had enough attention; this moment belongs to you."],
       ["Walking home", "Our hands are cold, our feet hurt, and neither of us wants a taxi because the walk is still part of the date."]
     ], "blush"),
-    world("Kyoto Blossom Rain", "petals in your hair", "Spring keeps letting go of pink petals around us. We walk beneath old trees, speak more quietly without deciding to, and keep finding small beautiful things tucked beside the path.", romanticGallery("photo-1528360983277-13d401cdc186", "kyoto,cherry-blossom", 290), [
+    world("Kyoto Blossom Rain", "petals in your hair", "Spring keeps letting go of pink petals around us. We walk beneath old trees, speak more quietly without deciding to, and keep finding small beautiful things tucked beside the path.", gallery("kyoto"), [
       ["Temple morning", "We arrive before the crowds. Bells sound somewhere beyond the trees and your hand finds mine inside my coat pocket."],
       ["Tea for two", "We sit by a paper window while steam curls between us. You taste mine. I knew you would."],
       ["Petal weather", "A gust fills the path with blossoms. I brush one from your hair and leave the prettiest one there."],
       ["Lantern evening", "The lanes glow gold after dark. We walk slowly because the night deserves our full attention."]
     ], "petal"),
-    world("Zanzibar Barefoot Morning", "salt, spice, and sunlight", "The morning starts with the sea and ends somewhere inside a market full of color. Everything is warm: the sand, the bread, the air, and your shoulder against mine.", romanticGallery("photo-1507525428034-b723cf961d3e", "zanzibar,beach", 300), [
+    world("Zanzibar Barefoot Morning", "salt, spice, and sunlight", "The morning starts with the sea and ends somewhere inside a market full of color. Everything is warm: the sand, the bread, the air, and your shoulder against mine.", gallery("zanzibar"), [
       ["Sunrise feet", "We walk where the water keeps erasing our footprints, leaving only the ones we are still making."],
       ["Spice market", "We smell everything, buy too much fruit, and choose a tiny gift that will always mean this day."],
       ["Dhow at dusk", "The sail catches the last light while the island becomes a line behind us. You lean into me when the wind rises."],
       ["Rooftop dinner", "Music drifts up from the street. We share grilled seafood and keep stealing from each other's plates."]
     ], "coral"),
-    world("The Swiss Window Seat", "mountains passing like cinema", "We take the slow train on purpose. Snow, lakes, villages, and green valleys move past the glass while your head rests on my shoulder and our snacks slowly disappear.", romanticGallery("photo-1530122037265-a5f1f91d3b99", "switzerland,train,mountains", 310), [
+    world("The Swiss Window Seat", "mountains passing like cinema", "We take the slow train on purpose. Snow, lakes, villages, and green valleys move past the glass while your head rests on my shoulder and our snacks slowly disappear.", gallery("switzerland"), [
       ["Window-seat treaty", "You get the window. I get the privilege of watching your face change every time the view becomes impossible."],
       ["A small mountain town", "We get off without a plan, find hot chocolate, and walk until our cheeks are cold."],
       ["The quiet carriage", "You fall asleep for twenty minutes. I stay still even when my arm complains because this is exactly where I want you."],
       ["Lake evening", "The mountains turn violet in the water. We sit on the edge of the dock and say almost nothing."]
     ], "mist"),
-    world("New York Winter Lights", "cold hands, warm city", "The city moves fast, so we make our own slow pocket inside it. Your scarf is too cute, my hand is your heater, and every window is dressed like it knew you were coming.", romanticGallery("photo-1522083165195-3424ed129620", "new-york,winter", 320), [
+    world("New York Winter Lights", "cold hands, warm city", "The city moves fast, so we make our own slow pocket inside it. Your scarf is too cute, my hand is your heater, and every window is dressed like it knew you were coming.", gallery("new-york"), [
       ["Coffee rescue", "We step into the first warm cafe we see, thaw our fingers around cups, and draw tiny hearts in the fogged window."],
       ["Bookstore hiding", "We choose one book for each other and write secret notes inside the covers."],
       ["Lights after dark", "The whole avenue glows. You look up, and I get the ridiculous feeling the city did all this for your birthday."],
       ["Late-night pizza", "Fancy plans end with us laughing over a slice that is too hot. Perfect."]
     ], "winter"),
-    world("Bali Hidden Garden", "green doors and flower baths", "We disappear behind carved doors into a garden that feels invented. Water runs over stone, flowers float everywhere, and the morning smells like rain and frangipani.", romanticGallery("photo-1533669955142-6a73332af4db", "bali,flower-bath", 330), [
+    world("Bali Hidden Garden", "green doors and flower baths", "We disappear behind carved doors into a garden that feels invented. Water runs over stone, flowers float everywhere, and the morning smells like rain and frangipani.", gallery("bali"), [
       ["Breakfast among leaves", "Fruit, warm pancakes, and birds that sound like they have been hired for atmosphere."],
       ["The flower bath", "Lilies and rose petals drift around you. I sit nearby and wonder how the room is coping with this much beauty."],
       ["Scooter road", "We move through rice fields slowly, stopping whenever the view asks us to."],
       ["Rain on the roof", "A tropical shower keeps us inside. We make tea and let the day become softer than planned."]
     ], "leaf"),
-    world("Cappadocia Before Sunrise", "balloons above the quiet", "We wake while the world is still dark, wrap ourselves in layers, and climb to the roof. Then color begins lifting into the sky, one balloon at a time.", romanticGallery("photo-1528181304800-259b08848526", "cappadocia,balloons", 340), [
+    world("Cappadocia Before Sunrise", "balloons above the quiet", "We wake while the world is still dark, wrap ourselves in layers, and climb to the roof. Then color begins lifting into the sky, one balloon at a time.", gallery("cappadocia"), [
       ["The 4:30 alarm", "We complain together, dress badly, and become instantly awake when the first balloon flame glows in the valley."],
       ["The sky fills", "Hundreds rise in the pink morning. I stand behind you with my arms around your waist so we can watch as one shape."],
       ["Breakfast after wonder", "Warm bread tastes better after seeing something impossible."],
       ["Cave-room nap", "We return under thick blankets and sleep until the day forgives the early alarm."]
     ], "sunrise"),
-    world("Venice After Rain", "reflections under every bridge", "Rain empties the lanes and polishes the stone. The city becomes silver, lilac, and gold, with little boats cutting through reflections that look painted.", romanticGallery("photo-1523906834658-6e24ef2386f9", "venice,gondola", 350), [
+    world("Venice After Rain", "reflections under every bridge", "Rain empties the lanes and polishes the stone. The city becomes silver, lilac, and gold, with little boats cutting through reflections that look painted.", gallery("venice"), [
       ["One shared umbrella", "It is technically too small. That is fine. It keeps us close and gives us an excuse to laugh at our wet shoulders."],
       ["Getting beautifully lost", "Every alley seems wrong until it opens beside water. Then it was obviously the right one."],
       ["A quiet gondola", "No performance. Just the sound of the oar, rain dripping from balconies, and you leaning back against me."],
       ["Tiramisu verdict", "We order one to share and immediately regret not ordering two."]
     ], "rain"),
-    world("Nairobi, Our Date Day", "a whole day close to home", "Not every dream needs a passport. We make a full little holiday out of the city: flowers, food, music, a long drive, and the relief of finally being in the same place.", romanticGallery("photo-1611348586804-61bf6c080437", "nairobi,date", 360), [
-      ["Flowers first", "I arrive with lilies because beginning any other way would feel incorrect."],
-      ["Lunch that takes hours", "We order slowly, talk through every course, and let the waiter wonder if we plan to move in."],
-      ["Golden-hour drive", "Windows down, your playlist on, the city changing color around us."],
-      ["No rushed goodbye", "We sit a little longer after arriving because I promised myself our real days would not feel like countdowns."]
+    world("Nairobi and Diani, Our Kenya Date", "candlelight in Nairobi, bare feet in Diani", "We begin dressed up across a candlelit table in Nairobi, then trade city lights for Diani sand and two loungers facing the Indian Ocean. Home gets to feel like a holiday too.", gallery("kenya"), [
+      ["Candlelit Nairobi", "I arrive with lilies, you walk toward our table looking impossible, and dinner takes hours because neither of us wants to rush a single story."],
+      ["The road to Diani", "Your playlist is on, your hand is in mine, and the city slowly gives way to palms and that first bright line of ocean."],
+      ["Two loungers, one view", "We claim the prettiest spot by the water, order cold drinks, and let the Indian Ocean keep time for us."],
+      ["Barefoot after sunset", "We walk back along the sand with no rushed goodbye waiting at the end, only another morning together."]
     ], "homegold"),
-    world("Seychelles Secret Cove", "granite, lilies, clear water", "We find a small curve of beach between smooth rocks and claim it for the afternoon. The water is glassy, the shade is cool, and nobody needs anything from us.", romanticGallery("photo-1540202404-a2f29016b523", "seychelles,beach", 370), [
+    world("Seychelles Secret Cove", "granite, lilies, clear water", "We find a small curve of beach between smooth rocks and claim it for the afternoon. The water is glassy, the shade is cool, and nobody needs anything from us.", gallery("seychelles"), [
       ["The hidden path", "We carry a towel, fruit, and too much excitement through palms until the water appears."],
       ["A private picnic", "Mango, cold drinks, sandwiches, and sand absolutely everywhere."],
       ["Reading beside you", "We each open a book, read three pages, then start talking again because silence with you is never an obligation."],
       ["Last swim", "We say one more five times. The sun lowers and the water turns lavender."]
     ], "shell"),
-    world("London Bookshop Rain", "stories, tea, and your hand", "Rain gives us permission to spend the day indoors. We move from bookshop to cafe to museum, carrying one umbrella and a growing stack of things we chose for each other.", romanticGallery("photo-1513635269975-59663e0ac1ad", "london,bookshop,rain", 380), [
+    world("London Bookshop Rain", "stories, tea, and your hand", "Rain gives us permission to spend the day indoors. We move from bookshop to cafe to museum, carrying one umbrella and a growing stack of things we chose for each other.", gallery("london"), [
       ["The note in the book", "I slip a sentence onto the title page before giving it to you: read this whenever you need another voice beside mine."],
       ["Afternoon tea", "Tiny sandwiches become an event. You choose the prettiest cake and I support this excellent decision."],
       ["Museum wandering", "We pick our favorite painting in every room and invent stories for the people inside them."],
       ["Rainy bus window", "Upstairs, front seat, city lights on wet glass, your head tucked against me."]
     ], "book"),
-    world("Rome at Golden Hour", "warm stone and slow evenings", "Rome feels sunlit even after the sun leaves. We walk between fountains and old walls, stopping for photographs, cold drinks, and kisses in streets that have seen every kind of love.", romanticGallery("photo-1552832230-c0197dd311b5", "rome,golden-hour", 390), [
+    world("Rome at Golden Hour", "warm stone and slow evenings", "Rome feels sunlit even after the sun leaves. We walk between fountains and old walls, stopping for photographs, cold drinks, and kisses in streets that have seen every kind of love.", gallery("rome"), [
       ["Morning espresso", "You make a face at how small the cup is. I make a face at how quickly you steal a sip of mine."],
       ["A coin and a wish", "We each make one at the fountain and refuse to say it. I suspect both wishes contain the same two people."],
       ["Pasta lesson", "Flour everywhere, serious concentration, and one shape that looks nothing like the teacher's."],
       ["Steps after sunset", "We sit while the city glows below, tired in the happiest possible way."]
     ], "terracotta"),
-    world("Northern Lights Cabin", "the sky learning magic", "Outside is snow and impossible color. Inside is warm wood, thick socks, soup on the stove, and a window wide enough to let the entire sky join us.", romanticGallery("photo-1483347756197-71ef80e95f73", "northern-lights,cabin", 400), [
+    world("Northern Lights Cabin", "the sky learning magic", "Outside is snow and impossible color. Inside is warm wood, thick socks, soup on the stove, and a window wide enough to let the entire sky join us.", gallery("aurora"), [
       ["Cabin afternoon", "We cook badly, dance in socks, and keep checking the sky like impatient children."],
       ["The first green ribbon", "You call my name from the window. We run outside without enough layers because wonder has terrible planning skills."],
       ["Under one blanket", "The lights move above us while I hold you from behind and try to remember every second accurately."],
       ["Firelight after", "Back inside, cheeks cold, hands warm, both of us too awake to sleep."]
     ], "aurora"),
-    world("Marrakech Lantern Night", "rose walls and amber light", "The city is color layered over sound. We wander through courtyards, tiled rooms, spice stalls, and rooftop lanterns until the night feels like a story told just to us.", romanticGallery("photo-1597212618440-806262de4f6b", "marrakech,lanterns", 410), [
+    world("Marrakech Lantern Night", "rose walls and amber light", "The city is color layered over sound. We wander through courtyards, tiled rooms, spice stalls, and rooftop lanterns until the night feels like a story told just to us.", gallery("marrakech"), [
       ["Courtyard morning", "Orange juice, patterned tiles, a fountain, and sunlight moving slowly across the walls."],
       ["Choosing a keepsake", "We search the market for one small object that will sit in our future home and remember this day for us."],
       ["Rooftop sunset", "The call to prayer moves through the city while the sky turns dusty pink."],
       ["Lantern dinner", "Warm bread, shared plates, cinnamon, candlelight, and your face glowing across the table."]
     ], "amber"),
-    world("Amalfi Lemon Afternoon", "sunlight the color of joy", "The road curls above the sea and every balcony grows flowers. We spend the afternoon between lemon trees, striped umbrellas, cold drinks, and views that keep interrupting our conversation.", romanticGallery("photo-1533104816931-20fa691ff6ca", "amalfi,lemon,coast", 420), [
+    world("Amalfi Lemon Afternoon", "sunlight the color of joy", "The road curls above the sea and every balcony grows flowers. We spend the afternoon between lemon trees, striped umbrellas, cold drinks, and views that keep interrupting our conversation.", gallery("amalfi"), [
       ["The coastal drive", "I pretend to focus on the road while you keep pointing out views that deserve immediate stopping."],
       ["Lemon garden lunch", "Pasta, lemonade, shade, and the kind of long meal that resets a whole nervous system."],
       ["The swimming stairs", "We descend too many steps, jump into clear water, and agree the climb back can be future-us's problem."],
       ["Balcony music", "At night we leave the doors open, play something soft, and sway more than dance."]
     ], "lemon"),
-    world("Our Tiny Kitchen", "the destination called ordinary", "This one matters as much as every passport stamp. It is our kitchen, our mugs, your things beside mine, and the quiet miracle of not needing a call to share the same room.", romanticGallery("photo-1556911220-bff31c812dba", "couple,cooking,kitchen", 430), [
+    world("Our Tiny Kitchen", "the destination called ordinary", "This one matters as much as every passport stamp. It is our kitchen, our mugs, your things beside mine, and the quiet miracle of not needing a call to share the same room.", gallery("kitchen"), [
       ["Sleepy coffee", "You appear wrapped in something soft while I am halfway through making your drink exactly how you like it."],
       ["Dinner experiment", "We choose a recipe, ignore one instruction, make a mess, and eat it proudly anyway."],
       ["Music between chores", "A song catches us while the dishes wait. We dance for one minute and let the water run."],
       ["The refrigerator evidence", "Photos, tiny notes, a shopping list, and proof everywhere that two lives have learned to overlap."]
     ], "cream"),
-    world("The Sunday Bedroom Fort", "rain outside, us inside", "Blankets become walls, pillows become architecture, and Sunday becomes a country with only two citizens. Nothing impressive happens. That is why I want it so much.", romanticGallery("photo-1522771739844-6a9f6d5f14af", "couple,cozy,bedroom", 440), [
+    world("The Sunday Bedroom Fort", "rain outside, us inside", "Blankets become walls, pillows become architecture, and Sunday becomes a country with only two citizens. Nothing impressive happens. That is why I want it so much.", gallery("bedroom-fort"), [
       ["Fort construction", "We take it far too seriously and disagree about structural pillow placement."],
       ["The snack delivery", "Everything arrives on one tray because leaving the fort repeatedly would violate its laws."],
       ["A movie we barely watch", "We pause to talk, rewind, get distracted, and eventually accept that the plot is not the point."],
       ["Falling asleep nearby", "No countdown to hang up. No screen going dark. Just your breathing changing while I am still there."]
     ], "cloud"),
-    world("Twenty-Fifth of February", "our date, made into a place", "Imagine a world where the calendar always reads 25 February. Lilies bloom in every doorway, the sky stays tender, and every path leads back to the moment we chose to call ours.", romanticGallery("photo-1490750967868-88aa4486c946", "anniversary,lilies,couple", 450), [
+    world("Twenty-Fifth of February", "our date, made into a place", "Imagine a world where the calendar always reads 25 February. Lilies bloom in every doorway, the sky stays tender, and every path leads back to the moment we chose to call ours.", gallery("anniversary"), [
       ["The anniversary garden", "We plant one lily for every year and leave room for the years still coming."],
       ["Letters at noon", "We exchange one page each: what I loved this year, what I learned about you, what I promise next."],
       ["The same song", "We play one song that belongs to us and let memory fill in the parts no recording holds."],
