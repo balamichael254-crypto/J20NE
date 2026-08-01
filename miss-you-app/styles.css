@@ -137,6 +137,11 @@ p{line-height:1.55;color:var(--muted)}
 .premium-card:after,.hero-card:after{content:"✦";position:absolute;right:18px;top:14px;color:rgba(255,224,244,.34);font-size:1.05rem;pointer-events:none;animation:twinkle 2.4s ease-in-out infinite}
 @keyframes twinkle{50%{opacity:.25;transform:scale(.7) rotate(20deg)}}
 .hero-card{min-height:252px;display:grid;grid-template-columns:1fr 132px;align-items:center;gap:10px;padding:18px}
+.moon-card{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:14px;padding:16px 18px;margin:12px 0}
+.moon-card-emoji{font-size:2.6rem;filter:drop-shadow(0 8px 14px rgba(89,42,90,.28));animation:moonGlow 5s ease-in-out infinite}
+.moon-card-copy h3{margin:2px 0 4px;font-size:1.15rem}
+.moon-card-copy p{margin:0;font-size:.88rem}
+@keyframes moonGlow{50%{transform:translateY(-3px) scale(1.04)}}
 .hero-copy{position:relative;z-index:1}
 .hero-copy h2{font-size:2.82rem;margin-bottom:8px}
 .pulse-orb{width:128px;height:128px;border-radius:50%;color:#fff;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.92),rgba(255,143,189,.74) 24%,rgba(107,53,214,.94) 66%,rgba(36,12,54,.96));box-shadow:0 0 0 10px rgba(255,143,189,.12),0 20px 55px rgba(108,59,210,.38);display:grid;place-items:center;align-content:center;position:relative;z-index:2;animation:pulse 2.8s ease-in-out infinite}

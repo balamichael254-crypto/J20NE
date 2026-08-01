@@ -1961,6 +1961,40 @@ async function registerServiceWorker() {
   }
 }
 
+const moonPhaseLines = {
+  "New Moon": "The sky is resting tonight, saving its light for later. Even hidden, it's still there. So am I.",
+  "Waxing Crescent": "Just a sliver tonight, but it's growing, the same way this feeling never really shrinks.",
+  "First Quarter": "Half-lit, half-shadowed, and still whole. That's most days when you're not next to me.",
+  "Waxing Gibbous": "Almost full. Almost enough light to find your way to me by, if you needed to.",
+  "Full Moon": "Wherever you are tonight, the moon is full and easy to find. Look up. I'm looking too.",
+  "Waning Gibbous": "Still bright, just easing back. Like a good day that doesn't want to end yet.",
+  "Last Quarter": "Half of it is letting go. The other half is already waiting for the next one to begin.",
+  "Waning Crescent": "Barely there tonight, but that's how it goes right before something starts over.",
+};
+
+function moonPhaseInfo(date) {
+  const synodic = 29.53058867;
+  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
+  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
+  let phase = (diffDays % synodic) / synodic;
+  if (phase < 0) phase += 1;
+  const names = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
+  const emojis = ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"];
+  const index = Math.min(7, Math.floor(phase * 8));
+  const name = names[index];
+  return { name, emoji: emojis[index], line: moonPhaseLines[name] };
+}
+
+function renderMoon() {
+  const info = moonPhaseInfo(new Date());
+  const emojiEl = $("#moon-emoji");
+  const nameEl = $("#moon-phase-name");
+  const lineEl = $("#moon-line");
+  if (emojiEl) emojiEl.textContent = info.emoji;
+  if (nameEl) nameEl.textContent = info.name;
+  if (lineEl) lineEl.textContent = info.line;
+}
+
 function todayStr(d) {
   d = d || new Date();
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -2000,6 +2034,7 @@ function trackVisit() {
 function init() {
   document.body.dataset.world = "home";
   trackVisit();
+  renderMoon();
   document.body.classList.toggle("soft-mode", state.softMode);
   renderAtlas();
   setMood(selectedMood);
