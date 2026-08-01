@@ -150,9 +150,10 @@
       y: savedPos?.y ?? (window.innerHeight * 0.6),
       wanderTarget: null, nextWander: 6 + Math.random() * 10,
       dragging: false,
+      restPose: "neutral", holdUntil: 0,
     };
 
-    const size = () => Math.min(148, Math.max(112, window.innerWidth * 0.32));
+    const size = () => Math.min(210, Math.max(150, window.innerWidth * 0.42));
 
     function bounds() {
       const s = size();
@@ -174,7 +175,8 @@
       try { localStorage.setItem(POS_KEY, JSON.stringify({ x: S.x, y: S.y })); } catch {}
     }
 
-    function setPose(pose, fade) {
+    function setPose(pose, fade, holdSec) {
+      if (holdSec) S.holdUntil = S.t + holdSec;
       if (pose === S.pose) return;
       S.prevPose = S.pose; S.pose = pose; S.fade = 0;
       S.fadeDur = Math.max(fade || 0.2, 1 / 60);
@@ -229,30 +231,25 @@
       addBond(bondGain);
 
       if (kind === "love") {
-        setPose("excited", 0.14); emit("heart", cw, cx, cy, 14); S.blush.target = 1;
-        setTimeout(() => setPose("content", 0.3), 1000);
+        setPose("excited", 0.14, 1.0); emit("heart", cw, cx, cy, 14); S.blush.target = 1;
         say("excited");
       } else if (kind === "shy") {
-        setPose("shy", 0.14); S.blush.target = 1; emit("heart", cw, cx, cy, 4);
-        setTimeout(() => setPose("content", 0.3), 1100);
+        setPose("shy", 0.14, 1.1); S.blush.target = 1; emit("heart", cw, cx, cy, 4);
         say("shy");
       } else if (kind === "tickle") {
-        setPose("surprised", 0.1); emit("spark", cw, cx, cy, 8);
+        setPose("surprised", 0.1, 0.26); emit("spark", cw, cx, cy, 8);
         S.tiltLean.vel += 40;
-        setTimeout(() => { setPose("happy", 0.2); say("happy"); }, 260);
-        setTimeout(() => setPose("content", 0.3), 1100);
+        setTimeout(() => { if (!S.holdUntil || S.t >= S.holdUntil - 0.9) { setPose("happy", 0.2, 0.85); say("happy"); } }, 260);
       } else if (kind === "sleepy") {
         setPose("sleepy", 0.3); say("sleepy");
       } else if (kind === "surprised") {
-        setPose("surprised", 0.1); emit("spark", cw, cx, cy, 7);
-        setTimeout(() => setPose("curious", 0.3), 700);
+        setPose("surprised", 0.1, 0.7); emit("spark", cw, cx, cy, 7);
         say("surprised");
       } else if (kind === "pet") {
         setPose("content", 0.2); emit("heart", cw, cx, cy, 5); S.blush.target = 0.7;
         say("content");
       } else {
-        setPose("happy", 0.15); emit("spark", cw, cx, cy, 6);
-        setTimeout(() => setPose("content", 0.3), 800);
+        setPose("happy", 0.15, 0.8); emit("spark", cw, cx, cy, 6);
         say("happy");
       }
     }
@@ -260,6 +257,7 @@
     function setMood(mood) {
       const map = { soft: "content", heavy: "shy", sleepy: "sleepy", clingy: "lookup" };
       const pose = map[mood] || "neutral";
+      S.restPose = pose;
       setPose(pose, 0.35);
       say(pose);
     }
@@ -336,11 +334,10 @@
         return;
       }
       if (S.t < S.nextBlink) return;
+      if (S.holdUntil && S.t < S.holdUntil) return;
       if (!["neutral", "content", "curious"].includes(S.pose)) { S.nextBlink = S.t + 1; return; }
       S.blinkUntil = S.t + 0.12;
-      const was = S.pose;
-      setPose("wink", 0.05);
-      setTimeout(() => { if (S.pose === "wink") setPose(was, 0.08); }, 120);
+      setPose("wink", 0.05, 0.12);
     }
 
     function stepWander(dt) {
@@ -362,33 +359,47 @@
         x: b.minX + Math.random() * (b.maxX - b.minX),
         y: b.minY + Math.random() * (b.maxY - b.minY),
       };
-      setPose(Math.random() < 0.5 ? "curious" : "neutral", 0.4);
-      setTimeout(() => { if (!S.dragging) setPose("neutral", 0.4); }, 1200);
+      if (!S.holdUntil || S.t >= S.holdUntil) setPose(Math.random() < 0.5 ? "curious" : "neutral", 0.4, 1.2);
       savePos();
+    }
+
+    // the one authority that returns her to rest once any hold expires -
+    // replaces the old scattered setTimeout reverts that could race each other
+    function stepHold() {
+      if (S.holdUntil && S.t >= S.holdUntil) {
+        S.holdUntil = 0;
+        if (S.pose !== "wink") setPose(S.restPose, 0.3);
+      }
     }
 
     let last = performance.now();
     function loop(now) {
-      const dt = Math.min((now - last) / 1000, 1 / 20);
-      last = now; S.t += dt;
+      try {
+        const dt = Math.min((now - last) / 1000, 1 / 20);
+        last = now; S.t += dt;
 
-      if (S.fade < 1) S.fade = Math.min(1, S.fade + dt / S.fadeDur);
-      stepBlink();
-      stepWander(dt);
-      [S.squash, S.earL, S.earR, S.sprout, S.blush, S.tiltLean].forEach(s => springStep(s, dt));
-      S.blush.target *= 0.99; S.tiltLean.target *= 0.96;
+        if (S.fade < 1) S.fade = Math.min(1, S.fade + dt / S.fadeDur);
+        stepHold();
+        stepBlink();
+        stepWander(dt);
+        [S.squash, S.earL, S.earR, S.sprout, S.blush, S.tiltLean].forEach(s => springStep(s, dt));
+        S.blush.target *= 0.99; S.tiltLean.target *= 0.96;
 
-      S.parts = S.parts.filter(p => {
-        p.life += dt; if (p.life >= p.ttl) return false;
-        p.x += p.vx * dt; p.y -= p.vy * dt; p.vy -= 130 * dt;
-        return true;
-      });
+        S.parts = S.parts.filter(p => {
+          p.life += dt; if (p.life >= p.ttl) return false;
+          p.x += p.vx * dt; p.y -= p.vy * dt; p.vy -= 130 * dt;
+          return true;
+        });
 
-      placeRoam();
-      const bond = getBond();
-      const glow = clamp((bond - STAGES[3]) / 30, 0, 1) * 0.4;
-      drawInto(bubbleCanvas.getContext("2d"), bubbleCanvas.width, glow);
-      if (S.expanded) drawInto(fullCanvas.getContext("2d"), fullCanvas.width, glow);
+        placeRoam();
+        const bond = getBond();
+        const glow = clamp((bond - STAGES[3]) / 30, 0, 1) * 0.4;
+        drawInto(bubbleCanvas.getContext("2d"), bubbleCanvas.width, glow);
+        if (S.expanded) drawInto(fullCanvas.getContext("2d"), fullCanvas.width, glow);
+      } catch (err) {
+        last = now;
+        console.error("Poo loop error (recovered):", err);
+      }
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(t => { last = t; requestAnimationFrame(loop); });
@@ -401,10 +412,10 @@
           const bond = getBond();
           const act = bond > STAGES[2] && Math.random() < 0.3 ? "watch"
             : acts[Math.floor(Math.random() * acts.length)];
-          if (act === "look") { setPose("curious", 0.3); setTimeout(() => setPose("neutral", 0.3), 1500); }
+          if (act === "look") { setPose("curious", 0.3, 1.5); }
           else if (act === "wiggle") { S.earL.vel += 24; S.earR.vel -= 24; S.sprout.vel += 18; }
-          else if (act === "yawn") { setPose("sleepy", 0.3); setTimeout(() => setPose("neutral", 0.4), 1600); }
-          else if (act === "watch") { setPose("lookup", 0.3); say("lookup"); setTimeout(() => setPose("neutral", 0.4), 2200); }
+          else if (act === "yawn") { setPose("sleepy", 0.3, 1.6); }
+          else if (act === "watch") { setPose("lookup", 0.3, 2.2); say("lookup"); }
           else { S.squash.value = 1.08; S.squash.vel -= 1; }
         }
         scheduleIdle();

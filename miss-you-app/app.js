@@ -3,7 +3,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0 };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -1987,8 +1987,45 @@ async function registerServiceWorker() {
   }
 }
 
+function todayStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function computeStreak(log) {
+  if (!log || !log.length) return 0;
+  const set = new Set(log);
+  let streak = 0;
+  const cursor = new Date();
+  while (set.has(todayStr(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function trackVisit() {
+  const today = todayStr();
+  if (!Array.isArray(state.visitLog)) state.visitLog = [];
+  if (state.visitLog[state.visitLog.length - 1] !== today) {
+    state.visitLog.push(today);
+    if (state.visitLog.length > 400) state.visitLog = state.visitLog.slice(-400);
+    saveState();
+  }
+  const streak = computeStreak(state.visitLog);
+  const el = $("#streak-line");
+  if (!el) return;
+  if (streak >= 2) {
+    el.hidden = false;
+    el.textContent = `🔥 day ${streak} in a row you've come back to me. ${state.visitLog.length} visits and counting.`;
+  } else {
+    el.hidden = true;
+  }
+}
+
 function init() {
   document.body.dataset.world = "home";
+  trackVisit();
   document.body.classList.toggle("soft-mode", state.softMode);
   renderAtlas();
   setMood(selectedMood);

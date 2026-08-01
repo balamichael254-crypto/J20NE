@@ -78,7 +78,7 @@ body.poo-full-open { overflow: hidden; }
 .poo-full-close small { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 
 .poo-canvas-full {
-  width: min(78vw, 60vh, 420px);
+  width: min(84vw, 64vh, 480px);
   height: auto;
   aspect-ratio: 620 / 700;
   display: block;
@@ -119,4 +119,11 @@ body.poo-full-open { overflow: hidden; }
   font-style: italic;
 }
 .presence-line:before { content: "🛰️ "; }
+
+.streak-line {
+  margin-top: 6px;
+  font-size: .82rem;
+  color: var(--muted);
+  font-style: italic;
+}
 
