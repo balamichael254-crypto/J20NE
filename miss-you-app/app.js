@@ -587,6 +587,7 @@ function setMood(mood) {
   $$(".mood-chip").forEach(btn => btn.classList.toggle("active", btn.dataset.mood === mood));
   $("#comfort-note").textContent = nextComfort(mood);
   saveState();
+  if (window.Poo) window.Poo.setMood(mood);
 }
 
 function renderAtlas() {
@@ -980,6 +981,7 @@ function bloomGarden() {
     flowerConfetti(44);
     burstAt(window.innerWidth / 2, window.innerHeight / 2, 16);
     toast("look, Moonpie. Your garden is blooming");
+    if (window.Poo) window.Poo.react("love");
   }, GARDEN_BLOOM_DURATION - 1200);
 }
 
@@ -1026,6 +1028,7 @@ function showCareResponse(mode) {
   $$("[data-care-mode]").forEach(button => button.classList.toggle("active", button.dataset.careMode === mode));
   $("#care-response").innerHTML = `<span>${response[0]}</span><h3>${escapeHtml(response[1])}</h3><p>${escapeHtml(response[2])}</p>`;
   burstAt(window.innerWidth / 2, Math.min(window.innerHeight * .62, 520), 8);
+  if (window.Poo) window.Poo.react("shy");
 }
 
 let breathingTimer = null;
@@ -1066,6 +1069,7 @@ function startBreathingCare() {
           button.disabled = false;
           button.textContent = "breathe together again";
           flowerConfetti(18);
+          if (window.Poo) window.Poo.react("cheer");
           return;
         }
       }
@@ -1279,6 +1283,7 @@ function endBubbleGame() {
   submitBubbleScore(result);
   flowerConfetti(bubbleScore >= 30 ? 28 : 14);
   toast(`${state.profile}: ${bubbleScore} points · ${result.accuracy}% accuracy · x${bubbleMaxCombo} combo`);
+  if (window.Poo) window.Poo.react(bubbleScore >= 30 ? "love" : "cheer");
 }
 
 function nextChallenge() {
@@ -1291,6 +1296,7 @@ function nextChallenge() {
 function rollLoveDice() {
   $("#dice-result").textContent = pick(dicePrompts);
   burstAt(window.innerWidth / 2, window.innerHeight / 2, 10);
+  if (window.Poo) window.Poo.react("cheer");
 }
 
 function showBirthdayStage(stage) {
