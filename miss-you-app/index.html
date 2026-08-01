@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=38">
+  <link rel="stylesheet" href="./styles.css?v=39">
   <link rel="stylesheet" href="./poo.css?v=2">
 </head>
 <body class="app-locked">
@@ -33,26 +33,24 @@
     </form>
   </section>
 
-  <section class="birthday-opening hidden" id="birthday-opening" aria-label="birthday candle ceremony">
+  <section class="day-opening hidden" id="birthday-opening" aria-label="girlfriend day surprise">
     <div class="opening-petals" id="opening-petals" aria-hidden="true"></div>
     <article class="opening-ritual-card">
       <p class="eyebrow">before your universe opens</p>
-      <div class="opening-cake cake-lit" id="opening-cake" aria-label="birthday cake with five lit candles">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
       <div class="opening-listen" id="opening-listen">
-        <h2>Make one birthday wish.</h2>
-        <p>Allow the microphone, take a breath, and blow gently toward your phone. I will take care of the flowers.</p>
-        <button class="primary-btn wide" id="allow-microphone" type="button">allow microphone and blow</button>
-        <div class="mic-meter" aria-label="microphone breath meter"><i id="mic-meter-fill"></i></div>
-        <p class="mic-status" id="mic-status">Your microphone only listens for the sound of your breath. Nothing is recorded.</p>
-        <button class="secondary-btn wide hidden" id="tap-blow-fallback" type="button">blow them out with a tap</button>
+        <h2>It's Girlfriend Day.</h2>
+        <p>I left something wrapped for you. Untie the ribbon.</p>
+        <button class="bouquet-unwrap" id="unwrap-bouquet" type="button" aria-label="untie the ribbon and open your surprise">
+          <img src="../assets/lily-bouquet.png" alt="A wrapped bouquet of pink lilies and roses" class="bouquet-wrapped-img">
+          <span class="ribbon-bow" aria-hidden="true">🎀</span>
+          <small>tap to untie</small>
+        </button>
       </div>
       <div class="opening-reveal hidden" id="opening-reveal">
-        <img src="../assets/lily-bouquet.png" alt="A birthday bouquet of pink lilies and roses">
-        <p class="script-kicker">your wish is on its way</p>
-        <h2>Happy birthday, Moonpie.</h2>
-        <p>The candles are out. The lilies are opening. Your little universe is ready.</p>
+        <img src="../assets/lily-bouquet.png" alt="A bouquet of pink lilies and roses">
+        <p class="script-kicker">happy girlfriend day</p>
+        <h2>These are yours, Moonpie.</h2>
+        <p>The ribbon's untied. The lilies are open. Your little universe is ready.</p>
         <button class="primary-btn wide" id="enter-universe" type="button">enter your universe</button>
       </div>
     </article>
@@ -79,11 +77,11 @@
 
     <main>
       <section class="screen active" id="screen-home" aria-label="home">
-        <section class="opening-garden home-garden" aria-label="birthday garden preview">
+        <section class="opening-garden home-garden" aria-label="love garden preview">
           <div class="garden-copy">
             <p class="script-kicker">for the love of my life</p>
             <h2>Moonpie</h2>
-            <p>This is not just an app. It is the little birthday garden I made for you, folded gently into your phone.</p>
+            <p>This is not just an app. It is the little love garden I made for you, folded gently into your phone.</p>
             <button class="primary-btn" data-open="garden" type="button">open the garden</button>
           </div>
         </section>
@@ -134,7 +132,7 @@
         <div class="section-head">
           <p class="eyebrow">not basic cards</p>
           <h2>Your universe atlas</h2>
-          <p>Every part of the birthday world I made for you, gathered here for the moments you miss me.</p>
+          <p>Every part of the little world I made for you, gathered here for the moments you miss me.</p>
         </div>
         <div class="atlas-grid" id="atlas-grid"></div>
       </section>
@@ -142,7 +140,7 @@
       <section class="screen world-screen" id="screen-garden" aria-label="garden">
         <div class="section-head garden-head">
           <p class="eyebrow">the original magic, restored</p>
-          <h2>Your Birthday Garden</h2>
+          <h2>Your Love Garden</h2>
           <p>I planted this little world for you: a blooming heart tree, lilies, a bouquet, and petals that never stop falling.</p>
         </div>
         <article class="garden-stage premium-card" id="garden-stage">
@@ -330,8 +328,8 @@
         <div class="memory-list" id="memory-list"></div>
       </section>
 
-      <section class="screen world-screen" id="screen-birthday" aria-label="birthday wish">
-        <div class="section-head"><p class="eyebrow">save this one for last</p><h2>Birthday Wish</h2></div>
+      <section class="screen world-screen" id="screen-birthday" aria-label="girlfriend day wish">
+        <div class="section-head"><p class="eyebrow">save this one for last</p><h2>Girlfriend Day Wish</h2></div>
         <article class="birthday-card premium-card" id="birthday-wish"></article>
       </section>
 
@@ -369,7 +367,7 @@
       <button class="tab" data-open="atlas" type="button">🪐<span>atlas</span></button>
       <button class="tab" data-open="doodles" type="button">✍️<span>create</span></button>
       <button class="tab" data-open="care" type="button">🫶<span>care</span></button>
-      <button class="tab" data-open="birthday" type="button">🎂<span>wish</span></button>
+      <button class="tab" data-open="birthday" type="button">💐<span>wish</span></button>
     </nav>
   </div>
 
@@ -386,8 +384,8 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./content.js?v=38"></script>
-  <script src="./app.js?v=38"></script>
+  <script src="./content.js?v=39"></script>
+  <script src="./app.js?v=39"></script>
   <script src="./poo.js?v=2"></script>
   <script src="./presence.js?v=2"></script>
 </body>

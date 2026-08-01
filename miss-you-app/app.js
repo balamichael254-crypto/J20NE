@@ -17,14 +17,12 @@ const GARDEN_BLOOM_DURATION = 9200;
 let navIdleTimer = null;
 let lastScrollY = 0;
 let widgetSyncTimer = null;
-let activeMicStream = null;
-let activeAudioContext = null;
 const screenHistory = [];
 const renderedScreens = new Set(["home", "atlas"]);
 let widgetSyncStarted = false;
 
 const worlds = [
-  { id: "garden", icon: "🌸", title: "Birthday Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
+  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
   { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter" },
   { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem" },
   { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice" },
@@ -35,7 +33,7 @@ const worlds = [
   { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance" },
   { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason" },
   { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory" },
-  { id: "birthday", icon: "🎂", title: "Birthday Wish", sub: "save this one for last", count: 1, tone: "birthday" },
+  { id: "birthday", icon: "💐", title: "Girlfriend Day Wish", sub: "save this one for last", count: 1, tone: "birthday" },
   { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create" },
   { id: "games", icon: "🎮", title: "Love Arcade", sub: "tap tiny feelings", count: 6, tone: "game" },
   { id: "care", icon: "🫶", title: "Emergency Care", sub: "when missing gets heavy", count: 5, tone: "care" }
@@ -109,19 +107,19 @@ const letters = [
     closing: "Call me in your heart. I will answer there too."
   },
   {
-    title: "Your Birthday Letter",
+    title: "Your Girlfriend Day Letter",
     tab: "save this one",
     theme: "birthday",
-    preview: "For the day the world became luckier because you arrived in it.",
-    salutation: "Happy birthday, Michelle,",
+    preview: "For the day the world got a little luckier, because I get to call you mine.",
+    salutation: "Happy Girlfriend Day, Michelle,",
     body: [
-      "Today is not just the day you were born. It is the day every person who gets to love you became possible. It is the beginning of your laugh, your softness, your stubborn little heart, your dreams, your voice, your way of making ordinary things feel warm.",
+      "There is no candle to blow out for this one, just a whole day the world set aside to say what I already know every day: I am the luckiest person alive because you chose to be mine.",
       "I wish I could place flowers in your hands for real. I wish I could watch your face while you read this. I wish I could make the whole day gentle around you, like the world knows it is carrying someone precious.",
-      "You deserve more than a message. You deserve a room full of lilies, a sky full of pink light, a cake with wishes that come true, and a love that does not make you wonder if you are too much.",
+      "You deserve more than a message. You deserve a room full of lilies, a sky full of pink light, and a love that does not make you wonder if you are too much.",
       "You are not too much. You are my favorite kind of everything. My Moonpie. My Princess. My babyy. My person in the softest part of my chest.",
-      "I hope this year gives you proof after proof that you are loved, protected, chosen, and seen. I hope it brings you closer to the life you dream about. I hope it brings you closer to me."
+      "So happy Girlfriend Day, Moonpie. Here's to every one of these we get, near or far, until there is no more distance left to close."
     ],
-    closing: "Make a wish. I am wishing for you too."
+    closing: "Make a wish anyway. I am wishing for you too."
   },
   {
     title: "The Future I Keep Seeing",
@@ -987,18 +985,10 @@ function bloomGarden() {
 
 function renderBirthday() {
   $("#birthday-wish").innerHTML = `
-    <div class="birthday-stage" data-birthday-stage="candles">
-      <p class="card-label">step 1</p>
-      <div class="cake-mini cake-lit" aria-label="birthday cake with candles"><span></span><span></span><span></span></div>
-      <h2>Blow the candles, Michelle.</h2>
-      <p>Let the microphone hear one gentle birthday breath. Nothing is recorded.</p>
-      <button class="primary-btn wide" id="blow-candles" type="button">listen for my breath</button>
-    </div>
-
-    <div class="birthday-stage hidden" data-birthday-stage="wish">
-      <p class="card-label">step 2</p>
+    <div class="birthday-stage" data-birthday-stage="wish">
+      <p class="card-label">it's girlfriend day</p>
       <div class="wish-moon">🌙</div>
-      <h2>Now make a wish.</h2>
+      <h2>Make a wish, Michelle.</h2>
       <p>Write it here or keep it secret. Either way, I am rooting for every soft thing your heart asks for.</p>
       <textarea id="birthday-wish-text" rows="3" maxlength="180" placeholder="my wish is..."></textarea>
       <button class="primary-btn wide" id="seal-wish" type="button">seal my wish</button>
@@ -1007,11 +997,11 @@ function renderBirthday() {
     <div class="birthday-stage hidden" data-birthday-stage="letter">
       <p class="card-label">wish sealed</p>
       <div class="birthday-envelope">💌</div>
-      <h2>Happy birthday, Michelle.</h2>
+      <h2>Happy Girlfriend Day, Michelle.</h2>
       <p class="birthday-letter">You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.</p>
       <p class="birthday-letter">My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.</p>
       <p class="birthday-letter">Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it.</p>
-      <button class="secondary-btn wide" id="replay-birthday" type="button">replay the birthday magic</button>
+      <button class="secondary-btn wide" id="replay-birthday" type="button">make another wish</button>
     </div>
   `;
 }
@@ -1322,87 +1312,10 @@ function seedOpeningFlowers() {
   });
 }
 
-function cleanupMicrophone() {
-  activeMicStream?.getTracks?.().forEach(track => track.stop());
-  activeMicStream = null;
-  activeAudioContext?.close?.().catch(() => {});
-  activeAudioContext = null;
-}
-
-async function listenForBlow({ meter, status, fallback, onBlow }) {
-  cleanupMicrophone();
-  if (!navigator.mediaDevices?.getUserMedia) {
-    if (status) status.textContent = "This browser cannot listen for a breath. Use the gentle tap instead.";
-    fallback?.classList.remove("hidden");
-    return;
-  }
-  try {
-    if (status) status.textContent = "Listening now. Take a breath, then blow gently toward the microphone...";
-    activeMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-    activeAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    await activeAudioContext.resume?.();
-    const analyser = activeAudioContext.createAnalyser();
-    analyser.fftSize = 512;
-    analyser.smoothingTimeConstant = .2;
-    const source = activeAudioContext.createMediaStreamSource(activeMicStream);
-    source.connect(analyser);
-    const samples = new Uint8Array(analyser.fftSize);
-    let baseline = .018;
-    let frames = 0;
-    let strongFrames = 0;
-    let completed = false;
-    const started = performance.now();
-    const stopAt = started + 16000;
-
-    const sample = () => {
-      if (completed || !activeMicStream) return;
-      analyser.getByteTimeDomainData(samples);
-      let sum = 0;
-      for (const value of samples) {
-        const normalized = (value - 128) / 128;
-        sum += normalized * normalized;
-      }
-      const rms = Math.sqrt(sum / samples.length);
-      frames += 1;
-      if (frames < 35) baseline = baseline * .9 + rms * .1;
-      const threshold = Math.max(.075, baseline * 3.25);
-      if (meter) meter.style.width = `${Math.min(100, 8 + rms / Math.max(threshold, .01) * 78)}%`;
-      strongFrames = rms > threshold && performance.now() - started > 650 ? strongFrames + 1 : Math.max(0, strongFrames - 1);
-      if (strongFrames >= 3) {
-        completed = true;
-        if (status) status.textContent = "I heard you. Your candles are going out...";
-        cleanupMicrophone();
-        onBlow();
-        return;
-      }
-      if (performance.now() > stopAt) {
-        if (status) status.textContent = "I did not catch it clearly. Try once more or use the gentle tap.";
-        fallback?.classList.remove("hidden");
-        if (fallback) {
-          fallback.dataset.blowFallback = "true";
-          if (fallback.id === "blow-candles") fallback.textContent = "tap gently to blow them out";
-        }
-        cleanupMicrophone();
-        return;
-      }
-      requestAnimationFrame(sample);
-    };
-    requestAnimationFrame(sample);
-  } catch {
-    cleanupMicrophone();
-    if (status) status.textContent = "Microphone permission was not available. Your wish still counts; use the gentle tap.";
-    fallback?.classList.remove("hidden");
-    if (fallback) {
-      fallback.dataset.blowFallback = "true";
-      if (fallback.id === "blow-candles") fallback.textContent = "tap gently to blow them out";
-    }
-  }
-}
-
-function completeOpeningBlow() {
-  const cake = $("#opening-cake");
-  if (cake?.classList.contains("cake-blown")) return;
-  cake?.classList.add("cake-blown");
+function completeBouquetUnwrap() {
+  const button = $("#unwrap-bouquet");
+  if (button?.classList.contains("untied")) return;
+  button?.classList.add("untied");
   navigator.vibrate?.([35, 45, 35]);
   flowerConfetti(90);
   burstAt(window.innerWidth / 2, window.innerHeight * .36, 18);
@@ -1410,7 +1323,7 @@ function completeOpeningBlow() {
     $("#opening-listen")?.classList.add("hidden");
     $("#opening-reveal")?.classList.remove("hidden");
     flowerConfetti(72);
-  }, 950);
+  }, 550);
 }
 
 function enterUniverse() {
@@ -1458,28 +1371,8 @@ function setupOpeningRitual() {
     $("#birthday-opening")?.classList.remove("hidden");
     setTimeout(() => $("#entry-gate")?.remove(), 650);
   });
-  $("#allow-microphone")?.addEventListener("click", () => listenForBlow({ meter: $("#mic-meter-fill"), status: $("#mic-status"), fallback: $("#tap-blow-fallback"), onBlow: completeOpeningBlow }));
-  $("#tap-blow-fallback")?.addEventListener("click", completeOpeningBlow);
+  $("#unwrap-bouquet")?.addEventListener("click", completeBouquetUnwrap);
   $("#enter-universe")?.addEventListener("click", enterUniverse);
-}
-
-function blowCandles() {
-  const cake = $(".cake-mini");
-  cake?.classList.remove("cake-lit");
-  cake?.classList.add("cake-blown");
-  burstAt(window.innerWidth / 2, 250, 10);
-  toast("make a wish, birthday girl");
-  setTimeout(() => showBirthdayStage("wish"), 700);
-}
-
-function listenForBirthdayBlow() {
-  const button = $("#blow-candles");
-  if (button) button.textContent = "listening... blow gently";
-  listenForBlow({
-    status: button?.previousElementSibling,
-    fallback: button,
-    onBlow: blowCandles
-  });
 }
 
 function sealBirthdayWish() {
@@ -1492,7 +1385,7 @@ function sealBirthdayWish() {
 
 function replayBirthday() {
   renderBirthday();
-  toast("candles relit");
+  toast("make a new wish");
 }
 
 function renderWidgets() {
@@ -1910,8 +1803,6 @@ function setupEvents() {
     const portal = event.target.closest("[data-world-portal]");
     if (portal) openFutureWorld(Number(portal.dataset.worldPortal));
     if (event.target.closest("#bloom-garden,#seed-heart")) bloomGarden();
-    const birthdayBlow = event.target.closest("#blow-candles");
-    if (birthdayBlow) birthdayBlow.dataset.blowFallback === "true" ? blowCandles() : listenForBirthdayBlow();
     if (event.target.closest("#seal-wish")) sealBirthdayWish();
     if (event.target.closest("#replay-birthday")) replayBirthday();
     const expressive = event.target.closest(".primary-btn,.world-tile,.letter-card,.mood-chip");
