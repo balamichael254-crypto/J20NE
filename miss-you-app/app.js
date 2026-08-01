@@ -3,7 +3,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [] };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {} };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -993,6 +993,50 @@ const girlfriendDayCompliments = [
   "Whatever room you are in becomes the good one.",
 ];
 
+const girlfriendDayDares = [
+  "Send me a voice note laughing on purpose, badly, right now.",
+  "Take a selfie making the face you make when you see my texts.",
+  "Describe today in exactly one word and send it with no context.",
+  "Play our song out loud for fifteen seconds, wherever you are.",
+  "Text me the last thing that made you smile before this app did.",
+  "Look in a mirror and say one nice thing about yourself. Out loud. I'll wait.",
+  "Send me a voice memo of you saying my name the way you say it when I do something dumb.",
+];
+
+const girlfriendDayFutures = [
+  "A rooftop dinner the night we finally land in the same city.",
+  "A slow, boring Sunday morning where neither of us has anywhere to be.",
+  "Getting lost somewhere on purpose, just to see what you'd say about it.",
+  "Cooking something ambitious and ruining it together, laughing the whole time.",
+  "Falling asleep mid-conversation because we are finally in the same room.",
+  "An ordinary grocery run that takes two hours because we won't stop talking.",
+  "Meeting your people, and mine, in the same loud, warm room.",
+];
+
+const giftKinds = {
+  compliment: { label: "a compliment", list: girlfriendDayCompliments },
+  song: { label: "a song for today", list: songs },
+  promise: { label: "a promise", list: promises },
+  dare: { label: "a tiny dare", list: girlfriendDayDares },
+  future: { label: "a future we're owed", list: girlfriendDayFutures },
+};
+
+function nextGiftIndex(kind, listLength) {
+  if (!state.giftMemory || typeof state.giftMemory !== "object") state.giftMemory = {};
+  const mem = state.giftMemory[kind] && Array.isArray(state.giftMemory[kind].deck)
+    ? state.giftMemory[kind]
+    : { deck: [], cursor: 0, last: -1 };
+  if (mem.deck.length !== listLength || mem.cursor >= mem.deck.length) {
+    mem.deck = shuffledIndexes(listLength, mem.last);
+    mem.cursor = 0;
+  }
+  const index = mem.deck[mem.cursor++];
+  mem.last = index;
+  state.giftMemory[kind] = mem;
+  saveState();
+  return index;
+}
+
 function revealGift(kind, box) {
   box?.classList.add("opened");
   const panel = $("#gift-reveal");
@@ -1001,16 +1045,19 @@ function revealGift(kind, box) {
   const rect = box?.getBoundingClientRect();
   burstAt(rect ? rect.left + rect.width / 2 : window.innerWidth / 2, rect ? rect.top : window.innerHeight / 2, 10);
   let html = "";
-  if (kind === "compliment") {
-    html = `<p class="card-label">a compliment</p><p>${escapeHtml(pick(girlfriendDayCompliments))}</p>`;
-  } else if (kind === "song") {
-    const [title, artist, note] = pick(songs);
-    html = `<p class="card-label">a song for today</p><h3>${escapeHtml(title)}</h3><p class="gift-song-artist">${escapeHtml(artist)}</p><p>${escapeHtml(note)}</p>`;
-  } else if (kind === "promise") {
-    html = `<p class="card-label">a promise</p><p>${escapeHtml(pick(promises))}</p>`;
-  } else if (kind === "hug") {
+  if (kind === "hug") {
     html = `<p class="card-label">from Poo</p><p>She heard it's Girlfriend Day too. Go say hi to her.</p>`;
     window.Poo?.react?.("love");
+  } else if (giftKinds[kind]) {
+    const { label, list } = giftKinds[kind];
+    const index = nextGiftIndex(kind, list.length);
+    const entry = list[index];
+    if (kind === "song") {
+      const [title, artist, note] = entry;
+      html = `<p class="card-label">${escapeHtml(label)}</p><h3>${escapeHtml(title)}</h3><p class="gift-song-artist">${escapeHtml(artist)}</p><p>${escapeHtml(note)}</p>`;
+    } else {
+      html = `<p class="card-label">${escapeHtml(label)}</p><p>${escapeHtml(entry)}</p>`;
+    }
   }
   panel.innerHTML = html;
   panel.classList.remove("hidden");
