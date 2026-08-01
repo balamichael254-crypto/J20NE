@@ -1048,6 +1048,13 @@ function revealGift(kind, box) {
   if (kind === "hug") {
     html = `<p class="card-label">from Poo</p><p>She heard it's Girlfriend Day too. Go say hi to her.</p>`;
     window.Poo?.react?.("love");
+  } else if (kind === "dance") {
+    html = `<p class="card-label">a slow dance</p><p>She's already spinning. Go open her up.</p>`;
+    window.Poo?.open?.();
+    setTimeout(() => window.Poo?.react?.("dance"), 250);
+  } else if (kind === "moonwish") {
+    const info = moonPhaseInfo(new Date());
+    html = `<p class="card-label">a wish on tonight's moon</p><h3>${info.emoji} ${escapeHtml(info.name)}</h3><p>Make a wish on it. Wherever you are, I'm looking at the same one.</p>`;
   } else if (giftKinds[kind]) {
     const { label, list } = giftKinds[kind];
     const index = nextGiftIndex(kind, list.length);

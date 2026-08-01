@@ -16,6 +16,19 @@
 .poo-roam:active { cursor: grabbing; }
 .poo-canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
 
+.poo-butterfly {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 54;
+  font-size: 1.7rem;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 10px rgba(43, 8, 58, .3));
+  animation: pooButterflyFlap .35s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes pooButterflyFlap { from { scale: 1 1; } to { scale: .78 1.08; } }
+
 .poo-word {
   position: absolute;
   left: 50%;
@@ -78,7 +91,7 @@ body.poo-full-open { overflow: hidden; }
 .poo-full-close small { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 
 .poo-canvas-full {
-  width: min(84vw, 64vh, 480px);
+  width: min(88vw, 68vh, 520px);
   height: auto;
   aspect-ratio: 620 / 700;
   display: block;

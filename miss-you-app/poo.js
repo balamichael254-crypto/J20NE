@@ -26,24 +26,35 @@
   // it feels earned rather than constant.
   const LINES = {
     neutral: ["Just glad to be near you.", "I like it here, watching your world.",
-      "No rush. I'll just sit with you a while."],
+      "No rush. I'll just sit with you a while.", "You can ignore me. I'll still be happy.",
+      "This spot is good. I pick it every time."],
     content: ["This is a good, quiet kind of happy.", "I could stay right here a long time.",
-      "You make ordinary minutes feel soft."],
+      "You make ordinary minutes feel soft.", "Nothing is wrong. I'm just soft right now."],
     happy: ["That made me happy too.", "I felt that, all the way over here.",
-      "You have good taste in tiny joys.", "See, this is why I like being yours."],
+      "You have good taste in tiny joys.", "See, this is why I like being yours.",
+      "Okay that one was genuinely delightful."],
     excited: ["Tell me everything, don't leave anything out.",
-      "I've been waiting for you to look over here.", "Okay, okay, what happened?!"],
+      "I've been waiting for you to look over here.", "Okay, okay, what happened?!",
+      "I'm vibrating a little. In a good way."],
     curious: ["Hm. What are you thinking about?", "You have that look again - tell me.",
-      "I'm nosy about your whole day, honestly."],
+      "I'm nosy about your whole day, honestly.", "Wait, what's that face for?"],
     lookup: ["I keep glancing over, hoping it's your turn to visit.",
       "Still watching the door for you.", "You're my favorite thing to wait for."],
     shy: ["...you're going to make me blush.", "I don't know where to look now.",
-      "Stop it. ...don't actually stop it."],
+      "Stop it. ...don't actually stop it.", "Okay, that one got me."],
     sleepy: ["Rest. I'll still be here when you wake up.", "Close your eyes. I'll keep watch.",
       "Sleepy, but happy-sleepy. The good kind."],
     surprised: ["Oh! I didn't expect that.", "You always catch me off guard.",
-      "Wait, really?"],
+      "Wait, really?", "Okay, hi! Did not see that coming."],
     wink: ["Caught you looking.", "Hehe."],
+    pet: ["Right there. Yes. Don't stop.", "Head pats are basically my whole love language.",
+      "I am now a puddle. Thank you for that."],
+    boop: ["Hey! ...okay that was kind of cute.", "Rude. I liked it though.",
+      "Boop received. Filing a complaint. Sort of."],
+    catch: ["Got it! Look - I caught you a butterfly.", "It tickled a little. Worth it.",
+      "Chased that thing across the whole screen for you."],
+    dance: ["Okay, hold my hand, we're doing this.", "This is the part where you're supposed to laugh at my moves.",
+      "No music? Doesn't matter. I brought my own rhythm."],
   };
 
   const GREETINGS = {
@@ -143,7 +154,7 @@
       pose: "neutral", prevPose: "neutral", fade: 1, fadeDur: 0.2,
       squash: Spring(1, 220, 12),
       earL: Spring(0, 85, 5.2), earR: Spring(0, 85, 5.2), sprout: Spring(0, 140, 4),
-      blush: Spring(0, 60, 9), tiltLean: Spring(0, 70, 8),
+      blush: Spring(0, 60, 9), tiltLean: Spring(0, 70, 8), hop: Spring(0, 150, 7),
       blinkUntil: -1, nextBlink: 2 + Math.random() * 4,
       recentTaps: [], expanded: false,
       x: savedPos?.x ?? (window.innerWidth * 0.74),
@@ -151,9 +162,11 @@
       wanderTarget: null, nextWander: 6 + Math.random() * 10,
       dragging: false,
       restPose: "neutral", holdUntil: 0,
+      pickupY: 0, yFalling: false, ySpring: Spring(0, 55, 9),
+      butterfly: null, nextButterfly: 40 + Math.random() * 50,
     };
 
-    const size = () => Math.min(210, Math.max(150, window.innerWidth * 0.42));
+    const size = () => Math.min(270, Math.max(196, window.innerWidth * 0.54));
 
     function bounds() {
       const s = size();
@@ -227,7 +240,7 @@
       S.earL.vel += (Math.random() - 0.5) * 34; S.earR.vel += (Math.random() - 0.5) * 34;
       S.sprout.vel += 22;
 
-      const bondGain = { pet: 0.6, cheer: 0.4, love: 1.6, tickle: 1.0, shy: 0.8 }[kind] || 0.3;
+      const bondGain = { pet: 0.6, cheer: 0.4, love: 1.6, tickle: 1.0, shy: 0.8, boop: 0.4, catch: 1.2, dance: 1.4 }[kind] || 0.3;
       addBond(bondGain);
 
       if (kind === "love") {
@@ -246,8 +259,22 @@
         setPose("surprised", 0.1, 0.7); emit("spark", cw, cx, cy, 7);
         say("surprised");
       } else if (kind === "pet") {
-        setPose("content", 0.2); emit("heart", cw, cx, cy, 5); S.blush.target = 0.7;
-        say("content");
+        setPose("content", 0.2, 0.9); emit("heart", cw, cx, cy, 5); S.blush.target = 0.7;
+        say("pet");
+      } else if (kind === "boop") {
+        setPose("surprised", 0.08, 0.5); S.sprout.vel += 46; emit("spark", cw, cx, cy, 4);
+        S.tiltLean.vel += (Math.random() < 0.5 ? -1 : 1) * 30;
+        say("boop");
+      } else if (kind === "catch") {
+        setPose("excited", 0.12, 1.1); emit("heart", cw, cx, cy, 10); emit("spark", cw, cx, cy, 8);
+        say("catch");
+      } else if (kind === "dance") {
+        setPose("excited", 0.14, 2.6); emit("heart", cw, cx, cy, 8); S.blush.target = 0.8;
+        S.tiltLean.vel += 30; S.hop.vel += 220;
+        say("dance");
+        setTimeout(() => { S.tiltLean.vel -= 55; S.hop.vel += 200; }, 380);
+        setTimeout(() => { S.tiltLean.vel += 40; S.hop.vel += 180; emit("heart", cw, cx, cy, 6); }, 780);
+        setTimeout(() => { setPose("content", 0.3); }, 2400);
       } else {
         setPose("happy", 0.15, 0.8); emit("spark", cw, cx, cy, 6);
         say("happy");
@@ -290,7 +317,7 @@
       const sq = S.squash.value;
       const sy = sq * (1 + breath);
       const sx = (1 / Math.max(sq, 0.4)) * (1 - breath * 0.5);
-      const bob = Math.sin(S.t * 1.1) * cw * 0.014;
+      const bob = Math.sin(S.t * 1.1) * cw * 0.014 - S.hop.value * cw * 0.1;
       const rot = clamp(S.tiltLean.value, -22, 22);
 
       ctx.save();
@@ -340,8 +367,65 @@
       setPose("wink", 0.05, 0.12);
     }
 
+    function stepYFall(dt) {
+      if (!S.yFalling) return;
+      S.y = springStep(S.ySpring, dt);
+      if (Math.abs(S.ySpring.vel) < 3 && Math.abs(S.ySpring.value - S.pickupY) < 1.2) {
+        S.yFalling = false;
+        S.y = S.pickupY;
+        savePos();
+      }
+    }
+
+    function stepButterfly(dt) {
+      if (S.expanded) return;
+      if (S.butterfly) {
+        const bf = S.butterfly;
+        bf.x += bf.vx * dt + Math.sin(S.t * 2.4) * 12 * dt;
+        bf.y += Math.sin(S.t * 3.1) * 16 * dt;
+        bf.el.style.transform = `translate(${bf.x}px, ${bf.y}px)`;
+        if (!S.dragging && !S.yFalling) {
+          S.x += (bf.x - S.x) * Math.min(dt * 1.6, 1);
+          S.y += (bf.y - S.y) * Math.min(dt * 1.6, 1);
+          S.tiltLean.target = clamp((bf.x - S.x) * 0.08, -16, 16);
+        }
+        const dist = Math.hypot(bf.x - S.x, bf.y - S.y);
+        if (dist < size() * 0.3) {
+          bf.el.remove();
+          S.butterfly = null;
+          S.nextButterfly = S.t + 70 + Math.random() * 70;
+          savePos();
+          react("catch");
+        } else if (bf.x < -100 || bf.x > window.innerWidth + 100) {
+          bf.el.remove();
+          S.butterfly = null;
+          S.nextButterfly = S.t + 40 + Math.random() * 50;
+        }
+        return;
+      }
+      if (S.dragging || S.yFalling) return;
+      if (S.t < S.nextButterfly) return;
+      spawnButterfly();
+    }
+
+    function spawnButterfly() {
+      const fromLeft = Math.random() < 0.5;
+      const b = bounds();
+      const el = document.createElement("div");
+      el.className = "poo-butterfly";
+      el.textContent = "🦋";
+      document.body.appendChild(el);
+      S.butterfly = {
+        el,
+        x: fromLeft ? -60 : window.innerWidth + 60,
+        y: b.minY + Math.random() * (b.maxY - b.minY),
+        vx: (fromLeft ? 1 : -1) * (34 + Math.random() * 18),
+      };
+      setPose("curious", 0.3, 8);
+    }
+
     function stepWander(dt) {
-      if (S.dragging || S.expanded) return;
+      if (S.dragging || S.expanded || S.yFalling || S.butterfly) return;
       if (S.t < S.nextWander) {
         if (S.wanderTarget) {
           const b = bounds();
@@ -355,9 +439,14 @@
       }
       S.nextWander = S.t + 14 + Math.random() * 26;
       const b = bounds();
+      // drift near wherever she currently is rather than anywhere in the
+      // whole play area - otherwise repeated wandering statistically pulls
+      // her back toward the middle and quietly undoes manual placement
+      const radiusX = (b.maxX - b.minX) * 0.16;
+      const radiusY = (b.maxY - b.minY) * 0.14;
       S.wanderTarget = {
-        x: b.minX + Math.random() * (b.maxX - b.minX),
-        y: b.minY + Math.random() * (b.maxY - b.minY),
+        x: clamp(S.x + (Math.random() * 2 - 1) * radiusX, b.minX, b.maxX),
+        y: clamp(S.y + (Math.random() * 2 - 1) * radiusY, b.minY, b.maxY),
       };
       if (!S.holdUntil || S.t >= S.holdUntil) setPose(Math.random() < 0.5 ? "curious" : "neutral", 0.4, 1.2);
       savePos();
@@ -381,8 +470,10 @@
         if (S.fade < 1) S.fade = Math.min(1, S.fade + dt / S.fadeDur);
         stepHold();
         stepBlink();
+        stepYFall(dt);
+        stepButterfly(dt);
         stepWander(dt);
-        [S.squash, S.earL, S.earR, S.sprout, S.blush, S.tiltLean].forEach(s => springStep(s, dt));
+        [S.squash, S.earL, S.earR, S.sprout, S.blush, S.tiltLean, S.hop].forEach(s => springStep(s, dt));
         S.blush.target *= 0.99; S.tiltLean.target *= 0.96;
 
         S.parts = S.parts.filter(p => {
@@ -404,31 +495,59 @@
     }
     requestAnimationFrame(t => { last = t; requestAnimationFrame(loop); });
 
+    // a full-body stretch, choreographed with the parts we actually have
+    // (no separate arm/leg art exists in the rig - ears splay wide and the
+    // body compresses then elongates, which reads as reaching without
+    // needing new limb layers)
+    function doStretch() {
+      setPose("content", 0.25, 1.7);
+      S.squash.value = 0.88; S.squash.vel -= 1.4;
+      S.earL.vel += 75; S.earR.vel -= 75;
+      S.tiltLean.vel += 16;
+      setTimeout(() => {
+        S.squash.value = 1.18; S.squash.vel += 2.4;
+        S.tiltLean.vel -= 32;
+        S.sprout.vel += 30;
+      }, 420);
+    }
+
+    function doHop() {
+      setPose(Math.random() < 0.5 ? "happy" : "excited", 0.15, 1.1);
+      S.hop.vel += 300;
+      S.squash.value = 0.9; S.squash.vel -= 1;
+      setTimeout(() => { S.hop.vel += 240; S.squash.value = 1.1; S.squash.vel += 1.4; }, 260);
+    }
+
     // idle acts - gentle, occasional, never stacked with wandering's own pose change
     function scheduleIdle() {
       setTimeout(() => {
         if (!S.dragging && !S.expanded && document.visibilityState === "visible") {
-          const acts = ["look", "wiggle", "stretch", "yawn"];
+          const acts = ["look", "wiggle", "stretch", "yawn", "hop"];
           const bond = getBond();
           const act = bond > STAGES[2] && Math.random() < 0.3 ? "watch"
             : acts[Math.floor(Math.random() * acts.length)];
           if (act === "look") { setPose("curious", 0.3, 1.5); }
           else if (act === "wiggle") { S.earL.vel += 24; S.earR.vel -= 24; S.sprout.vel += 18; }
+          else if (act === "stretch") { doStretch(); }
+          else if (act === "hop") { doHop(); }
           else if (act === "yawn") { setPose("sleepy", 0.3, 1.6); }
           else if (act === "watch") { setPose("lookup", 0.3, 2.2); say("lookup"); }
-          else { S.squash.value = 1.08; S.squash.vel -= 1; }
         }
         scheduleIdle();
-      }, 20000 + Math.random() * 34000);
+      }, 16000 + Math.random() * 28000);
     }
     scheduleIdle();
 
     // ---- drag ----
-    let moved = false, holdTimer = null, startX = 0, startY = 0;
+    let moved = false, holdTimer = null, startX = 0, startY = 0, tapZone = "belly";
     roam.addEventListener("pointerdown", (e) => {
       roam.setPointerCapture(e.pointerId);
-      S.dragging = true; moved = false;
+      S.dragging = true; moved = false; S.yFalling = false;
       startX = e.clientX; startY = e.clientY;
+      S.pickupY = S.y;
+      const rect = roam.getBoundingClientRect();
+      const relY = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
+      tapZone = relY < 0.4 ? "head" : relY < 0.72 ? "belly" : "paws";
       holdTimer = setTimeout(() => { if (!moved) react("shy"); }, 550);
     });
     roam.addEventListener("pointermove", (e) => {
@@ -450,10 +569,17 @@
       if (!moved) {
         S.recentTaps = S.recentTaps.filter(t => S.t - t < 2);
         S.recentTaps.push(S.t);
-        react(S.recentTaps.length >= 3 ? "love" : "cheer");
+        if (S.recentTaps.length >= 3) react("love");
+        else if (tapZone === "head") react("pet");
+        else if (tapZone === "paws") react("boop");
+        else react("tickle");
       } else {
-        savePos();
-        S.nextWander = S.t + 16 + Math.random() * 20;
+        // she was held, not dropped - like a doll on a string, she swings back
+        // to the height you picked her up from instead of sinking to the floor
+        S.ySpring.value = S.y;
+        S.ySpring.target = S.pickupY;
+        S.yFalling = true;
+        S.nextWander = S.t + 55 + Math.random() * 45;
       }
     });
     roam.addEventListener("dblclick", () => openFull());
@@ -476,10 +602,22 @@
       btn.addEventListener("click", () => react(btn.dataset.pooAct));
     });
 
+    // mobile browsers fire resize constantly as the address bar shows/hides
+    // while scrolling - debounce and only correct if she's meaningfully
+    // outside the new bounds, so she doesn't visibly snap after every scroll
+    let resizeTimer = null;
     window.addEventListener("resize", () => {
-      const b = bounds();
-      S.x = clamp(S.x, b.minX, b.maxX);
-      S.y = clamp(S.y, b.minY, b.maxY);
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (S.dragging) return;
+        const b = bounds();
+        const nx = clamp(S.x, b.minX, b.maxX);
+        const ny = clamp(S.y, b.minY, b.maxY);
+        if (Math.abs(nx - S.x) > 4 || Math.abs(ny - S.y) > 4) {
+          S.x = nx; S.y = ny; S.pickupY = ny;
+          savePos();
+        }
+      }, 400);
     });
 
     // ---- public API ----
