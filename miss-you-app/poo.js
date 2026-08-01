@@ -21,9 +21,9 @@
   // moments rather than continuous idle: falling, catching a butterfly, and
   // a few extra expressions the rig doesn't have.
   const FLAT_DIR = "./assets/poo/extra/";
-  const FLAT_POSES = ["catch_reach", "fall_1", "fall_2", "fall_3", "fall_4", "fall_5", "fall_6",
+  const FLAT_POSES = ["catch_reach", "fall_1", "fall_2", "fall_3", "fall_6",
                        "wave", "sad", "grumpy", "delight", "peekaboo", "cheer"];
-  const FALL_SEQUENCE = ["fall_1", "fall_2", "fall_3", "fall_2", "fall_4", "fall_5", "fall_6"];
+  const FALL_SEQUENCE = ["fall_1", "fall_2", "fall_3", "fall_6"];
 
   const BOND_KEY = "moonpie-poo-bond";
   const POS_KEY = "moonpie-poo-pos";
