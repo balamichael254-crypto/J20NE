@@ -255,7 +255,7 @@ const songs = [
   ["Sleep Well", "d4vd", "For the soft nights when missing each other gets too loud."],
   ["Best Part", "Daniel Caesar ft. H.E.R.", "Because you are exactly that: the part my day keeps waiting for."],
   ["Those Eyes", "New West", "A song for tiny things, private jokes, and the ordinary ways love proves itself."],
-  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct birthday way."],
+  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct way."],
   ["Melting", "Kali Uchis", "For the moments where all I can do is be dramatically in love with you."],
   ["Japanese Denim", "Daniel Caesar", "For late calls, warm silence, and wanting more time."],
   ["Glue Song", "beabadoobee", "Because you stuck, Moonpie. Beautifully, inconveniently, permanently."]
@@ -981,6 +981,40 @@ function bloomGarden() {
     toast("look, Moonpie. Your garden is blooming");
     if (window.Poo) window.Poo.react("love");
   }, GARDEN_BLOOM_DURATION - 1200);
+}
+
+const girlfriendDayCompliments = [
+  "You make ordinary Tuesdays feel like an event.",
+  "You are the softest, funniest, most stubbornly loving person I know.",
+  "You argue like you mean it and love like you mean it more.",
+  "You are worth every time zone and every bad connection call.",
+  "You have never once made me feel silly for how much I adore you.",
+  "You are the calmest chaos I have ever loved.",
+  "Whatever room you are in becomes the good one.",
+];
+
+function revealGift(kind, box) {
+  box?.classList.add("opened");
+  const panel = $("#gift-reveal");
+  if (!panel) return;
+  navigator.vibrate?.(20);
+  const rect = box?.getBoundingClientRect();
+  burstAt(rect ? rect.left + rect.width / 2 : window.innerWidth / 2, rect ? rect.top : window.innerHeight / 2, 10);
+  let html = "";
+  if (kind === "compliment") {
+    html = `<p class="card-label">a compliment</p><p>${escapeHtml(pick(girlfriendDayCompliments))}</p>`;
+  } else if (kind === "song") {
+    const [title, artist, note] = pick(songs);
+    html = `<p class="card-label">a song for today</p><h3>${escapeHtml(title)}</h3><p class="gift-song-artist">${escapeHtml(artist)}</p><p>${escapeHtml(note)}</p>`;
+  } else if (kind === "promise") {
+    html = `<p class="card-label">a promise</p><p>${escapeHtml(pick(promises))}</p>`;
+  } else if (kind === "hug") {
+    html = `<p class="card-label">from Poo</p><p>She heard it's Girlfriend Day too. Go say hi to her.</p>`;
+    window.Poo?.react?.("love");
+  }
+  panel.innerHTML = html;
+  panel.classList.remove("hidden");
+  flowerConfetti(30);
 }
 
 function renderBirthday() {
@@ -1803,6 +1837,8 @@ function setupEvents() {
     const portal = event.target.closest("[data-world-portal]");
     if (portal) openFutureWorld(Number(portal.dataset.worldPortal));
     if (event.target.closest("#bloom-garden,#seed-heart")) bloomGarden();
+    const giftBox = event.target.closest(".gift-box");
+    if (giftBox) revealGift(giftBox.dataset.gift, giftBox);
     if (event.target.closest("#seal-wish")) sealBirthdayWish();
     if (event.target.closest("#replay-birthday")) replayBirthday();
     const expressive = event.target.closest(".primary-btn,.world-tile,.letter-card,.mood-chip");

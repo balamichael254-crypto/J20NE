@@ -245,6 +245,16 @@ body.doodle-expanded .tabbar{opacity:0;pointer-events:none}
 .memory-polaroid{background:linear-gradient(145deg,#fffaf3,#ffe9f3);color:var(--paper-ink);transform:rotate(var(--r))}
 .memory-polaroid p{color:#705a78}.fake-photo{height:140px;border-radius:18px;background:linear-gradient(145deg,#251037,#7a4ad9);display:grid;place-items:center;font-size:2.6rem;margin-bottom:12px}
 .birthday-card{padding:22px;text-align:center;background:radial-gradient(circle at 50% 0,rgba(255,224,138,.32),transparent 35%),linear-gradient(145deg,#fff8ef,#ffe0ef);color:var(--paper-ink)}
+.gift-grid-card{padding:20px;text-align:center;background:radial-gradient(circle at 50% 0,rgba(255,182,224,.28),transparent 35%),linear-gradient(145deg,#fff8ef,#f0e4ff);color:var(--paper-ink)}
+.gift-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gift-box{padding:18px 10px;border-radius:22px;border:1px solid rgba(150,90,160,.16);background:linear-gradient(150deg,rgba(255,255,255,.75),rgba(240,220,255,.55));display:grid;justify-items:center;gap:6px;cursor:pointer;transition:transform .2s ease}
+.gift-box .gift-emoji{font-size:1.9rem;transition:transform .3s ease}
+.gift-box small{color:#6a526f;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.7rem}
+.gift-box:active{transform:scale(.96)}
+.gift-box.opened{background:linear-gradient(150deg,rgba(255,235,246,.9),rgba(224,196,255,.7))}
+.gift-box.opened .gift-emoji{transform:scale(1.15) rotate(-6deg)}
+.gift-reveal{margin-top:14px;padding:16px;border-radius:20px;background:rgba(255,255,255,.55);text-align:center;animation:birthdayReveal .4s ease both}
+.gift-reveal .gift-song-artist{color:#9a4f79;font-weight:800;margin-top:-4px}
 .birthday-card p{color:#6a526f}.birthday-stage{animation:birthdayReveal .42s ease both}.birthday-stage.hidden{display:none}.birthday-stage h2{font-size:clamp(2rem,9vw,2.8rem)}
 @keyframes birthdayReveal{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 .cake-mini{height:124px;margin-bottom:12px;position:relative}.cake-mini:before{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:210px;height:78px;border-radius:34px 34px 18px 18px;background:linear-gradient(#ffc1dc,#ef7dad);box-shadow:inset 0 -20px 0 rgba(120,45,95,.18),0 18px 42px rgba(239,125,173,.26)}.cake-mini:after{content:"";position:absolute;left:50%;bottom:60px;transform:translateX(-50%);width:190px;height:34px;border-radius:28px;background:linear-gradient(#f7c3ee,#c981d2);box-shadow:0 8px 0 rgba(116,55,132,.18)}.cake-mini span{position:absolute;z-index:2;bottom:86px;width:9px;height:38px;background:#b4416c;border-radius:999px}.cake-mini span:before{content:"";position:absolute;left:-5px;top:-20px;width:18px;height:24px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 50% 65%,#fff6a8,#ffd86e 45%,#ff9a5a 72%);filter:blur(.15px);animation:flameDance .45s ease-in-out infinite alternate;transform-origin:50% 90%}.cake-mini span:after{content:"";position:absolute;left:-6px;top:-22px;width:22px;height:26px;border-radius:50%;background:rgba(255,224,138,.35);filter:blur(6px);animation:flameGlow .8s ease-in-out infinite alternate}.cake-mini span:nth-child(1){left:42%}.cake-mini span:nth-child(2){left:50%}.cake-mini span:nth-child(3){left:58%}
