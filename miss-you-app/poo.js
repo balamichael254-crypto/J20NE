@@ -16,6 +16,15 @@
   const PARTS = ["body", "ear_l", "ear_r", "sprout"];
   const PIVOTS = { ear_l: [0.445, 0.439], ear_r: [0.554, 0.439], sprout: [0.499, 0.378] };
 
+  // Flat single-image poses - hand-picked full-body renders (not part of the
+  // rig, so no independent ear-jiggle on these) used for short, distinct
+  // moments rather than continuous idle: falling, catching a butterfly, and
+  // a few extra expressions the rig doesn't have.
+  const FLAT_DIR = "./assets/poo/extra/";
+  const FLAT_POSES = ["catch_reach", "fall_1", "fall_2", "fall_3", "fall_4", "fall_5", "fall_6",
+                       "wave", "sad", "grumpy", "delight", "peekaboo", "cheer"];
+  const FALL_SEQUENCE = ["fall_1", "fall_2", "fall_3", "fall_2", "fall_4", "fall_5", "fall_6"];
+
   const BOND_KEY = "moonpie-poo-bond";
   const POS_KEY = "moonpie-poo-pos";
   const STAGES = [0, 8, 24, 55]; // shy, warming, playful, devoted
@@ -44,6 +53,8 @@
       "Stop it. ...don't actually stop it.", "Okay, that one got me."],
     sleepy: ["Rest. I'll still be here when you wake up.", "Close your eyes. I'll keep watch.",
       "Sleepy, but happy-sleepy. The good kind."],
+    sad: ["Come here. Let me be the soft place today.", "It's okay to have a heavy one. I'm not going anywhere.",
+      "Missing me this hard just means it's real. I'd rather that than nothing."],
     surprised: ["Oh! I didn't expect that.", "You always catch me off guard.",
       "Wait, really?", "Okay, hi! Did not see that coming."],
     wink: ["Caught you looking.", "Hehe."],
@@ -93,15 +104,24 @@
   function loadImages(onDone) {
     const img = {};
     let pending = 0, started = false;
+    const done = () => { pending--; if (pending === 0 && started) onDone(img); };
     POSES.forEach(pose => {
       img[pose] = {};
       PARTS.forEach(part => {
         pending++;
         const el = new Image();
         el.src = ASSET_DIR + pose + "_" + part + ".png";
-        el.onload = el.onerror = () => { pending--; if (pending === 0 && started) onDone(img); };
+        el.onload = el.onerror = done;
         img[pose][part] = el;
       });
+    });
+    img.flat = {};
+    FLAT_POSES.forEach(name => {
+      pending++;
+      const el = new Image();
+      el.src = FLAT_DIR + name + ".png";
+      el.onload = el.onerror = done;
+      img.flat[name] = el;
     });
     started = true;
     if (pending === 0) onDone(img);
@@ -162,11 +182,11 @@
       wanderTarget: null, nextWander: 6 + Math.random() * 10,
       dragging: false,
       restPose: "neutral", holdUntil: 0,
-      pickupY: 0, yFalling: false, ySpring: Spring(0, 55, 9),
+      pickupY: 0, yFalling: false, ySpring: Spring(0, 55, 9), fallSeq: null,
       butterfly: null, nextButterfly: 40 + Math.random() * 50,
     };
 
-    const size = () => Math.min(270, Math.max(196, window.innerWidth * 0.54));
+    const size = () => Math.min(300, Math.max(220, window.innerWidth * 0.6));
 
     function bounds() {
       const s = size();
@@ -244,29 +264,29 @@
       addBond(bondGain);
 
       if (kind === "love") {
-        setPose("excited", 0.14, 1.0); emit("heart", cw, cx, cy, 14); S.blush.target = 1;
+        setPose("cheer", 0.1, 1.1); emit("heart", cw, cx, cy, 14); S.blush.target = 1;
         say("excited");
       } else if (kind === "shy") {
         setPose("shy", 0.14, 1.1); S.blush.target = 1; emit("heart", cw, cx, cy, 4);
         say("shy");
       } else if (kind === "tickle") {
-        setPose("surprised", 0.1, 0.26); emit("spark", cw, cx, cy, 8);
+        setPose("peekaboo", 0.1, 0.3); emit("spark", cw, cx, cy, 8);
         S.tiltLean.vel += 40;
-        setTimeout(() => { if (!S.holdUntil || S.t >= S.holdUntil - 0.9) { setPose("happy", 0.2, 0.85); say("happy"); } }, 260);
+        setTimeout(() => { if (!S.holdUntil || S.t >= S.holdUntil - 0.9) { setPose("happy", 0.2, 0.85); say("happy"); } }, 300);
       } else if (kind === "sleepy") {
         setPose("sleepy", 0.3); say("sleepy");
       } else if (kind === "surprised") {
         setPose("surprised", 0.1, 0.7); emit("spark", cw, cx, cy, 7);
         say("surprised");
       } else if (kind === "pet") {
-        setPose("content", 0.2, 0.9); emit("heart", cw, cx, cy, 5); S.blush.target = 0.7;
+        setPose("delight", 0.1, 0.9); emit("heart", cw, cx, cy, 5); S.blush.target = 0.7;
         say("pet");
       } else if (kind === "boop") {
-        setPose("surprised", 0.08, 0.5); S.sprout.vel += 46; emit("spark", cw, cx, cy, 4);
+        setPose("grumpy", 0.08, 0.6); S.sprout.vel += 46; emit("spark", cw, cx, cy, 4);
         S.tiltLean.vel += (Math.random() < 0.5 ? -1 : 1) * 30;
         say("boop");
       } else if (kind === "catch") {
-        setPose("excited", 0.12, 1.1); emit("heart", cw, cx, cy, 10); emit("spark", cw, cx, cy, 8);
+        setPose("cheer", 0.1, 1.1); emit("heart", cw, cx, cy, 10); emit("spark", cw, cx, cy, 8);
         say("catch");
       } else if (kind === "dance") {
         setPose("excited", 0.14, 2.6); emit("heart", cw, cx, cy, 8); S.blush.target = 0.8;
@@ -282,7 +302,7 @@
     }
 
     function setMood(mood) {
-      const map = { soft: "content", heavy: "shy", sleepy: "sleepy", clingy: "lookup" };
+      const map = { soft: "content", heavy: "sad", sleepy: "sleepy", clingy: "lookup" };
       const pose = map[mood] || "neutral";
       S.restPose = pose;
       setPose(pose, 0.35);
@@ -291,7 +311,20 @@
 
     function dims(cw) { const aspect = 620 / 700; return [cw * aspect, cw]; }
 
+    function drawFlat(ctx, cw, pose, alpha) {
+      const img = images && images.flat && images.flat[pose];
+      if (!img || !img.complete || !img.naturalWidth) return;
+      const srcAspect = img.naturalWidth / img.naturalHeight;
+      let fw = cw, fh = cw / srcAspect;
+      if (fh > cw) { fh = cw; fw = cw * srcAspect; }
+      const fx = (cw - fw) / 2, fy = (cw - fh) / 2;
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.drawImage(img, fx, fy, fw, fh);
+      ctx.restore();
+    }
+
     function drawPuppet(ctx, cw, pose, alpha) {
+      if (FLAT_POSES.includes(pose)) { drawFlat(ctx, cw, pose, alpha); return; }
       const set = images && images[pose];
       if (!set) return;
       const [dw, dh] = dims(cw);
@@ -334,7 +367,7 @@
       drawPuppet(ctx, cw, S.pose, S.fade);
 
       const b = clamp(S.blush.value, 0, 1);
-      if (b > 0.03) {
+      if (b > 0.03 && !FLAT_POSES.includes(S.pose)) {
         ctx.globalAlpha = b * 0.45; ctx.fillStyle = "#ff7fb0";
         const [dw, dh] = dims(cw); const x0 = (cw - dw) / 2;
         [-1, 1].forEach(s => {
@@ -370,9 +403,22 @@
     function stepYFall(dt) {
       if (!S.yFalling) return;
       S.y = springStep(S.ySpring, dt);
-      if (Math.abs(S.ySpring.vel) < 3 && Math.abs(S.ySpring.value - S.pickupY) < 1.2) {
+
+      if (S.fallSeq && S.fallSeq.i < FALL_SEQUENCE.length - 1) {
+        S.fallSeq.t += dt;
+        if (S.fallSeq.t >= 0.22) {
+          S.fallSeq.t -= 0.22;
+          S.fallSeq.i++;
+          const last = S.fallSeq.i === FALL_SEQUENCE.length - 1;
+          setPose(FALL_SEQUENCE[S.fallSeq.i], 0.08, last ? 1.0 : 0);
+        }
+      }
+
+      const seqDone = !S.fallSeq || S.fallSeq.i >= FALL_SEQUENCE.length - 1;
+      if (seqDone && Math.abs(S.ySpring.vel) < 3 && Math.abs(S.ySpring.value - S.pickupY) < 1.2) {
         S.yFalling = false;
         S.y = S.pickupY;
+        S.fallSeq = null;
         savePos();
       }
     }
@@ -388,6 +434,7 @@
           S.x += (bf.x - S.x) * Math.min(dt * 1.6, 1);
           S.y += (bf.y - S.y) * Math.min(dt * 1.6, 1);
           S.tiltLean.target = clamp((bf.x - S.x) * 0.08, -16, 16);
+          if (S.pose !== "catch_reach") setPose("catch_reach", 0.2);
         }
         const dist = Math.hypot(bf.x - S.x, bf.y - S.y);
         if (dist < size() * 0.3) {
@@ -575,10 +622,14 @@
         else react("tickle");
       } else {
         // she was held, not dropped - like a doll on a string, she swings back
-        // to the height you picked her up from instead of sinking to the floor
+        // to the height you picked her up from instead of sinking to the floor.
+        // plays the real falling/landing art sequence rather than just easing
+        // the spring, so it actually reads as a fall.
         S.ySpring.value = S.y;
         S.ySpring.target = S.pickupY;
         S.yFalling = true;
+        S.fallSeq = { i: 0, t: 0 };
+        setPose(FALL_SEQUENCE[0], 0.06);
         S.nextWander = S.t + 55 + Math.random() * 45;
       }
     });
@@ -588,6 +639,7 @@
       full.hidden = false;
       S.expanded = true;
       requestAnimationFrame(() => full.classList.add("open"));
+      setPose("wave", 0.1, 1.0);
       say("neutral", { greeting: true });
       document.body.classList.add("poo-full-open");
     }
