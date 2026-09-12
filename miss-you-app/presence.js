@@ -11,6 +11,7 @@
   const API = "../api/widgets?room=moonpie-presence-v1";
   const STORE_KEY = "moonpie-miss-you-v9";
   const HEARTBEAT_MS = 90000;
+  const NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 
   function myProfile() {
     try {
@@ -55,7 +56,7 @@
       if (!row) return;
       const ts = Number(row.value);
       if (!Number.isFinite(ts)) return;
-      el.textContent = other + " was here " + relativeTime(ts);
+      el.textContent = (NICK[other] || other) + " was here " + relativeTime(ts);
       el.hidden = false;
     } catch { /* quiet failure - the line just stays hidden */ }
   }

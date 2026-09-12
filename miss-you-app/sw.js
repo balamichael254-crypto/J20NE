@@ -1,22 +1,24 @@
-const CACHE_NAME = "moonpie-miss-you-v46";
+const CACHE_NAME = "moonpie-miss-you-v85";
 const ASSETS = [
   "./",
   "./index.html",
-  "./?v=43",
-  "./styles.css?v=43",
+  "./styles.css?v=83",
+  "./poo.css?v=6",
   "./content.js?v=43",
-  "./app.js?v=43",
-  "./poo.css?v=3",
-  "./poo.js?v=6",
+  "./push.js?v=2",
+  "./app.js?v=48",
+  "./bloom.js?v=2",
+  "./vault.js?v=2",
+  "./poo.js?v=16",
   "./presence.js?v=2",
   "./manifest.webmanifest",
   "./icon.svg",
   "./assets/fonts/lora-400.woff2",
-  "./assets/fonts/lora-600.woff2",
   "./assets/fonts/cormorant-600.woff2",
   "./assets/fonts/cormorant-italic-400.woff2",
   "./assets/fonts/dancing-600.woff2",
-  "./assets/fonts/italiana-400.woff2"
+  "./assets/fonts/baloo2-var.woff2",
+  "./assets/fonts/quicksand-var.woff2"
 ];
 
 self.addEventListener("install", event => {
@@ -55,6 +57,21 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => caches.match("./index.html")))
   );
+});
+
+self.addEventListener("push", event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = {}; }
+  const title = data.title || "Moonpie";
+  const options = {
+    body: data.body || "",
+    icon: "./icon.svg",
+    badge: "./icon.svg",
+    tag: "moonpie-nudge",
+    renotify: true,
+    data: { url: "./?open=care" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", event => {

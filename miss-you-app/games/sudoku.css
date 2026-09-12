@@ -1,0 +1,536 @@
+/* Moonpie Sudoku — styles.
+ * Consumes the app's global lavender tokens. Nothing global is redefined:
+ * the tokens are aliased onto .sdk-root as --sdk-* (with safe fallbacks so
+ * the game still reads correctly if it is ever mounted outside the app).
+ * Every class is prefixed sdk-.
+ */
+
+.sdk-root {
+  --sdk-lav-50: var(--lav-50, #faf7ff);
+  --sdk-lav-100: var(--lav-100, #f1ebff);
+  --sdk-lav-200: var(--lav-200, #e3d8ff);
+  --sdk-lav-300: var(--lav-300, #cebaff);
+  --sdk-lav-400: var(--lav-400, #b49bf5);
+  --sdk-lav-500: var(--lav-500, #9a7be8);
+  --sdk-lav-600: var(--lav-600, #7c5bd0);
+  --sdk-lav-700: var(--lav-700, #5d3fa6);
+  --sdk-pink: var(--pink, #ffc3de);
+  --sdk-pink-hot: var(--pink-hot, #ff7ab0);
+  --sdk-red: var(--red, #ff6b7f);
+  --sdk-gold: var(--gold, #ffd479);
+  --sdk-peach: var(--peach, #ffd0b8);
+  --sdk-mint: var(--mint, #a9e5cd);
+  --sdk-ink: var(--ink, #3a2a55);
+  --sdk-ink-soft: var(--ink-soft, #6b5a87);
+  --sdk-ink-faint: var(--ink-faint, #9e90b5);
+  --sdk-edge: var(--edge, rgba(255, 255, 255, .82));
+  --sdk-card: var(--card, #ffffff);
+  --sdk-card-2: var(--card-2, #fbf8ff);
+  --sdk-sh-sm: var(--sh-sm, 0 2px 6px rgba(124, 91, 208, .16));
+  --sdk-sh: var(--sh, 0 6px 16px rgba(124, 91, 208, .20));
+  --sdk-sh-lg: var(--sh-lg, 0 14px 34px rgba(124, 91, 208, .26));
+  --sdk-r: var(--r, 14px);
+  --sdk-r-lg: var(--r-lg, 20px);
+  --sdk-r-xl: var(--r-xl, 28px);
+  --sdk-tap: var(--tap, 44px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 16px 14px 20px;
+  box-sizing: border-box;
+  font-family: "Quicksand", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--sdk-ink);
+  background: linear-gradient(170deg, var(--sdk-card) 0%, var(--sdk-card-2) 100%);
+  border: 2px solid var(--sdk-edge);
+  border-radius: var(--sdk-r-xl);
+  box-shadow: var(--sdk-sh-lg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sdk-root *,
+.sdk-root *::before,
+.sdk-root *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.sdk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sdk-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sdk-title-script {
+  font-family: "Dancing Script", cursive;
+  font-size: 1.15rem;
+  color: var(--sdk-pink-hot);
+  transform: rotate(-6deg);
+}
+
+.sdk-title-main {
+  font-family: "Baloo", "Quicksand", system-ui, sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  color: var(--sdk-lav-700);
+  letter-spacing: .01em;
+}
+
+.sdk-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.sdk-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 66px;
+  padding: 5px 10px;
+  background: var(--sdk-lav-100);
+  border: 2px solid var(--sdk-edge);
+  border-radius: var(--sdk-r);
+  box-shadow: var(--sdk-sh-sm);
+}
+
+.sdk-stat-k {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--sdk-ink-faint);
+}
+
+.sdk-stat-v {
+  font-family: "Baloo", "Quicksand", system-ui, sans-serif;
+  font-size: 1.02rem;
+  color: var(--sdk-lav-700);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------ difficulty */
+
+.sdk-diffs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 5px;
+  background: var(--sdk-lav-100);
+  border: 2px solid var(--sdk-edge);
+  border-radius: var(--sdk-r-lg);
+  box-shadow: inset 0 2px 5px rgba(124, 91, 208, .10);
+}
+
+.sdk-diff {
+  min-height: 38px;
+  padding: 8px 4px;
+  font-family: "Quicksand", system-ui, sans-serif;
+  font-size: .86rem;
+  font-weight: 700;
+  color: var(--sdk-ink-soft);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--sdk-r);
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, transform .1s ease;
+}
+
+.sdk-diff:active {
+  transform: translateY(2px);
+}
+
+.sdk-diff-on {
+  color: var(--sdk-lav-700);
+  background: var(--sdk-card);
+  border-color: var(--sdk-edge);
+  box-shadow: var(--sdk-sh-sm);
+}
+
+/* ----------------------------------------------------------------- board */
+
+.sdk-boardwrap {
+  position: relative;
+  width: 100%;
+}
+
+.sdk-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--sdk-card);
+  border: 3px solid var(--sdk-lav-400);
+  border-radius: var(--sdk-r-lg);
+  box-shadow: var(--sdk-sh);
+}
+
+.sdk-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  aspect-ratio: 1 / 1;
+  font-family: "Baloo", "Quicksand", system-ui, sans-serif;
+  font-size: clamp(.95rem, 4.6vw, 1.45rem);
+  line-height: 1;
+  color: var(--sdk-lav-600);
+  background: var(--sdk-card);
+  border: 0;
+  border-right: 1px solid var(--sdk-lav-200);
+  border-bottom: 1px solid var(--sdk-lav-200);
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease;
+}
+
+.sdk-cell:nth-child(9n) {
+  border-right: 0;
+}
+
+.sdk-cell:nth-child(n + 73) {
+  border-bottom: 0;
+}
+
+.sdk-cell.sdk-edge-r {
+  border-right: 2px solid var(--sdk-lav-400);
+}
+
+.sdk-cell.sdk-edge-b {
+  border-bottom: 2px solid var(--sdk-lav-400);
+}
+
+/* cell states, ordered so later rules win where they overlap */
+
+.sdk-cell.sdk-peer {
+  background: var(--sdk-lav-50);
+}
+
+.sdk-cell.sdk-same {
+  background: var(--sdk-lav-200);
+  color: var(--sdk-lav-700);
+}
+
+.sdk-cell.sdk-given {
+  color: var(--sdk-ink);
+  font-weight: 700;
+  background: var(--sdk-lav-100);
+  cursor: default;
+}
+
+.sdk-cell.sdk-given.sdk-peer {
+  background: var(--sdk-lav-200);
+}
+
+.sdk-cell.sdk-given.sdk-same {
+  background: var(--sdk-lav-300);
+}
+
+.sdk-cell.sdk-sel {
+  background: var(--sdk-lav-300);
+  color: var(--sdk-lav-700);
+  box-shadow: inset 0 0 0 3px var(--sdk-lav-600);
+}
+
+.sdk-cell.sdk-conflict {
+  color: var(--sdk-red);
+  background: var(--sdk-peach); /* fallback where color-mix is unsupported */
+  background: color-mix(in srgb, var(--sdk-red) 16%, var(--sdk-card));
+}
+
+.sdk-cell.sdk-conflict.sdk-sel {
+  box-shadow: inset 0 0 0 3px var(--sdk-red);
+}
+
+.sdk-val {
+  pointer-events: none;
+}
+
+.sdk-notes {
+  position: absolute;
+  inset: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+}
+
+.sdk-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Quicksand", system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(.38rem, 1.9vw, .56rem);
+  line-height: 1;
+  color: var(--sdk-lav-500);
+}
+
+.sdk-cell.sdk-sel .sdk-mark {
+  color: var(--sdk-lav-700);
+}
+
+/* ------------------------------------------------------------- win state */
+
+.sdk-win {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  background: var(--sdk-pink); /* opaque fallback where color-mix is unsupported */
+  background: linear-gradient(165deg, rgba(255, 255, 255, .93), color-mix(in srgb, var(--sdk-pink) 55%, rgba(255, 255, 255, .93)));
+  border: 3px solid var(--sdk-edge);
+  border-radius: var(--sdk-r-lg);
+  box-shadow: var(--sdk-sh-lg);
+  transition: opacity .3s ease, visibility .3s ease;
+}
+
+.sdk-root.sdk-is-won .sdk-win {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sdk-win-emoji {
+  font-size: 2.4rem;
+  animation: sdk-bob 2.4s ease-in-out infinite;
+}
+
+.sdk-win-script {
+  font-family: "Dancing Script", cursive;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--sdk-lav-700);
+}
+
+.sdk-win-sub {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--sdk-ink-soft);
+}
+
+@keyframes sdk-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-7px) rotate(4deg); }
+}
+
+/* ------------------------------------------------------------ number pad */
+
+.sdk-pad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.sdk-key {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--sdk-tap);
+  min-width: var(--sdk-tap);
+  padding: 6px 2px;
+  font-family: "Baloo", "Quicksand", system-ui, sans-serif;
+  font-size: 1.32rem;
+  line-height: 1;
+  color: var(--sdk-lav-700);
+  background: linear-gradient(175deg, var(--sdk-card), var(--sdk-lav-100));
+  border: 2px solid var(--sdk-edge);
+  border-radius: var(--sdk-r-lg);
+  box-shadow: var(--sdk-sh);
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .1s ease, background .16s ease;
+}
+
+.sdk-key:active {
+  transform: translateY(3px);
+  box-shadow: var(--sdk-sh-sm);
+}
+
+.sdk-key-notes {
+  background: linear-gradient(175deg, var(--sdk-card), var(--sdk-peach));
+}
+
+.sdk-key-done {
+  color: var(--sdk-ink-faint);
+  background: var(--sdk-lav-50);
+  box-shadow: none;
+}
+
+.sdk-key-num {
+  pointer-events: none;
+  transform: translateY(-1px);
+}
+
+.sdk-key-left {
+  position: absolute;
+  right: 7px;
+  bottom: 4px;
+  font-family: "Quicksand", system-ui, sans-serif;
+  font-size: .6rem;
+  font-weight: 700;
+  color: var(--sdk-ink-faint);
+}
+
+/* --------------------------------------------------------------- actions */
+
+.sdk-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sdk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: var(--sdk-tap);
+  padding: 8px 6px;
+  font-family: "Quicksand", system-ui, sans-serif;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--sdk-lav-700);
+  background: var(--sdk-card);
+  border: 2px solid var(--sdk-edge);
+  border-radius: var(--sdk-r-lg);
+  box-shadow: var(--sdk-sh);
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .1s ease, background .16s ease;
+}
+
+.sdk-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--sdk-sh-sm);
+}
+
+.sdk-btn-ico {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.sdk-btn-hot {
+  color: var(--sdk-lav-700);
+  background: linear-gradient(175deg, var(--sdk-pink), var(--sdk-pink-hot));
+}
+
+.sdk-btn-notes.sdk-on {
+  color: var(--sdk-lav-700);
+  background: linear-gradient(175deg, var(--sdk-gold), var(--sdk-peach));
+}
+
+.sdk-pip {
+  padding: 1px 6px;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--sdk-ink-soft);
+  background: var(--sdk-lav-100);
+  border-radius: 999px;
+}
+
+.sdk-btn-notes.sdk-on .sdk-pip {
+  color: var(--sdk-lav-700);
+  background: var(--sdk-card);
+}
+
+.sdk-win .sdk-btn {
+  flex: 0 0 auto;
+  min-width: 150px;
+  margin-top: 2px;
+}
+
+/* ------------------------------------------------------------------ hint */
+
+.sdk-hint {
+  font-family: "Dancing Script", cursive;
+  font-size: 1rem;
+  text-align: center;
+  color: var(--sdk-ink-faint);
+}
+
+/* --------------------------------------------------------------- focus */
+
+.sdk-root button:focus-visible {
+  outline: 3px solid var(--sdk-lav-500);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------- narrow screens */
+
+@media (max-width: 360px) {
+  .sdk-root {
+    padding: 12px 10px 16px;
+    gap: 11px;
+  }
+
+  .sdk-pad {
+    gap: 5px;
+  }
+
+  .sdk-key {
+    font-size: 1.15rem;
+    border-radius: var(--sdk-r);
+  }
+
+  .sdk-btn {
+    font-size: .78rem;
+    gap: 3px;
+  }
+
+  .sdk-stat {
+    min-width: 58px;
+  }
+}
+
+/* one row of 9 keys once there is room for 44px targets */
+@media (min-width: 520px) {
+  .sdk-pad {
+    grid-template-columns: repeat(9, 1fr);
+  }
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .sdk-root *,
+  .sdk-root *::before,
+  .sdk-root *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .sdk-key:active,
+  .sdk-btn:active,
+  .sdk-diff:active {
+    transform: none;
+  }
+
+  .sdk-win-emoji {
+    animation: none;
+  }
+}

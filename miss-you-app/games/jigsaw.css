@@ -1,0 +1,499 @@
+/* Moonpie jigsaw — photo tile puzzle.
+   Every class is prefixed `jig-`. Nothing here is global except the .jig-root token block.
+
+   Token strategy: this module consumes the shared custom properties by their exact
+   names (--lav-*, --pink, --pink-hot, --red, --gold, --peach, --mint, --ink-soft,
+   --ink-faint, --edge, --card, --card-2, --sh-sm, --sh, --sh-lg, --r, --r-lg, --r-xl,
+   --tap) and folds each one into a local --jig-* alias with a fallback drawn from the
+   app's own unlocked lavender palette. Wherever the shared token is defined the app
+   wins; where it is not, the module still renders natively instead of collapsing to
+   an invalid value. --ink is intentionally NOT used for body text: the app defines it
+   as near-white (#fff8fb) for the locked splash, which would be invisible on the light
+   glass cards this module renders on.
+*/
+
+.jig-root {
+  /* surface */
+  --jig-card: var(--card, linear-gradient(145deg, rgba(255, 255, 255, .74), rgba(251, 239, 250, .54), rgba(230, 216, 247, .58)));
+  --jig-card-2: var(--card-2, linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(245, 232, 252, .62)));
+  --jig-edge: var(--edge, rgba(132, 91, 164, .17));
+  --jig-edge-soft: rgba(255, 255, 255, .72);
+
+  /* lavender ramp */
+  --jig-lav-50: var(--lav-50, #faf5ff);
+  --jig-lav-100: var(--lav-100, #f3e8fb);
+  --jig-lav-200: var(--lav-200, #e6d8f7);
+  --jig-lav-300: var(--lav-300, #cfb3ea);
+  --jig-lav-400: var(--lav-400, #b994ff);
+  --jig-lav-500: var(--lav-500, #9a6fd8);
+  --jig-lav-600: var(--lav-600, #704a83);
+  --jig-lav-700: var(--lav-700, #4b2d58);
+
+  /* accents */
+  --jig-pink: var(--pink, #ff8fbd);
+  --jig-pink-hot: var(--pink-hot, #e0568f);
+  --jig-red: var(--red, #d64060);
+  --jig-gold: var(--gold, #ffe08a);
+  --jig-peach: var(--peach, #ffd6c2);
+  --jig-mint: var(--mint, #bdf0dc);
+
+  /* ink */
+  --jig-ink: var(--ink-soft, #432b50);
+  --jig-ink-faint: var(--ink-faint, rgba(67, 43, 80, .74));
+  --jig-label: #9b5680;
+
+  /* purple-tinted shadows, never grey */
+  --jig-sh-sm: var(--sh-sm, 0 8px 24px rgba(99, 62, 124, .12));
+  --jig-sh: var(--sh, 0 16px 42px rgba(104, 67, 129, .16));
+  --jig-sh-lg: var(--sh-lg, 0 22px 58px rgba(104, 67, 129, .2));
+
+  /* shape */
+  --jig-r: var(--r, 18px);
+  --jig-r-lg: var(--r-lg, 26px);
+  --jig-r-xl: var(--r-xl, 34px);
+  --jig-tap: var(--tap, 44px);
+
+  display: block;
+  color: var(--jig-ink);
+  font-family: "Quicksand", "Lora", Georgia, serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jig-root *,
+.jig-root *:before,
+.jig-root *:after { box-sizing: border-box; }
+
+/* ---------- shell ---------- */
+
+.jig-shell {
+  padding: 16px;
+  border-radius: var(--jig-r-xl);
+  background: var(--jig-card);
+  border: 1px solid var(--jig-edge);
+  box-shadow: var(--jig-sh-lg), inset 0 1px 0 rgba(255, 255, 255, .8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.jig-head { text-align: center; margin-bottom: 12px; }
+
+.jig-eyebrow {
+  margin: 0 0 4px;
+  font-size: .67rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--jig-label);
+}
+
+.jig-title {
+  margin: 0;
+  font-family: "Baloo", "Italiana", "Playfair Display", serif;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 8vw, 2.2rem);
+  line-height: 1;
+  letter-spacing: -.03em;
+  color: var(--jig-lav-700);
+  text-shadow: 0 10px 34px rgba(171, 99, 147, .14);
+}
+
+.jig-script {
+  margin: 4px 0 0;
+  font-family: "Dancing Script", cursive;
+  font-size: 1.05rem;
+  color: var(--jig-pink-hot);
+}
+
+/* ---------- HUD ---------- */
+
+.jig-hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0 12px;
+}
+
+.jig-hud-cell {
+  padding: 9px 6px;
+  border-radius: var(--jig-r);
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid var(--jig-edge);
+  text-align: center;
+  box-shadow: var(--jig-sh-sm);
+}
+
+.jig-hud-cell small {
+  display: block;
+  font-size: .6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--jig-label);
+}
+
+.jig-hud-cell strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--jig-lav-700);
+}
+
+/* ---------- control rows ---------- */
+
+.jig-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.jig-btn {
+  min-height: var(--jig-tap);
+  min-width: var(--jig-tap);
+  padding: 0 16px;
+  border: 1px solid var(--jig-edge);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .58);
+  color: var(--jig-lav-600);
+  font: inherit;
+  font-weight: 900;
+  font-size: .82rem;
+  letter-spacing: -.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: var(--jig-sh-sm);
+  transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.jig-btn:active { transform: scale(.97); }
+
+.jig-btn:focus-visible {
+  outline: 3px solid var(--jig-lav-400);
+  outline-offset: 2px;
+}
+
+.jig-btn.jig-on,
+.jig-btn[aria-pressed="true"] {
+  background: linear-gradient(145deg, #ffb8d5, #e3c8ff);
+  color: var(--jig-lav-700);
+  border-color: rgba(255, 255, 255, .75);
+  box-shadow: 0 9px 24px rgba(190, 86, 139, .17);
+}
+
+.jig-btn.jig-primary {
+  background: linear-gradient(145deg, var(--jig-pink), #e3c8ff);
+  color: #fff;
+  border-color: rgba(255, 255, 255, .7);
+  text-shadow: 0 1px 6px rgba(150, 60, 110, .3);
+}
+
+/* size segmented control */
+
+.jig-sizes {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .42);
+  border: 1px solid var(--jig-edge);
+}
+
+.jig-size {
+  min-height: var(--jig-tap);
+  min-width: var(--jig-tap);
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--jig-lav-600);
+  font: inherit;
+  font-weight: 900;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: transform .12s ease, background .2s ease;
+}
+
+.jig-size:active { transform: scale(.95); }
+
+.jig-size[aria-pressed="true"] {
+  background: linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(255, 193, 220, .45));
+  color: var(--jig-lav-700);
+  box-shadow: var(--jig-sh-sm);
+}
+
+.jig-size:focus-visible {
+  outline: 3px solid var(--jig-lav-400);
+  outline-offset: 2px;
+}
+
+/* ---------- photo picker ---------- */
+
+.jig-picker {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jig-picker::-webkit-scrollbar { display: none; }
+
+.jig-pick {
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: var(--jig-r);
+  border: 2px solid rgba(255, 255, 255, .7);
+  background-color: var(--jig-lav-200);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  box-shadow: var(--jig-sh-sm);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.jig-pick:active { transform: scale(.95); }
+
+.jig-pick[aria-pressed="true"] {
+  border-color: var(--jig-pink);
+  box-shadow: 0 0 0 3px rgba(255, 143, 189, .35), var(--jig-sh);
+  transform: translateY(-2px);
+}
+
+.jig-pick:focus-visible {
+  outline: 3px solid var(--jig-lav-400);
+  outline-offset: 2px;
+}
+
+/* ---------- board ---------- */
+
+.jig-stage { position: relative; }
+
+.jig-board {
+  display: grid;
+  gap: 3px;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  padding: 6px;
+  border-radius: var(--jig-r-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .6), rgba(230, 216, 247, .5));
+  border: 1px solid var(--jig-edge);
+  box-shadow: var(--jig-sh), inset 0 1px 0 rgba(255, 255, 255, .7);
+  touch-action: manipulation;
+}
+
+.jig-tile {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background-color: var(--jig-lav-200);
+  background-repeat: no-repeat;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5);
+  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.jig-tile:active { transform: scale(.97); }
+
+.jig-tile:focus-visible {
+  outline: 3px solid var(--jig-lav-500);
+  outline-offset: -3px;
+  z-index: 3;
+}
+
+.jig-tile.jig-sel {
+  z-index: 4;
+  transform: scale(.92);
+  filter: saturate(1.15) brightness(1.05);
+  box-shadow:
+    inset 0 0 0 3px var(--jig-pink),
+    0 0 0 3px rgba(255, 143, 189, .45),
+    var(--jig-sh);
+}
+
+.jig-tile.jig-over {
+  z-index: 3;
+  box-shadow:
+    inset 0 0 0 3px var(--jig-gold),
+    0 0 0 3px rgba(255, 224, 138, .5);
+}
+
+.jig-tile.jig-home:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px rgba(189, 240, 220, .85);
+  pointer-events: none;
+}
+
+.jig-tile.jig-just {
+  animation: jig-pop .32s ease;
+}
+
+@keyframes jig-pop {
+  40% { transform: scale(1.07); }
+}
+
+/* solved state */
+
+.jig-board.jig-solved { gap: 0; }
+.jig-board.jig-solved .jig-tile {
+  border-radius: 0;
+  cursor: default;
+  box-shadow: none;
+}
+.jig-board.jig-solved .jig-tile:after { display: none; }
+.jig-board.jig-solved .jig-tile:first-child { border-radius: 10px 0 0 0; }
+
+/* ---------- peek overlay ---------- */
+
+.jig-peek {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--jig-r-lg);
+  /* 100% 100% (not cover) so the preview is exactly the solved board */
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 3px solid rgba(255, 255, 255, .8);
+  box-shadow: var(--jig-sh-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(.97);
+  transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.jig-peek.jig-show {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+.jig-peek:after {
+  content: "the whole picture";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: "Dancing Script", cursive;
+  font-size: .95rem;
+  color: var(--jig-lav-700);
+  background: rgba(255, 255, 255, .82);
+  box-shadow: var(--jig-sh-sm);
+  white-space: nowrap;
+}
+
+/* ---------- win banner ---------- */
+
+.jig-win {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--jig-r-lg);
+  background: radial-gradient(circle at 50% 38%, rgba(255, 255, 255, .92), rgba(255, 214, 236, .86) 55%, rgba(227, 200, 255, .88));
+  box-shadow: var(--jig-sh-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(.94);
+  transition: opacity .3s ease, transform .3s ease, visibility .3s ease;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.jig-win.jig-show {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.jig-win-emoji { font-size: 2.4rem; animation: jig-bob 2.4s ease-in-out infinite; }
+
+@keyframes jig-bob {
+  50% { transform: translateY(-7px); }
+}
+
+.jig-win h3 {
+  margin: 2px 0;
+  font-family: "Baloo", "Italiana", serif;
+  font-weight: 400;
+  font-size: 1.9rem;
+  color: var(--jig-lav-700);
+}
+
+.jig-win p {
+  margin: 0 0 10px;
+  font-family: "Dancing Script", cursive;
+  font-size: 1.1rem;
+  color: var(--jig-pink-hot);
+  max-width: 24ch;
+}
+
+/* ---------- status line ---------- */
+
+.jig-status {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--jig-ink-faint);
+  min-height: 1.2em;
+}
+
+.jig-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- narrow phones ---------- */
+
+@media (max-width: 380px) {
+  .jig-shell { padding: 12px; }
+  .jig-btn { padding: 0 12px; font-size: .78rem; }
+  .jig-pick { width: 52px; height: 52px; }
+  .jig-hud-cell strong { font-size: 1.02rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jig-root *,
+  .jig-root *:before,
+  .jig-root *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .jig-tile.jig-sel { transform: none; }
+  .jig-pick[aria-pressed="true"] { transform: none; }
+  .jig-peek, .jig-win { transform: none; }
+}

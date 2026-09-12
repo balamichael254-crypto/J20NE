@@ -2,6 +2,13 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 const expansion = window.MOONPIE_EXPANSION || {};
 
+// "Michelle" / "Michael" only ever exist as internal profile identifiers now -
+// they route the shared vault, the leaderboard, and widget sync, but nothing
+// on screen should ever print them literally. Every display of a name goes
+// through here. (vault.js keeps its own copy of this map for the same reason.)
+const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
+const nickOf = name => PROFILE_NICK[name] || name;
+
 const STORE_KEY = "moonpie-miss-you-v9";
 const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {} };
 let state = loadState();
@@ -22,47 +29,75 @@ const renderedScreens = new Set(["home", "atlas"]);
 let widgetSyncStarted = false;
 
 const worlds = [
-  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden" },
-  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter" },
-  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem" },
-  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice" },
-  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day" },
-  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place" },
-  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song" },
-  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise" },
-  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance" },
-  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason" },
-  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory" },
-  { id: "birthday", icon: "💐", title: "Girlfriend Day Wish", sub: "save this one for last", count: 1, tone: "birthday" },
-  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create" },
-  { id: "games", icon: "🎮", title: "Love Arcade", sub: "tap tiny feelings", count: 6, tone: "game" },
-  { id: "care", icon: "🫶", title: "Emergency Care", sub: "when missing gets heavy", count: 5, tone: "care" }
+  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden", photo: "./assets/flowers/hero-lily.webp" },
+  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter", photo: "./assets/mood/notebook-4.webp" },
+  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem", photo: "./assets/mood/moon-sky-1.webp" },
+  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice", photo: "./assets/mood/jar-note-4.webp" },
+  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day", photo: "./assets/mood/bunny-morning-hero.webp" },
+  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place", photo: "./assets/worlds/santorini-1.webp" },
+  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song", photo: "./assets/mood/vinyl-2.webp" },
+  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise", photo: "./assets/mood/bunny-lily-4.webp" },
+  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance", photo: "./assets/mood/moon-back-4.webp" },
+  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason", photo: "./assets/mood/bunny-glow-4.webp" },
+  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory", photo: "./assets/mood/polaroid-2.webp" },
+  { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp" },
+  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp" },
+  { id: "games", icon: "🎮", title: "Love Arcade", sub: "tap tiny feelings", count: 6, tone: "game", photo: "./assets/mood/drink-4.webp" },
+  { id: "care", icon: "🫶", title: "Emergency Care", sub: "when missing gets heavy", count: 5, tone: "care", photo: "./assets/mood/bunny-loveheart-hero.webp" },
+  { id: "us", icon: "💞", title: "Us", sub: "a heart, a lantern, our numbers", count: 3, tone: "us", photo: "./assets/worlds/anniversary-1.webp" }
 ];
 
 const comfortNotes = {
   soft: [
     "Come closer in your head. I am probably smiling at my phone somewhere, thinking about you too.",
     "You do not have to be brave for this minute. Let me be the soft place. Breathe in. I love you. Breathe out. Still yours.",
-    "Distance is loud, but it is not bigger than us. It is just the room between two people already walking toward each other."
+    "Distance is loud, but it is not bigger than us. It is just the room between two people already walking toward each other.",
+    "Nothing about this minute needs fixing. You are allowed to just be soft here for a while.",
+    "I keep a version of you in my head that never actually leaves. She is here right now, keeping me company.",
+    "This is a good, quiet kind of missing. The kind that means the thing you're missing is worth it."
   ],
   heavy: [
     "If today feels too much, do only the next tiny thing. Drink water. Unclench your jaw. Let my love be simple for you.",
     "Missing me is not proof that something is wrong. It is proof that what we have is real enough to leave an ache.",
-    "I would sit beside you through the whole heavy thing if I could. Since I cannot, let this be my hand on your shoulder."
+    "I would sit beside you through the whole heavy thing if I could. Since I cannot, let this be my hand on your shoulder.",
+    "You do not have to carry today gracefully. You just have to carry it. That's enough for me.",
+    "Heavy days end. This one will too. I'm not going anywhere in the meantime.",
+    "Let today be hard without it meaning anything is wrong between us. It's just a hard day. We've survived worse."
   ],
   sleepy: [
     "Put the phone near you. Imagine my voice getting quieter and quieter until the room feels safe. Goodnight, Moonpie.",
     "You are allowed to sleep before replying. I will still be here. Morning-you deserves rest too.",
-    "Close your eyes for ten seconds. I am not disappearing. I am tucked into tomorrow, waiting."
+    "Close your eyes for ten seconds. I am not disappearing. I am tucked into tomorrow, waiting.",
+    "Sleep is not you giving up on the day. It's you trusting there will be another one, with me in it.",
+    "Let the missing get quiet too. It can rest when you rest.",
+    "I'll still be exactly this yours when you wake up. Nothing about that changes overnight."
   ],
   clingy: [
     "Be clingy. I like being loved by you in the specific, dramatic, adorable way only you can manage.",
     "If I were there, I would let you steal my hoodie, my arm, half the blanket, and probably my entire heart again.",
-    "You can miss me loudly here. This app was literally built for that. Come be ridiculous. I am yours."
+    "You can miss me loudly here. This app was literally built for that. Come be ridiculous. I am yours.",
+    "There is no such thing as too much when it's you missing me. Say it as many times as you need to.",
+    "I want the clingy version of you. I built you a whole app to have somewhere to put it.",
+    "Ask for the reassurance. Ask twice. I will keep saying yes."
   ]
 };
 
 const letters = [
+  {
+    title: "Read This One First",
+    tab: "before all the others",
+    theme: "lilies",
+    preview: "The one I wrote before the pretty ones, so it sits where you cannot miss it.",
+    salutation: "My Princess,",
+    body: [
+      "I am putting this one at the top so it is the first thing you find. Life is going to get loud. It already is getting loud. There will be stretches where I am tired in a way that makes me go quiet, where work swallows me whole, where something I planned falls apart and I have to start it again from nothing. I want to say this now, while things are calm enough for me to say it properly. None of that has anything to do with how I feel about you.",
+      "On the worst day I will still want you. People think love softens under pressure. Mine gets sharper. When everything else is uncertain you are the one thing I am sure of, and I will keep choosing you every morning on purpose, like it is the first decision of my day and the only one I never get wrong.",
+      "I am not going anywhere from the rest of it either. Years from now I want to still lose my train of thought because you walked past me in one of my shirts. I want to still put my hand on the back of your neck and feel you go quiet for me. I want your voice in the dark saying my name like it belongs to you, because it does. I am going to keep learning you. I am going to keep finding new ways to take you apart slowly on an ordinary Tuesday, for no reason at all except that I can.",
+      "And when the chaos does come, when we are exhausted and unglamorous and arguing about something stupid, you are still mine. You are still Daddy's little Princess. That does not expire and you never have to earn it back. You do not have to be sweet, or easy, or okay. Come to me messy. Come to me angry. Come to me needing far too much. I will be standing right there with my hands open.",
+      "I will not do this perfectly. I will get it wrong sometimes and have to come back and fix it, and I will come back every time. That is the whole promise, babyy. I keep trying, and when I fail you I try again, and I pick you, and then I pick you again."
+    ],
+    closing: "Still yours. On the loud days most of all."
+  },
   {
     title: "Every Night With You",
     tab: "our magical nights",
@@ -107,17 +142,17 @@ const letters = [
     closing: "Call me in your heart. I will answer there too."
   },
   {
-    title: "Your Girlfriend Day Letter",
+    title: "The Letter I Keep For No Reason",
     tab: "save this one",
     theme: "birthday",
-    preview: "For the day the world got a little luckier, because I get to call you mine.",
-    salutation: "Happy Girlfriend Day, Michelle,",
+    preview: "For a completely ordinary day, because I get to call you mine.",
+    salutation: "My Moonpie,",
     body: [
-      "There is no candle to blow out for this one, just a whole day the world set aside to say what I already know every day: I am the luckiest person alive because you chose to be mine.",
-      "I wish I could place flowers in your hands for real. I wish I could watch your face while you read this. I wish I could make the whole day gentle around you, like the world knows it is carrying someone precious.",
+      "There is no occasion for this one. No date on the calendar told me to write it. I just wanted a whole page to say what I already know every day: I am the luckiest person alive because you chose to be mine.",
+      "I wish I could place flowers in your hands for real. I wish I could watch your face while you read this. I wish I could make an ordinary Tuesday feel gentle around you, like the world knows it is carrying someone precious.",
       "You deserve more than a message. You deserve a room full of lilies, a sky full of pink light, and a love that does not make you wonder if you are too much.",
       "You are not too much. You are my favorite kind of everything. My Moonpie. My Princess. My babyy. My person in the softest part of my chest.",
-      "So happy Girlfriend Day, Moonpie. Here's to every one of these we get, near or far, until there is no more distance left to close."
+      "So here's to no occasion at all, Moonpie. Here's to every ordinary one of these we get, near or far, until there is no more distance left to close."
     ],
     closing: "Make a wish anyway. I am wishing for you too."
   },
@@ -168,7 +203,7 @@ const letters = [
     tab: "the airport letter",
     theme: "airport",
     preview: "For the countdown, the waiting, and the hug that will make all of this real.",
-    salutation: "My Michelle,",
+    salutation: "My Moonpie,",
     body: [
       "I think about the first real hug more than I probably should. I think about seeing you and forgetting every clever thing I planned to say. I think about that first second when distance finally loses.",
       "I want to hold you long enough for both of us to believe it. Not a quick hug. Not a polite one. The kind where the whole body exhales. The kind that says, there you are, I made it, we made it.",
@@ -441,6 +476,50 @@ function nextComfort(mood) {
   return list[index];
 }
 
+// Two more comfort generators, deliberately different in KIND from the rescue
+// note above rather than just more lines in the same box: one redirects
+// (something small to actually do), one is Poo's voice instead of mine. The
+// "never the same twice in a row" picker is shared so none of the three
+// generators on this screen can repeat back to back.
+function pickFresh(list, stateKey) {
+  const previous = Number(state[stateKey] ?? -1);
+  const choices = list.map((_, i) => i).filter(i => i !== previous);
+  const index = pick(choices.length ? choices : [0]);
+  state[stateKey] = index;
+  return list[index];
+}
+
+const tinyMissions = [
+  "Look out the nearest window and name three colors you actually see, not the ones you'd guess.",
+  "Send me the weirdest fact you currently know, no context needed.",
+  "Make the ugliest face you can manage and take the photo. You don't have to send it. But you can.",
+  "Reorganize one small thing near you - a drawer, a playlist, your camera roll's first row.",
+  "Write down one thing, however small, you're actually looking forward to.",
+  "Stand up. Stretch both arms as high as they go. Hold it for five seconds like you mean it.",
+  "Find the nearest soft thing and hold it for ten seconds. Pillow, blanket, sleeve, doesn't matter.",
+  "Name one thing you did today that past-you would be proud of. It can be tiny.",
+  "Drink actual water. Not tea, not coffee. Water. Then come back.",
+  "Text me one memory that made you smile this week, unprompted.",
+  "Open your camera roll and find the most ridiculous photo of me. Look at it for a second.",
+  "Pick one song, play thirty seconds of it, and just listen - not as background noise, actually listen.",
+];
+
+const pooComfortLines = [
+  "Poo says: she's not gone, she's just doing a phone thing. You're still her whole favourite.",
+  "Poo says: I've been sitting right here the entire time you were worrying. I'm very patient.",
+  "Poo says: missing someone this much just means you picked a good one. Rare, that.",
+  "Poo says: I would personally bite the distance if biting worked on distance.",
+  "Poo says: she talks about you like you're the best thing she's ever found. I've heard it a lot.",
+  "Poo says: come sit with me a second. We can miss her together, it's less heavy that way.",
+  "Poo says: I'm small and purple and even I know this feeling passes. Hang on.",
+  "Poo says: she left the light on for you, metaphorically. Also I'm the light. I'm fine with that.",
+  "Poo says: nobody in this whole app doubts that she's coming back to you. Not even the moon.",
+  "Poo says: I'm told I give excellent hugs for something with no arms that work properly. Want one?",
+];
+
+function nextMission() { return pickFresh(tinyMissions, "lastMissionIndex"); }
+function nextPooLine() { return pickFresh(pooComfortLines, "lastPooLineIndex"); }
+
 function nextReason() {
   if (!Array.isArray(state.reasonDeck) || state.reasonDeck.length !== reasons.length || state.reasonCursor >= state.reasonDeck.length) {
     state.reasonDeck = shuffledIndexes(reasons.length, Number(state.lastReasonIndex ?? -1));
@@ -503,23 +582,9 @@ function finishIntro() {
 }
 
 function flowerPageTransition() {
-  if (document.body.classList.contains("app-locked") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const veil = document.createElement("div");
-  veil.className = "page-flower-transition";
-  const flowers = ["🌸", "🌹", "🌷", "🪻", "🪷", "🌺", "💗", "🌸", "🌹", "🌷"];
-  flowers.forEach((flower, index) => {
-    const petal = document.createElement("i");
-    petal.textContent = flower;
-    petal.className = `flower-flight flight-${index % 4}`;
-    petal.style.left = `${4 + index * 10}%`;
-    petal.style.top = `${12 + (index % 3) * 24}%`;
-    petal.style.setProperty("--delay", `${index * .025}s`);
-    petal.style.setProperty("--size", `${2.3 + (index % 4) * .55}rem`);
-    petal.style.setProperty("--sway", `${(index % 2 ? 1 : -1) * (80 + index * 7)}px`);
-    veil.appendChild(petal);
-  });
-  document.body.appendChild(veil);
-  setTimeout(() => veil.remove(), 1800);
+  if (document.body.classList.contains("app-locked")) return;
+  // real photographed petals from bloom.js, not an emoji shower
+  if (window.Bloom) window.Bloom.confetti(window.innerWidth / 2, window.innerHeight * 0.3, 14);
 }
 
 function ensureScreenRendered(name) {
@@ -539,7 +604,8 @@ function ensureScreenRendered(name) {
     birthday: renderBirthday,
     care: renderCare,
     games: renderGames,
-    doodles: () => { renderWidgets(); setupCanvas(); }
+    doodles: () => { renderWidgets(); setupCanvas(); },
+    us: initHearthOnce
   };
   renderers[name]?.();
   renderedScreens.add(name);
@@ -561,6 +627,7 @@ function openScreen(name, options = {}) {
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
   if (name === "garden") requestAnimationFrame(resizeGardenTree);
   if (name === "games") fetchBubbleScores();
+  if (name === "us") refreshHearth();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
       if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
@@ -586,11 +653,63 @@ function setMood(mood) {
   $("#comfort-note").textContent = nextComfort(mood);
   saveState();
   if (window.Poo) window.Poo.setMood(mood);
+  applyHeroScene();
+}
+
+/* ============================================================================
+   The home hero - a real photo, not a gradient, and which photo depends on
+   when she opens the app AND how she says she's feeling. A "night" scene at
+   9am would feel like the app doesn't know what day it is; a cheerful
+   daytime porch scene when she's just told it she feels heavy would feel
+   actively tone-deaf. Mood (when she's set one) always wins over the clock.
+   ============================================================================ */
+const HERO_SCENES = {
+  morning: {
+    img: "./assets/mood/hero-morning.webp",
+    kicker: "good morning, my favourite person",
+    line: "Coffee first. Then come find me here - I left a note for you.",
+  },
+  day: {
+    img: "./assets/mood/hero-day.webp",
+    kicker: "hi, wherever you are right now",
+    line: "However today is going, this little world is still right here.",
+  },
+  evening: {
+    img: "./assets/mood/hero-evening.webp",
+    kicker: "the day is finally slowing down",
+    line: "Come sit for a minute. I saved the soft part of the day for you.",
+  },
+  night: {
+    img: "./assets/mood/hero-night.webp",
+    kicker: "still thinking of you before I sleep",
+    line: "If you're up too, come be sleepy with me for a second.",
+  },
+};
+
+// mood -> forced scene. Anything not listed here (soft, or no mood set yet)
+// just follows the actual clock instead of overriding it.
+const MOOD_SCENE_OVERRIDE = { sleepy: "night", heavy: "evening" };
+
+function timeOfDayScene(hour = new Date().getHours()) {
+  if (hour >= 5 && hour < 11) return "morning";
+  if (hour >= 11 && hour < 17) return "day";
+  if (hour >= 17 && hour < 21) return "evening";
+  return "night";
+}
+
+function applyHeroScene() {
+  const hero = $("#home-hero");
+  if (!hero) return;
+  const key = MOOD_SCENE_OVERRIDE[state.mood] || timeOfDayScene();
+  const scene = HERO_SCENES[key];
+  hero.style.setProperty("--hero-img", `url('${scene.img}')`);
+  $("#hero-kicker").textContent = scene.kicker;
+  $("#hero-line").textContent = scene.line;
 }
 
 function renderAtlas() {
   const html = worlds.map((world, i) => `
-    <button class="world-tile tone-${world.tone}" data-open="${world.id}" type="button" style="--i:${i}">
+    <button class="world-tile tone-${world.tone}" data-open="${world.id}" type="button" style="--i:${i};background-image:url('${world.photo}')">
       <span class="world-icon">${world.icon}</span>
       <span class="world-copy">
         <strong>${world.title}</strong>
@@ -615,13 +734,15 @@ function escapeHtml(value) {
 
 function renderLetters() {
   $("#letter-list").innerHTML = letters.map((letter, i) => `
-    <button class="letter-card letter-folder theme-${letter.theme}" type="button" data-letter="${i}">
-      <span class="folder-tab">${escapeHtml(letter.tab)}</span>
-      <span class="seal">${String(i + 1).padStart(2, "0")}</span>
-      <span class="folder-icon" aria-hidden="true"></span>
-      <h3>${escapeHtml(letter.title)}</h3>
-      <p>${escapeHtml(letter.preview)}</p>
-      <small>tap to open the letter</small>
+    <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}" aria-label="${escapeHtml(letter.title)} - tap to unseal">
+      <span class="envelope-flap" aria-hidden="true"></span>
+      <span class="envelope-seal" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
+      <span class="envelope-tab">${escapeHtml(letter.tab)}</span>
+      <span class="envelope-body">
+        <strong>${escapeHtml(letter.title)}</strong>
+        <small>${escapeHtml(letter.preview)}</small>
+        <em>tap to unseal</em>
+      </span>
     </button>
   `).join("");
 }
@@ -1046,7 +1167,7 @@ function revealGift(kind, box) {
   burstAt(rect ? rect.left + rect.width / 2 : window.innerWidth / 2, rect ? rect.top : window.innerHeight / 2, 10);
   let html = "";
   if (kind === "hug") {
-    html = `<p class="card-label">from Poo</p><p>She heard it's Girlfriend Day too. Go say hi to her.</p>`;
+    html = `<p class="card-label">from Poo</p><p>She heard about it too. Go say hi to her.</p>`;
     window.Poo?.react?.("love");
   } else if (kind === "dance") {
     html = `<p class="card-label">a slow dance</p><p>She's already spinning. Go open her up.</p>`;
@@ -1074,9 +1195,9 @@ function revealGift(kind, box) {
 function renderBirthday() {
   $("#birthday-wish").innerHTML = `
     <div class="birthday-stage" data-birthday-stage="wish">
-      <p class="card-label">it's girlfriend day</p>
+      <p class="card-label">no occasion needed</p>
       <div class="wish-moon">🌙</div>
-      <h2>Make a wish, Michelle.</h2>
+      <h2>Make a wish, Moonpie.</h2>
       <p>Write it here or keep it secret. Either way, I am rooting for every soft thing your heart asks for.</p>
       <textarea id="birthday-wish-text" rows="3" maxlength="180" placeholder="my wish is..."></textarea>
       <button class="primary-btn wide" id="seal-wish" type="button">seal my wish</button>
@@ -1085,7 +1206,7 @@ function renderBirthday() {
     <div class="birthday-stage hidden" data-birthday-stage="letter">
       <p class="card-label">wish sealed</p>
       <div class="birthday-envelope">💌</div>
-      <h2>Happy Girlfriend Day, Michelle.</h2>
+      <h2>This one's for you, Moonpie.</h2>
       <p class="birthday-letter">You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.</p>
       <p class="birthday-letter">My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.</p>
       <p class="birthday-letter">Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it.</p>
@@ -1100,6 +1221,184 @@ function renderCare() {
   `).join("");
 }
 
+/* ============================================================================
+   "Us" - the meadow at dusk. Everything here is IN the scene: a heart you
+   tap, a lantern you open, numbers scattered like fireflies. No card grid.
+   ============================================================================ */
+
+const COUNTER_API = "../api/counter?room=moonpie-counters-2504";
+const DAILY_API = "../api/daily-question?room=moonpie-daily-2504";
+const ANNIVERSARY = new Date("2025-02-25T00:00:00");
+
+function daysTogether() {
+  return Math.max(0, Math.floor((Date.now() - ANNIVERSARY.getTime()) / 86400000));
+}
+
+function scatterFireflies() {
+  const host = $("#hearth-fireflies");
+  if (!host || host.dataset.seeded) return;
+  host.dataset.seeded = "1";
+  const n = 16;
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const x = 6 + Math.random() * 88;
+    const y = 8 + Math.random() * 72;
+    const dur = 6 + Math.random() * 7;
+    const glowDur = 2 + Math.random() * 3;
+    const delay = Math.random() * -10;
+    html += `<span class="hearth-fly" style="left:${x}%;top:${y}%;animation-duration:${dur}s,${glowDur}s;animation-delay:${delay}s,${delay}s"></span>`;
+  }
+  host.innerHTML = html;
+}
+
+function initHearthOnce() {
+  scatterFireflies();
+
+  const heart = $("#thinking-heart");
+  heart?.addEventListener("click", async () => {
+    heart.classList.remove("tapped");
+    void heart.offsetWidth;
+    heart.classList.add("tapped");
+    const ripple = document.createElement("span");
+    ripple.className = "hearth-ripple";
+    $(".hearth")?.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 1150);
+    burstAt(window.innerWidth / 2, heart.getBoundingClientRect().top + 40, 5);
+    window.Poo?.react?.("love");
+
+    try {
+      const res = await fetch(COUNTER_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "thinking-of-you" }),
+      });
+      if (res.ok) {
+        const { value } = await res.json();
+        $("#thinking-count").textContent = `${value} times, between the two of you`;
+      }
+    } catch { /* the tap still felt like something even if the count didn't sync */ }
+
+    if (window.MoonpiePush) {
+      const me = window.MoonpiePush.myProfile();
+      window.MoonpiePush.send(`${nickOf(me)} is thinking of you`, "Just tapped the heart. That's all.");
+    }
+  });
+
+  $("#lantern")?.addEventListener("click", openLanternSheet);
+  $("#lantern-close")?.addEventListener("click", closeLanternSheet);
+  $("#lantern-sheet")?.addEventListener("click", e => { if (e.target.id === "lantern-sheet") closeLanternSheet(); });
+  $("#lantern-submit")?.addEventListener("click", submitLanternAnswer);
+}
+
+function renderHearthStats() {
+  const host = $("#hearth-stats");
+  if (!host) return;
+  const streak = typeof computeStreak === "function" && Array.isArray(state.visitLog)
+    ? computeStreak(state.visitLog) : 0;
+  const stats = [
+    [daysTogether(), "days together"],
+    [streak, "day streak"],
+    [state.widgets?.length || 0, "notes exchanged"],
+  ];
+  host.innerHTML = stats.map(([n, label]) =>
+    `<div class="hearth-stat"><b>${n}</b><span>${escapeHtml(label)}</span></div>`).join("");
+}
+
+async function refreshHearth() {
+  renderHearthStats();
+  try {
+    const res = await fetch(`${COUNTER_API}&key=thinking-of-you`, { cache: "no-store" });
+    if (res.ok) {
+      const { value } = await res.json();
+      $("#thinking-count").textContent = value > 0 ? `${value} times, between the two of you` : "be the first to tap it";
+    }
+  } catch { $("#thinking-count").textContent = " "; }
+
+  const lantern = $("#lantern");
+  const me = window.MoonpiePush?.myProfile?.() || "Michelle";
+  try {
+    const res = await fetch(`${DAILY_API}&me=${encodeURIComponent(me)}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("unavailable");
+    const data = await res.json();
+    state.dailyQuestion = data;
+    if (lantern) lantern.dataset.state = data.otherAnswer ? "revealed" : data.myAnswer ? "answered" : "closed";
+  } catch {
+    state.dailyQuestion = null;
+  }
+}
+
+function openLanternSheet() {
+  const sheet = $("#lantern-sheet");
+  const data = state.dailyQuestion;
+  if (!sheet || !data) { toast("couldn't reach today's question"); return; }
+
+  $("#lantern-question").textContent = data.question;
+  $("#lantern-day-label").textContent = "today's question";
+
+  const form = $("#lantern-answer-form"), waiting = $("#lantern-waiting"), reveal = $("#lantern-reveal");
+  form.classList.toggle("hidden", !!data.myAnswer);
+  waiting.classList.toggle("hidden", !(data.myAnswer && !data.otherAnswer));
+  reveal.classList.toggle("hidden", !(data.myAnswer && data.otherAnswer));
+
+  if (data.myAnswer) {
+    $("#lantern-my-answer").textContent = data.myAnswer;
+    $("#lantern-waiting-note").textContent = data.otherAnswered
+      ? "they answered too - open again in a moment"
+      : "waiting for them to answer too...";
+  }
+  if (data.myAnswer && data.otherAnswer) {
+    const me = window.MoonpiePush?.myProfile?.() || "Michelle";
+    $("#lantern-my-label").textContent = `${nickOf(me)} said`;
+    $("#lantern-their-label").textContent = `${nickOf(window.MoonpiePush?.otherProfile?.(me) || "Michael")} said`;
+    $("#lantern-reveal-mine").textContent = data.myAnswer;
+    $("#lantern-reveal-theirs").textContent = data.otherAnswer;
+  }
+
+  sheet.hidden = false;
+  requestAnimationFrame(() => sheet.classList.add("show"));
+  document.body.classList.add("focus-mode");
+}
+
+function closeLanternSheet() {
+  const sheet = $("#lantern-sheet");
+  if (!sheet) return;
+  sheet.classList.remove("show");
+  document.body.classList.remove("focus-mode");
+  setTimeout(() => { sheet.hidden = true; }, 260);
+}
+
+async function submitLanternAnswer() {
+  const answer = $("#lantern-answer")?.value.trim();
+  if (!answer) return toast("write something first");
+  const me = window.MoonpiePush?.myProfile?.() || "Michelle";
+  try {
+    const res = await fetch(DAILY_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ me, answer }),
+    });
+    if (!res.ok) throw new Error("failed");
+    const data = await res.json();
+    state.dailyQuestion = data;
+    $("#lantern").dataset.state = data.otherAnswer ? "revealed" : "answered";
+    $("#lantern-answer").value = "";
+    burstAt(window.innerWidth / 2, window.innerHeight * 0.7, 10);
+    openLanternSheet();
+  } catch {
+    toast("couldn't seal that answer - try again in a moment");
+  }
+}
+
+// What actually reaches the other phone when a care-mode button is tapped -
+// short and specific to the feeling, not the generic-alarm "new message"
+// most apps would send.
+const careNudges = {
+  missing: ["missing you", "just told the app the missing is loud right now."],
+  reassurance: ["needs to hear it", "wants reassurance. say the thing."],
+  overwhelmed: ["everything feels heavy", "is overwhelmed right now."],
+  sleep: ["can't settle", "is having trouble settling down tonight."],
+};
+
 function showCareResponse(mode) {
   const response = careResponses[mode];
   if (!response) return;
@@ -1107,6 +1406,16 @@ function showCareResponse(mode) {
   $("#care-response").innerHTML = `<span>${response[0]}</span><h3>${escapeHtml(response[1])}</h3><p>${escapeHtml(response[2])}</p>`;
   burstAt(window.innerWidth / 2, Math.min(window.innerHeight * .62, 520), 8);
   if (window.Poo) window.Poo.react("shy");
+
+  const nudge = careNudges[mode];
+  if (nudge && window.MoonpiePush) {
+    const me = window.MoonpiePush.myProfile();
+    window.MoonpiePush.send(`${nickOf(me)} is ${nudge[0]}`, nickOf(me) + " " + nudge[1]);
+    // fire-and-forget by design (see push.js) - worded as an attempt, not a
+    // guarantee, since a missing subscription or unconfigured push fails
+    // silently on purpose rather than blocking this screen on a network call
+    toast(`Letting ${nickOf(window.MoonpiePush.otherProfile(me))} know, if nudges are on.`);
+  }
 }
 
 let breathingTimer = null;
@@ -1386,22 +1695,29 @@ function showBirthdayStage(stage) {
 function seedOpeningFlowers() {
   const field = $("#opening-petals");
   if (!field || field.childElementCount) return;
-  const flowers = ["🌸", "🌹", "🌷", "🪻", "🪷", "🌺", "💗", "🌸", "🌹", "🌷", "🪻", "🪷"];
-  flowers.forEach((flower, index) => {
-    const piece = document.createElement("i");
-    piece.textContent = flower;
-    piece.className = `opening-flower flower-path-${index % 4}`;
-    piece.style.left = `${4 + (index * 8.2) % 92}%`;
-    piece.style.top = `${8 + (index % 4) * 21}%`;
-    piece.style.fontSize = `${2.4 + (index % 4) * .65}rem`;
-    piece.style.setProperty("--delay", `${-1 * (index % 6) * .55}s`);
-    piece.style.setProperty("--drift", `${(index % 2 ? 1 : -1) * (55 + index * 5)}px`);
+  // real photographed lilies, scattered and drifting - the emoji garden that
+  // used to sit here read as clip-art against the photography
+  for (let i = 0; i < 7; i++) {
+    const piece = document.createElement("img");
+    piece.src = `./assets/flowers/lily-${1 + (i % 6)}.webp`;
+    piece.alt = "";
+    piece.className = `opening-flower flower-path-${i % 4}`;
+    piece.style.left = `${2 + (i * 15.5) % 88}%`;
+    piece.style.top = `${5 + (i % 4) * 23}%`;
+    piece.style.width = `${52 + (i % 3) * 26}px`;
+    piece.style.setProperty("--delay", `${-1 * (i % 6) * .55}s`);
+    piece.style.setProperty("--drift", `${(i % 2 ? 1 : -1) * (48 + i * 6)}px`);
+    piece.style.setProperty("--spin", `${(i % 2 ? 1 : -1) * (9 + i * 3)}deg`);
     field.appendChild(piece);
-  });
+  }
 }
 
 function completeBouquetUnwrap() {
   const button = $("#unwrap-bouquet");
+  if (window.Bloom) {
+    const r = button?.getBoundingClientRect();
+    window.Bloom.confetti(r ? r.left + r.width / 2 : innerWidth / 2, r ? r.top + r.height / 2 : innerHeight / 2, 46);
+  }
   if (button?.classList.contains("untied")) return;
   button?.classList.add("untied");
   navigator.vibrate?.([35, 45, 35]);
@@ -1459,6 +1775,12 @@ function setupOpeningRitual() {
     $("#birthday-opening")?.classList.remove("hidden");
     setTimeout(() => $("#entry-gate")?.remove(), 650);
   });
+  // a different bouquet each visit - she should never untie the same one twice
+  const wrapped = $("#wrapped-bouquet");
+  if (wrapped) {
+    const n = 1 + Math.floor(Math.random() * 6);
+    wrapped.src = `./assets/flowers/bouquet-${n}.webp`;
+  }
   $("#unwrap-bouquet")?.addEventListener("click", completeBouquetUnwrap);
   $("#enter-universe")?.addEventListener("click", enterUniverse);
 }
@@ -1485,7 +1807,7 @@ function renderWidgets() {
   list.innerHTML = state.widgets.map((widget, index) => ({ ...widget, index })).slice().reverse().map(w => `
     <article class="saved-widget">
       <button class="delete-widget" type="button" data-delete-widget="${w.id || w.createdAt || w.index}" aria-label="delete widget">delete</button>
-      <span class="shared-widget-sender">from ${escapeHtml(w.sender || "one of us")}</span>
+      <span class="shared-widget-sender">from ${escapeHtml(nickOf(w.sender) || "one of us")}</span>
       ${w.type === "doodle" ? `<img src="${w.value}" alt="saved handwritten widget">` : `<p>${escapeHtml(w.value)}</p>`}
       <time>${new Date(w.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</time>
     </article>
@@ -1499,7 +1821,7 @@ function renderLatestWidget() {
     box.innerHTML = `<div class="card-label">latest widget</div><p>No widget yet. I will leave something here for the next time you miss me.</p>`;
     return;
   }
-  box.innerHTML = `<div class="card-label">latest widget · from ${escapeHtml(latest.sender || "one of us")}</div>${latest.type === "doodle" ? `<img src="${latest.value}" alt="latest doodle">` : `<p>${escapeHtml(latest.value)}</p>`}`;
+  box.innerHTML = `<div class="card-label">latest widget · from ${escapeHtml(nickOf(latest.sender) || "one of us")}</div>${latest.type === "doodle" ? `<img src="${latest.value}" alt="latest doodle">` : `<p>${escapeHtml(latest.value)}</p>`}`;
 }
 
 let canvas, ctx, strokes = [], activeStroke = null;
@@ -1662,7 +1984,12 @@ async function requestLoveNotifications() {
   }
   const result = await Notification.requestPermission();
   updatePhoneStatus();
-  toast(result === "granted" ? "nudges allowed" : "nudges not allowed yet");
+  if (result === "granted") {
+    const subscribed = await window.MoonpiePush?.subscribe();
+    toast(subscribed ? "nudges allowed - they'll reach your phone now" : "nudges allowed on this device, but couldn't connect to the other phone yet");
+  } else {
+    toast("nudges not allowed yet");
+  }
 }
 
 async function showLoveNotification(widget, title = "Moonpie miss-you widget") {
@@ -1730,10 +2057,10 @@ async function fetchSharedWidgets({ quiet = false } = {}) {
     mergeWidgets(remoteWidgets, pendingWidgets);
     pendingWidgets.slice(-20).forEach(widget => pushSharedWidget(widget));
     const latest = state.widgets[state.widgets.length - 1];
-    setSyncStatus(`Connected as ${state.profile || "Michelle"}. Notes from both phones appear here automatically.`, true);
+    setSyncStatus(`Connected as ${nickOf(state.profile) || "Moonpie"}. Notes from both phones appear here automatically.`, true);
     if (!quiet && latest?.id && latest.id !== beforeLatest && latest.sender !== state.profile) {
-      showLoveNotification(latest, `A new note from ${latest.sender || "your love"}`);
-      toast(`new love note from ${latest.sender || "your person"}`);
+      showLoveNotification(latest, `A new note from ${nickOf(latest.sender) || "your love"}`);
+      toast(`new love note from ${nickOf(latest.sender) || "your person"}`);
     }
     return true;
   } catch {
@@ -1749,7 +2076,7 @@ async function pushSharedWidget(widget) {
     const local = state.widgets.find(item => String(item.id) === String(widget.id));
     if (local) local.syncPending = false;
     saveState();
-    setSyncStatus(`Sent from ${widget.sender}. It will appear on the other phone.`, true);
+    setSyncStatus(`Sent from ${nickOf(widget.sender)}. It will appear on the other phone.`, true);
   } catch {
     setSyncStatus("Saved on this phone. I will keep trying to send it to the shared shelf.", false);
   }
@@ -1886,6 +2213,11 @@ function setupSmartNav() {
 
 function setupEvents() {
   document.body.addEventListener("click", event => {
+    const poo = event.target.closest("[data-poo]");
+    if (poo) {
+      if (window.Poo) window.Poo.open();
+      return;
+    }
     const open = event.target.closest("[data-open]");
     if (open) openScreen(open.dataset.open);
     const portal = event.target.closest("[data-world-portal]");
@@ -1900,6 +2232,16 @@ function setupEvents() {
   });
   $$(".mood-chip").forEach(btn => btn.addEventListener("click", () => setMood(btn.dataset.mood)));
   $("#new-comfort").addEventListener("click", () => setMood(selectedMood));
+  $("#new-mission")?.addEventListener("click", () => {
+    $("#mission-note").textContent = nextMission();
+    saveState();
+    burstAt(window.innerWidth / 2, window.innerHeight * 0.5, 6);
+  });
+  $("#new-poo-line")?.addEventListener("click", () => {
+    $("#poo-says-note").textContent = nextPooLine();
+    saveState();
+    window.Poo?.react?.("curious");
+  });
   $("#new-reason").addEventListener("click", nextReason);
   $("#save-text-widget").addEventListener("click", saveTextWidget);
   $("#clear-text-widget").addEventListener("click", () => $("#widget-text").value = "");
@@ -1936,18 +2278,26 @@ function setupEvents() {
   });
   $("#letter-list").addEventListener("click", event => {
     const card = event.target.closest("[data-letter]");
-    if (!card) return;
+    if (!card || card.classList.contains("opening")) return;
     const letter = letters[Number(card.dataset.letter)];
-    const modal = $("#letter-modal");
-    modal.className = `letter-dialog theme-${letter.theme}`;
-    $("#modal-title").textContent = letter.title;
-    $("#modal-body").innerHTML = `
-      <p class="letter-salutation">${escapeHtml(letter.salutation)}</p>
-      ${letter.body.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}
-      <p class="letter-closing">${escapeHtml(letter.closing)}</p>
-    `;
-    document.body.classList.add("focus-mode");
-    modal.showModal();
+    // the flap lifts and the seal breaks before the letter itself appears -
+    // a beat of "unsealing" instead of instantly popping a modal open
+    card.classList.add("opening");
+    const rect = card.getBoundingClientRect();
+    burstAt(rect.left + rect.width / 2, rect.top + 18, 8);
+    setTimeout(() => {
+      const modal = $("#letter-modal");
+      modal.className = `letter-dialog theme-${letter.theme}`;
+      $("#modal-title").textContent = letter.title;
+      $("#modal-body").innerHTML = `
+        <p class="letter-salutation">${escapeHtml(letter.salutation)}</p>
+        ${letter.body.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}
+        <p class="letter-closing">${escapeHtml(letter.closing)}</p>
+      `;
+      document.body.classList.add("focus-mode");
+      modal.showModal();
+      setTimeout(() => card.classList.remove("opening"), 400);
+    }, 420);
   });
   $("#letter-modal").addEventListener("close", () => {
     document.body.classList.remove("focus-mode");

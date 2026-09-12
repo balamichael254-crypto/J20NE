@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Moonpie",
+    "slug": "moonpie-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "moonpie",
+    "extra": {
+      "moonpieUrl": "https://moonpie-wine.vercel.app/miss-you-app/"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.moonpie.wrapper",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used only if you choose to attach a photo from your camera to a note or a memory.",
+        "NSPhotoLibraryUsageDescription": "Used only if you choose to attach a photo from your library to a note or a memory."
+      }
+    },
+    "android": {
+      "package": "app.moonpie.wrapper",
+      "adaptiveIcon": {
+        "backgroundColor": "#E9DFFA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#f56da8"
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
