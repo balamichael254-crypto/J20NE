@@ -59,7 +59,7 @@ function slimMovie(m) {
     title: m.title || m.name,
     year: (m.release_date || m.first_air_date || "").slice(0, 4) || null,
     overview: m.overview || "",
-    poster: posterUrl(m.poster_path),
+    poster: posterUrl(m.poster_path, "w500"),
     backdrop: posterUrl(m.backdrop_path, "w780"),
     rating: typeof m.vote_average === "number" ? Math.round(m.vote_average * 10) / 10 : null,
     genreIds: m.genre_ids || (m.genres ? m.genres.map(g => g.id) : [])
@@ -83,11 +83,18 @@ module.exports = async function handler(request, response) {
       const genre = String(request.query?.genre || "all");
       const sort = ["popularity.desc", "vote_average.desc", "release_date.desc"].includes(request.query?.sort)
         ? request.query.sort : "popularity.desc";
+      // Browsing should surface what's actually current, not the same handful
+      // of vote-count-heavy 1990s/2000s classics popularity sorting tends to
+      // resurface - so every discover query (whatever the genre) is scoped to
+      // roughly the last decade unless a specific sort asks for the classics.
+      const recentYearsBack = 10;
+      const cutoffYear = new Date().getUTCFullYear() - recentYearsBack;
       const params = new URLSearchParams({
         language: "en-US",
         page: String(page),
         sort_by: sort,
-        "vote_count.gte": sort === "vote_average.desc" ? "300" : "50",
+        "vote_count.gte": sort === "vote_average.desc" ? "150" : "40",
+        "primary_release_date.gte": `${cutoffYear}-01-01`,
         include_adult: "false"
       });
       if (genre === "korean") {
@@ -95,7 +102,7 @@ module.exports = async function handler(request, response) {
       } else if (genre === "comfort") {
         params.set("with_genres", "10751,35"); // family, comedy
         params.set("sort_by", "vote_average.desc");
-        params.set("vote_count.gte", "200");
+        params.set("vote_count.gte", "80");
       } else if (genre !== "all") {
         params.set("with_genres", genre);
       }

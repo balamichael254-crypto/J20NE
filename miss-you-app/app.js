@@ -839,6 +839,11 @@ function wlParseId(raw) {
 function wlIsSaved(id) { const key = wlParseId(id); return (state.watchSaved || []).some(m => m.id === key); }
 function wlIsSeen(id) { const key = wlParseId(id); return (state.watchSeen || []).some(m => m.id === key); }
 
+// Full-bleed poster card, title and rating on a scrim over the art, save/seen
+// as small circular icons that float on the poster - the streaming-app
+// pattern, not text stacked in a box under a small thumbnail. The old layout
+// gave the poster maybe a third of the card; this gives it all of it, which
+// is the actual point of having real poster art to show.
 function wlCardHtml(movie) {
   const saved = wlIsSaved(movie.id);
   const seen = wlIsSeen(movie.id);
@@ -847,16 +852,19 @@ function wlCardHtml(movie) {
     : `<div class="wl-poster-fallback" aria-hidden="true">\u{1F3AC}</div>`;
   return `
     <article class="wl-card${seen ? " is-seen" : ""}" data-wl-open="${movie.id}">
-      <div class="wl-poster">${poster}${movie.rating ? `<span class="wl-rating">★ ${movie.rating}</span>` : ""}</div>
-      <div class="wl-card-main">
-        <h3>${escapeHtml(movie.title)}${movie.year ? ` <span class="wl-year">${escapeHtml(movie.year)}</span>` : ""}</h3>
-        ${movie.overview ? `<p class="wl-why">${escapeHtml(movie.overview)}</p>` : ""}
-      </div>
-      <div class="wl-card-actions">
-        <button class="wl-act wl-save${saved ? " on" : ""}" data-wl-save="${movie.id}" type="button"
-          aria-pressed="${saved}" aria-label="${saved ? "remove from" : "add to"} watchlist">&#9825;</button>
-        <button class="wl-act wl-seen${seen ? " on" : ""}" data-wl-seen="${movie.id}" type="button"
-          aria-pressed="${seen}" aria-label="${seen ? "unmark" : "mark"} as already watched">&#10003;</button>
+      <div class="wl-poster">
+        ${poster}
+        <div class="wl-icon-col">
+          <button class="wl-icon-btn wl-save${saved ? " on" : ""}" data-wl-save="${movie.id}" type="button"
+            aria-pressed="${saved}" aria-label="${saved ? "remove from" : "add to"} watchlist">&#9825;</button>
+          <button class="wl-icon-btn wl-seen${seen ? " on" : ""}" data-wl-seen="${movie.id}" type="button"
+            aria-pressed="${seen}" aria-label="${seen ? "unmark" : "mark"} as already watched">&#10003;</button>
+        </div>
+        ${seen ? `<span class="wl-seen-ribbon">watched</span>` : ""}
+        <div class="wl-scrim">
+          <h3>${escapeHtml(movie.title)}</h3>
+          <p class="wl-scrim-meta">${movie.year ? escapeHtml(movie.year) : ""}${movie.rating ? ` &middot; ★ ${movie.rating}` : ""}</p>
+        </div>
       </div>
     </article>
   `;
