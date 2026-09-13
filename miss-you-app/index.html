@@ -9,8 +9,11 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=86">
+  <link rel="stylesheet" href="./styles.css?v=99">
   <link rel="stylesheet" href="./poo.css?v=6">
+  <link rel="stylesheet" href="./games/sudoku.css?v=1">
+  <link rel="stylesheet" href="./games/memory.css?v=1">
+  <link rel="stylesheet" href="./games/jigsaw.css?v=2">
 </head>
 <body class="app-locked">
   <section class="entry-gate" id="entry-gate" aria-label="private anniversary passkey">
@@ -69,11 +72,14 @@
        glued onto a page and the page actually being a place - a small corner
        thumbnail reads as decoration, a wall of soft out-of-focus lilies you
        feel like you're standing inside reads as a scene. -->
+  <div class="paper-ground" aria-hidden="true"></div>
+  <div class="paper-wash" aria-hidden="true"></div>
   <div class="scene-bg" id="scene-bg" aria-hidden="true">
     <div class="scene-layer scene-garden">
-      <img class="scene-bloom bloom-a" src="./assets/flowers/lily-drama.webp" alt="">
-      <img class="scene-bloom bloom-b" src="./assets/flowers/hero-lily.webp" alt="">
-      <img class="scene-bloom bloom-c" src="./assets/flowers/lily-night-2.webp" alt="">
+      <img class="scene-bloom bloom-far" src="./assets/flowers/bloom-sprig.webp" alt="" decoding="async">
+      <img class="scene-bloom bloom-tl" src="./assets/flowers/corner-bloom-tl.webp" alt="" fetchpriority="high">
+      <img class="scene-bloom bloom-br" src="./assets/flowers/corner-bloom-br.webp" alt="" decoding="async">
+      <div class="garden-veil"></div>
     </div>
     <div class="scene-layer scene-space">
       <div class="starfield"></div>
@@ -135,18 +141,22 @@
 
         <div class="quick-row" aria-label="quick ways in">
           <button class="quick-tile q-letters" data-open="letters" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-1.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">💌</span>
             <b>Letters</b><small>16 waiting for you</small>
           </button>
           <button class="quick-tile q-worlds" data-open="places" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-3.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🌍</span>
             <b>Our worlds</b><small>20 places to go</small>
           </button>
           <button class="quick-tile q-care" data-open="care" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-5.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🫶</span>
             <b>Come here</b><small>when it&rsquo;s heavy</small>
           </button>
           <button class="quick-tile q-gifts" data-open="birthday" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-2.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🎁</span>
             <b>Little gifts</b><small>open one today</small>
           </button>
@@ -201,8 +211,8 @@
         <section class="home-section">
           <div class="section-row">
             <div>
-              <p class="eyebrow">the whole universe</p>
-              <h2>All the rooms</h2>
+              <p class="eyebrow">if you only open one thing</p>
+              <h2>For today</h2>
             </div>
             <button class="pill-link" data-open="atlas" type="button">open atlas</button>
           </div>
@@ -230,11 +240,16 @@
           <img class="head-charm" src="./assets/mood/flower-jar-1.webp" alt="">
         </div>
         <article class="garden-stage premium-card" id="garden-stage">
-          <div class="garden-copy">
+          <div class="garden-copy garden-copy-new">
             <p class="script-kicker">I planted one small thing here for you.</p>
             <h3>Tap the heart. Let it bloom.</h3>
             <p>The tree grows into a heart because subtlety left the room the moment I started loving you.</p>
             <button class="primary-btn" id="bloom-garden" type="button">bloom the heart tree</button>
+          </div>
+          <div class="garden-copy garden-copy-grown">
+            <p class="script-kicker">still growing, right where you left it</p>
+            <h3 id="garden-age-line">This tree does not wilt.</h3>
+            <p>Tap it whenever you want to watch it happen again.</p>
           </div>
           <div class="heart-tree big-tree" aria-label="heart tree that grows into bloom">
             <canvas class="love-tree-canvas" id="garden-tree-canvas" aria-label="animated heart tree"></canvas>
@@ -247,7 +262,7 @@
           <div>
             <p class="card-label">real flowers</p>
             <h3>For you, Moonpie.</h3>
-            <p>Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
+            <p id="bouquet-copy">Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
           </div>
         </article>
 
@@ -256,7 +271,7 @@
           <div>
             <p class="card-label">not only lilies</p>
             <h3>And this one, too.</h3>
-            <p>The deep red kind, the ones that look almost too velvet to be real.</p>
+            <p id="rose-copy">The deep red kind, the ones that look almost too velvet to be real.</p>
           </div>
         </article>
       </section>
@@ -326,8 +341,52 @@
         </article>
       </section>
 
+      <section class="screen world-screen" id="screen-watchlist" aria-label="watchlist">
+        <div class="section-head">
+          <p class="eyebrow">for the nights you want to disappear into something</p>
+          <h2>What are we watching?</h2>
+          <p>Pick a mood, tap the heart to save it for later, tap the tick if you have already seen it.</p>
+          <img class="head-charm" src="./assets/mood/window-rain-4.webp" alt="">
+        </div>
+
+        <div class="wl-tabs" id="wl-tabs" role="tablist" aria-label="browse or your lists">
+          <button class="wl-tab active" data-wl-view="browse" type="button" role="tab" aria-selected="true">Browse</button>
+          <button class="wl-tab" data-wl-view="saved" type="button" role="tab" aria-selected="false">Watchlist <span class="wl-badge" id="wl-count-saved">0</span></button>
+          <button class="wl-tab" data-wl-view="seen" type="button" role="tab" aria-selected="false">Seen <span class="wl-badge" id="wl-count-seen">0</span></button>
+        </div>
+
+        <div class="wl-search-row">
+          <input class="wl-search" id="wl-search" type="search" inputmode="search" placeholder="search any movie, any title" aria-label="search movies">
+        </div>
+
+        <div class="wl-genres" id="wl-genres" role="group" aria-label="genres"></div>
+        <p class="wl-empty hidden" id="wl-empty"></p>
+        <div class="wl-list" id="wl-list"></div>
+        <p class="wl-status hidden" id="wl-status">finding more...</p>
+        <button class="secondary-btn wide wl-load-more hidden" id="wl-load-more" type="button">show me more</button>
+      </section>
+
       <section class="screen world-screen" id="screen-games" aria-label="games">
         <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>I made you a few tiny games for the moments you want something sweet to tap while you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
+        <!-- The three real games. Each module owns its own DOM inside
+             #game-stage and is mounted only while chosen, so none of them
+             runs a timer or a rAF loop while you are on another screen. -->
+        <div class="game-picker" id="game-picker" role="tablist" aria-label="pick a game">
+          <button class="game-pick" data-game="sudoku" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#129518;</span>
+            <b>Sudoku</b><small>60 puzzles, five levels</small>
+          </button>
+          <button class="game-pick" data-game="jigsaw" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#129513;</span>
+            <b>Jigsaw</b><small>our photos, any piece count</small>
+          </button>
+          <button class="game-pick" data-game="memory" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#127800;</span>
+            <b>Memory</b><small>find every pair</small>
+          </button>
+        </div>
+        <div class="game-stage" id="game-stage" aria-live="polite"></div>
+
         <article class="game-card premium-card card-warm">
           <div class="game-topline">
             <div>
@@ -390,11 +449,14 @@
 
       <section class="screen world-screen" id="screen-places" aria-label="places">
         <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Tap a place and step inside. Every world holds its own gallery, atmosphere, and little life waiting for us.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
+        <p class="places-progress" id="places-progress"></p>
         <div class="place-rail" id="place-rail"></div>
       </section>
 
       <section class="screen world-screen" id="screen-songs" aria-label="songs">
         <div class="section-head"><p class="eyebrow">press play and stay awhile</p><h2>Songs That Are You</h2><p>Real Spotify players, with the reason each song keeps finding its way back to you.</p><img class="head-charm" src="./assets/mood/vinyl-2.webp" alt=""></div>
+        <div class="song-featured" id="song-featured"></div>
+        <p class="card-label song-list-label">the rest of the playlist</p>
         <div class="song-list" id="song-list"></div>
       </section>
 
@@ -428,14 +490,14 @@
         <div class="section-head"><p class="eyebrow">no occasion at all</p><h2>A Few Small Gifts</h2><p>Tap one open. There's no wrong order.</p><img class="head-charm" src="./assets/mood/bunny-daisy-4.webp" alt=""></div>
         <article class="premium-card gift-grid-card card-rose">
           <div class="gift-grid" id="gift-grid">
-            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">🎁</span><small>a compliment</small></button>
-            <button class="gift-box" data-gift="song" type="button"><span class="gift-emoji">🎁</span><small>a song</small></button>
-            <button class="gift-box" data-gift="promise" type="button"><span class="gift-emoji">🎁</span><small>a promise</small></button>
-            <button class="gift-box" data-gift="dare" type="button"><span class="gift-emoji">🎁</span><small>a tiny dare</small></button>
-            <button class="gift-box" data-gift="future" type="button"><span class="gift-emoji">🎁</span><small>a future we're owed</small></button>
-            <button class="gift-box" data-gift="moonwish" type="button"><span class="gift-emoji">🎁</span><small>a wish on the moon</small></button>
-            <button class="gift-box" data-gift="dance" type="button"><span class="gift-emoji">🎁</span><small>a slow dance</small></button>
-            <button class="gift-box" data-gift="hug" type="button"><span class="gift-emoji">🎁</span><small>a hug from Poo</small></button>
+            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">&#128156;</span><small>a compliment</small></button>
+            <button class="gift-box" data-gift="song" type="button"><span class="gift-emoji">&#127911;</span><small>a song</small></button>
+            <button class="gift-box" data-gift="promise" type="button"><span class="gift-emoji">&#129309;</span><small>a promise</small></button>
+            <button class="gift-box" data-gift="dare" type="button"><span class="gift-emoji">&#127919;</span><small>a tiny dare</small></button>
+            <button class="gift-box" data-gift="future" type="button"><span class="gift-emoji">&#128302;</span><small>a future we're owed</small></button>
+            <button class="gift-box" data-gift="moonwish" type="button"><span class="gift-emoji">&#127772;</span><small>a wish on the moon</small></button>
+            <button class="gift-box" data-gift="dance" type="button"><span class="gift-emoji">&#128131;</span><small>a slow dance</small></button>
+            <button class="gift-box" data-gift="hug" type="button"><span class="gift-emoji">&#129391;</span><small>a hug from Poo</small></button>
           </div>
           <div class="gift-reveal hidden" id="gift-reveal"></div>
         </article>
@@ -492,6 +554,25 @@
             </div>
           </div>
         </div>
+
+          <!-- The Us hub: everything that is about the two of us specifically,
+               as opposed to Atlas, which is things to do. Populated by
+               renderAtlas() from the worlds entries tagged section:"us". -->
+          <div class="us-hub">
+            <p class="card-label us-hub-label">ours to keep</p>
+            <!-- Our Eyes Only lives in Us, not Care: Care is for reaching
+                 for each other, Us is for what the two of us already hold. -->
+            <button class="premium-card vault-entry" data-open="vault" type="button">
+              <span class="vault-entry-mark" aria-hidden="true">🔒</span>
+              <span>
+                <b>Our Eyes Only</b>
+                <small>encrypted, just for the two of us</small>
+              </span>
+              <span class="vault-entry-go" aria-hidden="true">→</span>
+            </button>
+            <div class="atlas-grid" id="us-grid"></div>
+          </div>
+
       </section>
 
       <section class="screen" id="screen-vault" aria-label="our eyes only">
@@ -569,15 +650,6 @@
 
       <section class="screen" id="screen-care" aria-label="care">
         <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>You do not have to scroll around hoping to find the right comfort. Tell me what kind of moment this is and let me meet you there.</p></div>
-        <button class="premium-card vault-entry" data-open="vault" type="button">
-          <span class="vault-entry-mark" aria-hidden="true">🔒</span>
-          <span>
-            <b>Our Eyes Only</b>
-            <small>encrypted, just for the two of us</small>
-          </span>
-          <span class="vault-entry-go" aria-hidden="true">→</span>
-        </button>
-
         <article class="care-checkin premium-card">
           <p class="card-label">what does your heart need?</p>
           <div class="care-modes">
@@ -611,7 +683,16 @@
           <button class="secondary-btn" id="new-poo-line" type="button">what does Poo say</button>
         </article>
 
-        <div class="care-list" id="care-list"></div>
+        <!-- Replaces the old fixed 1-through-8 checklist, which said the exact
+             same eight things in the exact same order on every single visit.
+             One suggestion at a time, never the same one twice running. -->
+        <article class="premium-card card-mint one-thing-card">
+          <p class="card-label">if you only do one thing</p>
+          <h3 id="one-thing-title">Come closer</h3>
+          <p id="one-thing-note">Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours.</p>
+          <button class="secondary-btn" id="new-one-thing" type="button">give me another way in</button>
+        </article>
+
         <article class="promise-card premium-card">
           <p class="card-label">promise</p>
           <h3>I am not gone.</h3>
@@ -620,29 +701,36 @@
       </section>
     </main>
 
+    <!-- Four main pages, on purpose: Home (land here), Atlas (every browsable
+         feature - letters, games, songs, all of it), Care (the real-time
+         "she misses him right now" loop), Us (the shared/private relationship
+         space - vault, memories, garden, distance). Poo lost her own tab; she
+         still roams every screen and opens her room on tap, same as before -
+         a 5th tab just for her didn't fit "four main pages". -->
     <nav class="tabbar" aria-label="main navigation">
       <button class="tab active" data-open="home" type="button" aria-label="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.2 12 3.5l9 6.7V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
         <span>home</span>
       </button>
-      <button class="tab" data-open="letters" type="button" aria-label="letters">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3 7 8.1 5.6a1.6 1.6 0 0 0 1.8 0L21 7"/></svg>
-        <span>letters</span>
+      <button class="tab" data-open="atlas" type="button" aria-label="atlas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m12 6 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/></svg>
+        <span>atlas</span>
       </button>
-      <button class="tab tab-poo" data-poo type="button" aria-label="Poo, your companion">
-        <img src="./assets/poo/rig/neutral_body.png" alt="" aria-hidden="true">
-        <span>poo</span>
-      </button>
-      <button class="tab" data-open="places" type="button" aria-label="our worlds">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.2 9.5h17.6M3.2 14.5h17.6"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></svg>
-        <span>worlds</span>
-      </button>
-      <button class="tab" data-open="care" type="button" aria-label="just us">
+      <button class="tab" data-open="care" type="button" aria-label="care">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.6-4.6-9.2-9.4A5.1 5.1 0 0 1 12 7.2a5.1 5.1 0 0 1 9.2 3.9c-1.6 4.8-9.2 9.4-9.2 9.4Z"/></svg>
-        <span>just us</span>
+        <span>care</span>
+      </button>
+      <button class="tab" data-open="us" type="button" aria-label="us">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="6.2"/><circle cx="15" cy="12" r="6.2"/></svg>
+        <span>us</span>
       </button>
     </nav>
   </div>
+
+  <dialog class="wl-modal" id="wl-modal" aria-label="movie details">
+    <button class="wl-modal-close" id="wl-modal-close" type="button" aria-label="close">&larr; back</button>
+    <div class="wl-modal-body" id="wl-modal-body"></div>
+  </dialog>
 
   <dialog id="letter-modal">
     <button class="modal-close" id="close-letter" type="button" aria-label="close letter">×</button>
@@ -658,11 +746,15 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./content.js?v=43"></script>
+  <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=50"></script>
-  <script src="./bloom.js?v=3"></script>
+  <script src="./app.js?v=59"></script>
+  <script src="./bloom.js?v=4"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>
+  <script src="./games/sudoku.js?v=2"></script>
+  <script src="./games/memory.js?v=2"></script>
+  <script src="./games/jigsaw.js?v=2"></script>
   <script src="./presence.js?v=2"></script>
 </body>
 </html>

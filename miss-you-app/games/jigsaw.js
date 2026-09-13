@@ -3,29 +3,37 @@
  * Plain browser IIFE: no modules, no build step, no dependencies.
  * Exposes window.MoonpieJigsaw = { mount(containerEl), unmount() }.
  *
- * The photo is never canvas-sliced. Each tile is the same image used as a CSS
- * background at background-size:(N*100)% with a per-tile background-position, so
- * the puzzle stays sharp at any DPI and costs one image decode for the whole board.
+ * The photo is never canvas-sliced for display. Each tile is the same image
+ * used as a CSS background at background-size:(cols*100)%/(rows*100)% with a
+ * per-tile background-position, so the puzzle stays sharp at any DPI and
+ * costs one image decode for the whole board. A canvas IS used once, up
+ * front, to downscale an uploaded photo before it ever becomes a tile.
  */
 (function () {
   "use strict";
 
   var STORAGE_KEY = "moonpie-jigsaw-v1";
-  var SIZES = [3, 4, 5];
-  var DEFAULT_SIZE = 3;
+  var PIECE_PRESETS = [12, 24, 48, 100];
+  var MIN_PIECES = 6;
+  var MAX_PIECES = 200;
+  var DEFAULT_PIECES = 24;
+  var UPLOAD_MAX_EDGE = 1400;      // cap the long edge of an uploaded photo
+  var UPLOAD_STORE_CAP = 1200000;  // ~1.15MB of base64 — beyond this we don't persist it
 
   /* Photographs that actually ship with the app (verified on disk under
    * miss-you-app/assets/worlds/). Any entry that fails to load at runtime is
-   * dropped from the picker rather than rendered as broken tiles. */
+   * dropped from the picker rather than rendered as broken tiles. Dimensions
+   * are the real, measured pixel size of each file (960x720, 4:3) so the
+   * piece-count solver works from a true aspect ratio instead of guessing. */
   var IMAGES = [
-    { id: "paris", src: "./assets/worlds/paris-1.webp", label: "Paris at Midnight" },
-    { id: "santorini", src: "./assets/worlds/santorini-1.webp", label: "Santorini" },
-    { id: "maldives", src: "./assets/worlds/maldives-1.webp", label: "The Maldives" },
-    { id: "kyoto", src: "./assets/worlds/kyoto-1.webp", label: "Kyoto" },
-    { id: "venice", src: "./assets/worlds/venice-1.webp", label: "Venice" },
-    { id: "amalfi", src: "./assets/worlds/amalfi-1.webp", label: "Amalfi" },
-    { id: "aurora", src: "./assets/worlds/aurora-1.webp", label: "The Aurora" },
-    { id: "kenya", src: "./assets/worlds/kenya-1.webp", label: "Kenya" }
+    { id: "paris", src: "./assets/worlds/paris-1.webp", label: "Paris at Midnight", w: 960, h: 720 },
+    { id: "santorini", src: "./assets/worlds/santorini-1.webp", label: "Santorini", w: 960, h: 720 },
+    { id: "maldives", src: "./assets/worlds/maldives-1.webp", label: "The Maldives", w: 960, h: 720 },
+    { id: "kyoto", src: "./assets/worlds/kyoto-1.webp", label: "Kyoto", w: 960, h: 720 },
+    { id: "venice", src: "./assets/worlds/venice-1.webp", label: "Venice", w: 960, h: 720 },
+    { id: "amalfi", src: "./assets/worlds/amalfi-1.webp", label: "Amalfi", w: 960, h: 720 },
+    { id: "aurora", src: "./assets/worlds/aurora-1.webp", label: "The Aurora", w: 960, h: 720 },
+    { id: "kenya", src: "./assets/worlds/kenya-1.webp", label: "Kenya", w: 960, h: 720 }
   ];
 
   var WIN_LINES = [
@@ -45,8 +53,20 @@
   var tickId = null;    // setInterval handle
   var imgStatus = {};   // src -> "ok" | "bad"
   var loadToken = 0;    // invalidates in-flight image probes across remounts
+  var pendingObjectUrl = null; // object URL for an upload currently being read
 
-  var state = null;     // { imageId, size, order[], moves, elapsed, solved }
+  /* state = {
+   *   activeKind: "builtin" | "upload",
+   *   activeBuiltinId: string,
+   *   uploaded: null | { dataUrl, w, h },   // last uploaded photo, kept even
+   *                                          // when a builtin is active so
+   *                                          // she can flip back to it
+   *   pieces: number,   // requested piece count, 6..200
+   *   rows: number, cols: number,   // actual solved grid for this image
+   *   order: number[], moves: number, elapsed: number, solved: boolean
+   * }
+   */
+  var state = null;
   var selected = -1;    // board index of the currently selected tile
   var runStart = 0;     // timestamp the current timing run began (0 = not running)
   var peekOn = false;
@@ -80,6 +100,12 @@
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+  function clampInt(v, lo, hi) {
+    v = Math.round(Number(v));
+    if (!isFinite(v)) v = lo;
+    return Math.max(lo, Math.min(hi, v));
+  }
+
   function fmtTime(ms) {
     var total = Math.max(0, Math.floor(ms / 1000));
     var m = Math.floor(total / 60);
@@ -98,6 +124,51 @@
       if (imgStatus[IMAGES[i].src] !== "bad") out.push(IMAGES[i]);
     }
     return out;
+  }
+
+  /* current photo, whatever kind is active: { src, w, h, label } */
+  function imageInfo() {
+    if (state.activeKind === "upload" && state.uploaded) {
+      return { src: state.uploaded.dataUrl, w: state.uploaded.w, h: state.uploaded.h, label: "Your photo" };
+    }
+    var img = imageById(state.activeBuiltinId) || IMAGES[0];
+    return { src: img.src, w: img.w, h: img.h, label: img.label };
+  }
+
+  /* ---------------------------------------------------------- grid solver
+   * Given a target piece count and the image's real aspect ratio, pick
+   * rows x cols so rows*cols lands as close to the target as achievable
+   * while keeping individual tiles reasonably square. We scan every
+   * candidate row count, reject anything that misses the target by more
+   * than 15%, and among what's left prefer the squarest tiles.
+   */
+
+  function computeGrid(pieces, aspect) {
+    pieces = clampInt(pieces, MIN_PIECES, MAX_PIECES);
+    aspect = (isFinite(aspect) && aspect > 0) ? aspect : 1;
+
+    var best = null;
+    for (var rows = 2; rows <= pieces; rows++) {
+      var cols = Math.max(2, Math.round(pieces / rows));
+      var product = rows * cols;
+      var err = Math.abs(product - pieces) / pieces;
+      if (err > 0.15) continue;
+
+      var tileRatio = (aspect * rows) / cols;  // 1 == perfectly square tile
+      var squareDev = Math.abs(tileRatio - 1);
+      var score = err + 0.25 * squareDev;
+
+      if (!best || score < best.score) {
+        best = { rows: rows, cols: cols, product: product, score: score };
+      }
+    }
+    if (!best) {
+      // Only reachable for pathological inputs; fall back to a plain square-ish grid.
+      var r = Math.max(2, Math.round(Math.sqrt(pieces / aspect)));
+      var c = Math.max(2, Math.round(pieces / r));
+      best = { rows: r, cols: c, product: r * c };
+    }
+    return best;
   }
 
   /* -------------------------------------------------------------- shuffling
@@ -142,26 +213,45 @@
 
   /* ------------------------------------------------------------ persistence */
 
-  function defaultState(imageId, size) {
-    var n = size * size;
+  function defaultState() {
+    var img = IMAGES[0];
+    var grid = computeGrid(DEFAULT_PIECES, img.w / img.h);
     return {
-      imageId: imageId,
-      size: size,
-      order: shuffleOrder(n),
+      activeKind: "builtin",
+      activeBuiltinId: img.id,
+      uploaded: null,
+      pieces: DEFAULT_PIECES,
+      rows: grid.rows,
+      cols: grid.cols,
+      order: shuffleOrder(grid.rows * grid.cols),
       moves: 0,
       elapsed: 0,
       solved: false
     };
   }
 
+  function validUploaded(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    if (typeof raw.dataUrl !== "string" || raw.dataUrl.indexOf("data:image") !== 0) return null;
+    var w = raw.w, h = raw.h;
+    if (typeof w !== "number" || typeof h !== "number" || w <= 0 || h <= 0) return null;
+    return { dataUrl: raw.dataUrl, w: w, h: h };
+  }
+
   function validState(raw) {
     if (!raw || typeof raw !== "object") return null;
-    var size = raw.size;
-    if (SIZES.indexOf(size) === -1) return null;
-    var n = size * size;
+
+    var uploaded = validUploaded(raw.uploaded);
+    var kind = raw.activeKind === "upload" && uploaded ? "upload" : "builtin";
+    var builtinId = imageById(raw.activeBuiltinId) ? raw.activeBuiltinId : IMAGES[0].id;
+    if (kind === "builtin" && !imageById(builtinId)) return null;
+
+    var rows = raw.rows, cols = raw.cols;
+    if (typeof rows !== "number" || typeof cols !== "number" || rows < 2 || cols < 2) return null;
+    rows = Math.floor(rows); cols = Math.floor(cols);
+    var n = rows * cols;
     if (!Array.isArray(raw.order) || raw.order.length !== n) return null;
 
-    // order must be a permutation of 0..n-1
     var seen = new Array(n);
     for (var i = 0; i < n; i++) {
       var v = raw.order[i];
@@ -169,12 +259,15 @@
       seen[v] = true;
     }
 
-    var img = imageById(raw.imageId);
-    if (!img) return null;
+    var pieces = clampInt(raw.pieces, MIN_PIECES, MAX_PIECES);
 
     return {
-      imageId: img.id,
-      size: size,
+      activeKind: kind,
+      activeBuiltinId: builtinId,
+      uploaded: kind === "upload" ? uploaded : uploaded, // keep it around even if inactive
+      pieces: pieces,
+      rows: rows,
+      cols: cols,
       order: raw.order.slice(),
       moves: (typeof raw.moves === "number" && raw.moves >= 0) ? Math.floor(raw.moves) : 0,
       elapsed: (typeof raw.elapsed === "number" && raw.elapsed >= 0) ? raw.elapsed : 0,
@@ -190,27 +283,55 @@
     } catch (e) {
       raw = null;
     }
-    var ok = validState(raw);
+    var ok = null;
+    try { ok = validState(raw); } catch (e) { ok = null; }
     if (ok) {
-      // trust the board, not the stored flag
-      ok.solved = isSolved(ok.order);
+      ok.solved = isSolved(ok.order); // trust the board, not the stored flag
       return ok;
     }
-    return defaultState(IMAGES[0].id, DEFAULT_SIZE);
+    return defaultState();
   }
 
   function save() {
     if (!state) return;
+    var payload = {
+      activeKind: state.activeKind,
+      activeBuiltinId: state.activeBuiltinId,
+      uploaded: state.uploaded,
+      pieces: state.pieces,
+      rows: state.rows,
+      cols: state.cols,
+      order: state.order,
+      moves: state.moves,
+      elapsed: totalElapsed(),
+      solved: state.solved
+    };
+
+    // An uploaded photo that got too big to store safely: persist as if a
+    // builtin photo were active instead, rather than losing everything or
+    // throwing. The live session keeps the real upload either way.
+    if (payload.uploaded && payload.uploaded.dataUrl.length > UPLOAD_STORE_CAP) {
+      payload.uploaded = null;
+      if (payload.activeKind === "upload") {
+        payload.activeKind = "builtin";
+        payload.activeBuiltinId = imageById(state.activeBuiltinId) ? state.activeBuiltinId : IMAGES[0].id;
+      }
+    }
+
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        imageId: state.imageId,
-        size: state.size,
-        order: state.order,
-        moves: state.moves,
-        elapsed: totalElapsed(),
-        solved: state.solved
-      }));
-    } catch (e) { /* private mode / quota — puzzle still plays */ }
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      // Quota exceeded or private mode: retry once without the photo data
+      // before giving up quietly. The puzzle keeps playing either way.
+      try {
+        payload.uploaded = null;
+        if (payload.activeKind === "upload") {
+          payload.activeKind = "builtin";
+          payload.activeBuiltinId = imageById(state.activeBuiltinId) ? state.activeBuiltinId : IMAGES[0].id;
+        }
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e2) { /* still no room — the puzzle keeps working in-memory */ }
+    }
   }
 
   /* ------------------------------------------------------------------ timer */
@@ -248,6 +369,16 @@
     probe.onload = function () {
       if (token !== loadToken || !mounted) return;
       imgStatus[entry.src] = "ok";
+      // Defensive: if the real file ever differs from our recorded size,
+      // trust the browser and recompute so the solver stays accurate.
+      if (probe.naturalWidth && probe.naturalHeight &&
+          (probe.naturalWidth !== entry.w || probe.naturalHeight !== entry.h)) {
+        entry.w = probe.naturalWidth;
+        entry.h = probe.naturalHeight;
+        if (state && state.activeKind === "builtin" && state.activeBuiltinId === entry.id) {
+          regenerateBoard(true);
+        }
+      }
     };
     probe.onerror = function () {
       if (token !== loadToken || !mounted) return;
@@ -258,22 +389,16 @@
   }
 
   function dropImage(entry) {
-    // remove its chip from the picker
     if (els && els.picker) {
       var chip = els.picker.querySelector('[data-img="' + entry.id + '"]');
       if (chip && chip.parentNode) chip.parentNode.removeChild(chip);
     }
-    // if it was the active photo, fall back to the first one that works
-    if (state && state.imageId === entry.id) {
+    if (state && state.activeKind === "builtin" && state.activeBuiltinId === entry.id) {
       var alt = okImages()[0];
       if (alt) {
-        state.imageId = alt.id;
-        newBoard(state.size, true);
+        applyBuiltin(alt.id, true);
         setStatus("That photo would not load, so we swapped in " + alt.label + ".");
       }
-    }
-    if (els && els.picker && !els.picker.children.length) {
-      setStatus("None of the photos could load right now.");
     }
   }
 
@@ -296,24 +421,60 @@
     els.moves = hudCell(hud, "Moves");
     els.time = hudCell(hud, "Time");
     els.left = hudCell(hud, "To place");
+    els.count = hudCell(hud, "Pieces");
     shell.appendChild(hud);
 
-    // size + actions
-    var row = el("div", "jig-row");
+    // headline feature: upload her own photo
+    var uploadRow = el("div", "jig-upload-row");
+    var uploadLabel = el("label", "jig-upload-btn");
+    uploadLabel.appendChild(el("span", "jig-upload-icon", "📷"));
+    var uploadText = el("span", "jig-upload-text");
+    uploadText.appendChild(el("strong", null, "Upload your photo"));
+    uploadText.appendChild(el("small", null, "turn any picture into the puzzle"));
+    uploadLabel.appendChild(uploadText);
+    els.uploadInput = document.createElement("input");
+    els.uploadInput.type = "file";
+    els.uploadInput.accept = "image/*";
+    els.uploadInput.className = "jig-upload-input jig-sr";
+    els.uploadInput.setAttribute("aria-label", "Upload your own photo for the puzzle");
+    uploadLabel.appendChild(els.uploadInput);
+    uploadRow.appendChild(uploadLabel);
+    els.uploadStatus = el("small", "jig-upload-status", "");
+    uploadRow.appendChild(els.uploadStatus);
+    shell.appendChild(uploadRow);
 
-    var sizes = el("div", "jig-sizes");
-    sizes.setAttribute("role", "group");
-    sizes.setAttribute("aria-label", "Puzzle size");
-    els.sizes = sizes;
-    for (var i = 0; i < SIZES.length; i++) {
-      var n = SIZES[i];
-      var b = el("button", "jig-size", n + "×" + n);
-      b.type = "button";
-      b.setAttribute("data-size", String(n));
-      b.setAttribute("aria-pressed", "false");
-      sizes.appendChild(b);
+    // piece count
+    var pieceRow = el("div", "jig-row");
+    var pieces = el("div", "jig-pieces");
+    pieces.setAttribute("role", "group");
+    pieces.setAttribute("aria-label", "Piece count");
+    els.pieces = pieces;
+    for (var p = 0; p < PIECE_PRESETS.length; p++) {
+      var pv = PIECE_PRESETS[p];
+      var pb = el("button", "jig-size", String(pv));
+      pb.type = "button";
+      pb.setAttribute("data-pieces", String(pv));
+      pb.setAttribute("aria-pressed", "false");
+      pieces.appendChild(pb);
     }
-    row.appendChild(sizes);
+    var customWrap = el("span", "jig-pieces-custom");
+    els.piecesInput = document.createElement("input");
+    els.piecesInput.type = "number";
+    els.piecesInput.className = "jig-pieces-input";
+    els.piecesInput.min = String(MIN_PIECES);
+    els.piecesInput.max = String(MAX_PIECES);
+    els.piecesInput.placeholder = "6-200";
+    els.piecesInput.setAttribute("aria-label", "Custom piece count, 6 to 200");
+    customWrap.appendChild(els.piecesInput);
+    els.piecesGo = el("button", "jig-btn jig-pieces-go", "Go");
+    els.piecesGo.type = "button";
+    customWrap.appendChild(els.piecesGo);
+    pieces.appendChild(customWrap);
+    pieceRow.appendChild(pieces);
+    shell.appendChild(pieceRow);
+
+    // peek + shuffle
+    var row = el("div", "jig-row");
 
     els.peek = el("button", "jig-btn", "Peek");
     els.peek.type = "button";
@@ -327,7 +488,10 @@
 
     shell.appendChild(row);
 
-    // photo picker
+    // photo picker (built-in photos + the last uploaded one, if any)
+    var pickerLabel = el("p", "jig-picker-label", "or pick one of ours");
+    shell.appendChild(pickerLabel);
+
     var picker = el("div", "jig-picker");
     picker.setAttribute("role", "group");
     picker.setAttribute("aria-label", "Choose a photo");
@@ -395,21 +559,17 @@
 
   /* ------------------------------------------------------------------ paint */
 
-  function currentSrc() {
-    var img = imageById(state.imageId);
-    return img ? img.src : "";
-  }
-
   function paintBoard() {
-    var n = state.size;
-    var total = n * n;
-    var src = currentSrc();
+    var rows = state.rows, cols = state.cols;
+    var total = rows * cols;
+    var info = imageInfo();
     var board = els.board;
 
-    board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+    board.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+    board.style.gridTemplateRows = "repeat(" + rows + ", 1fr)";
+    board.style.aspectRatio = info.w && info.h ? (info.w + " / " + info.h) : "1 / 1";
     board.classList.toggle("jig-solved", !!state.solved);
 
-    // rebuild tiles only when the count changed; otherwise restyle in place
     if (board.children.length !== total) {
       board.textContent = "";
       for (var i = 0; i < total; i++) {
@@ -422,21 +582,23 @@
     }
 
     for (var k = 0; k < total; k++) {
-      paintTile(board.children[k], k, state.order[k], n, src);
+      paintTile(board.children[k], k, state.order[k], rows, cols, info.src);
     }
-    paintPeek(src);
+    paintPeek(info.src);
   }
 
-  function paintTile(node, boardIdx, pieceIdx, n, src) {
-    var row = Math.floor(pieceIdx / n);
-    var col = pieceIdx % n;
-    var denom = n - 1;
+  function paintTile(node, boardIdx, pieceIdx, rows, cols, src) {
+    var row = Math.floor(pieceIdx / cols);
+    var col = pieceIdx % cols;
+    var denomC = cols - 1;
+    var denomR = rows - 1;
     node.style.backgroundImage = src ? 'url("' + src + '")' : "";
-    // both axes must be N*100%: a bare "500%" computes to "500% auto", which
-    // preserves the photo's aspect ratio and breaks the row math.
-    node.style.backgroundSize = (n * 100) + "% " + (n * 100) + "%";
+    // both axes scale independently now that the grid need not be square: a
+    // bare percentage on one axis would preserve the photo's own aspect
+    // ratio and break the row/column math.
+    node.style.backgroundSize = (cols * 100) + "% " + (rows * 100) + "%";
     node.style.backgroundPosition =
-      (denom ? (col / denom) * 100 : 0) + "% " + (denom ? (row / denom) * 100 : 0) + "%";
+      (denomC ? (col / denomC) * 100 : 0) + "% " + (denomR ? (row / denomR) * 100 : 0) + "%";
     node.classList.toggle("jig-home", pieceIdx === boardIdx);
     node.classList.toggle("jig-sel", boardIdx === selected);
     node.setAttribute("aria-pressed", boardIdx === selected ? "true" : "false");
@@ -456,24 +618,47 @@
     els.moves.textContent = String(state.moves);
     els.time.textContent = fmtTime(totalElapsed());
     els.left.textContent = String(displacedCount(state.order));
+    els.count.textContent = String(state.rows * state.cols);
   }
 
   function paintControls() {
     var i, node;
-    var sizeBtns = els.sizes.children;
-    for (i = 0; i < sizeBtns.length; i++) {
-      node = sizeBtns[i];
-      node.setAttribute("aria-pressed", Number(node.getAttribute("data-size")) === state.size ? "true" : "false");
+
+    var pieceBtns = els.pieces.querySelectorAll(".jig-size");
+    for (i = 0; i < pieceBtns.length; i++) {
+      node = pieceBtns[i];
+      node.setAttribute("aria-pressed", Number(node.getAttribute("data-pieces")) === state.pieces ? "true" : "false");
     }
+    els.piecesInput.value = PIECE_PRESETS.indexOf(state.pieces) === -1 ? String(state.pieces) : "";
+
     var chips = els.picker.children;
     for (i = 0; i < chips.length; i++) {
       node = chips[i];
-      node.setAttribute("aria-pressed", node.getAttribute("data-img") === state.imageId ? "true" : "false");
+      var isUploadChip = node.classList.contains("jig-pick-upload");
+      var active = isUploadChip ? state.activeKind === "upload" : (state.activeKind === "builtin" && node.getAttribute("data-img") === state.activeBuiltinId);
+      node.setAttribute("aria-pressed", active ? "true" : "false");
     }
+
     els.peek.setAttribute("aria-pressed", peekOn ? "true" : "false");
     els.peekLayer.classList.toggle("jig-show", peekOn);
     els.win.classList.toggle("jig-show", !!state.solved);
     els.win.setAttribute("aria-hidden", state.solved ? "false" : "true");
+  }
+
+  function syncUploadChip() {
+    var existing = els.picker.querySelector(".jig-pick-upload");
+    if (!state.uploaded) {
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+      return;
+    }
+    if (!existing) {
+      existing = el("button", "jig-pick jig-pick-upload");
+      existing.type = "button";
+      existing.setAttribute("aria-label", "Your uploaded photo");
+      existing.title = "Your photo";
+      els.picker.insertBefore(existing, els.picker.firstChild);
+    }
+    existing.style.backgroundImage = 'url("' + state.uploaded.dataUrl + '")';
   }
 
   function setStatus(msg) {
@@ -481,6 +666,7 @@
   }
 
   function paintAll() {
+    syncUploadChip();
     paintBoard();
     paintHud();
     paintControls();
@@ -488,11 +674,14 @@
 
   /* ----------------------------------------------------------------- moves */
 
-  function newBoard(size, keepStatus) {
+  function regenerateBoard(keepStatus) {
     stopTimer();
     selected = -1;
-    state.size = size;
-    state.order = shuffleOrder(size * size);
+    var info = imageInfo();
+    var grid = computeGrid(state.pieces, info.w / info.h);
+    state.rows = grid.rows;
+    state.cols = grid.cols;
+    state.order = shuffleOrder(grid.rows * grid.cols);
     state.moves = 0;
     state.elapsed = 0;
     state.solved = false;
@@ -500,6 +689,32 @@
     paintAll();
     save();
     if (!keepStatus) setStatus("");
+  }
+
+  function applyBuiltin(id, keepStatus) {
+    if (!imageById(id)) return;
+    state.activeKind = "builtin";
+    state.activeBuiltinId = id;
+    regenerateBoard(keepStatus);
+  }
+
+  function applyUpload(dataUrl, w, h) {
+    state.uploaded = { dataUrl: dataUrl, w: w, h: h };
+    state.activeKind = "upload";
+    regenerateBoard(true);
+    setStatus("Your photo is loaded. Shuffled and ready.");
+  }
+
+  function applyPieceCount(n) {
+    n = clampInt(n, MIN_PIECES, MAX_PIECES);
+    if (n === state.pieces) return;
+    state.pieces = n;
+    regenerateBoard(true);
+    var actual = state.rows * state.cols;
+    setStatus(actual === n
+      ? "Now " + actual + " pieces."
+      : "Now " + actual + " pieces (closest fit for this photo's shape)."
+    );
   }
 
   function swap(a, b) {
@@ -523,7 +738,6 @@
     var node = els.board.children[idx];
     if (!node) return;
     node.classList.remove("jig-just");
-    // force reflow so the animation restarts
     void node.offsetWidth;
     node.classList.add("jig-just");
   }
@@ -543,7 +757,7 @@
       return;
     }
     swap(selected, idx);
-    if (!state.solved) setStatus(""); // keep the finishing time on screen
+    if (!state.solved) setStatus("");
   }
 
   function celebrate() {
@@ -572,6 +786,75 @@
       els.peek.setAttribute("aria-pressed", peekOn ? "true" : "false");
       els.peekLayer.classList.toggle("jig-show", peekOn);
     }
+  }
+
+  /* --------------------------------------------------------------- upload */
+
+  function revokePending() {
+    if (pendingObjectUrl) {
+      try { URL.revokeObjectURL(pendingObjectUrl); } catch (e) { /* already gone */ }
+      pendingObjectUrl = null;
+    }
+  }
+
+  function handleUploadFile(file) {
+    setStatus("Loading your photo…");
+    if (els.uploadStatus) els.uploadStatus.textContent = "Loading…";
+
+    revokePending();
+    var url;
+    try {
+      url = URL.createObjectURL(file);
+    } catch (e) {
+      setStatus("Could not read that file.");
+      return;
+    }
+    pendingObjectUrl = url;
+    var myToken = ++loadToken;
+
+    var img = new Image();
+    img.onload = function () {
+      var wasPending = pendingObjectUrl === url;
+      revokePending();
+      if (myToken !== loadToken || !mounted || !wasPending) return;
+
+      var w = img.naturalWidth || img.width;
+      var h = img.naturalHeight || img.height;
+      if (!w || !h) {
+        setStatus("That photo could not be used.");
+        if (els.uploadStatus) els.uploadStatus.textContent = "";
+        return;
+      }
+
+      var scale = Math.min(1, UPLOAD_MAX_EDGE / Math.max(w, h));
+      var cw = Math.max(1, Math.round(w * scale));
+      var ch = Math.max(1, Math.round(h * scale));
+
+      var dataUrl;
+      try {
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      } catch (e) {
+        setStatus("Could not process that photo.");
+        if (els.uploadStatus) els.uploadStatus.textContent = "";
+        return;
+      }
+
+      if (els.uploadStatus) els.uploadStatus.textContent = "";
+      applyUpload(dataUrl, cw, ch);
+    };
+    img.onerror = function () {
+      var wasPending = pendingObjectUrl === url;
+      revokePending();
+      if (myToken !== loadToken || !mounted || !wasPending) return;
+      setStatus("Could not read that photo.");
+      if (els.uploadStatus) els.uploadStatus.textContent = "";
+    };
+    img.src = url;
   }
 
   /* -------------------------------------------------------------- pointer  */
@@ -665,37 +948,64 @@
       if (idx >= 0) selectTile(idx);
     });
 
-    // size
-    on(els.sizes, "click", function (ev) {
+    // piece count presets
+    on(els.pieces, "click", function (ev) {
       var b = ev.target.closest ? ev.target.closest(".jig-size") : null;
       if (!b) return;
-      var n = Number(b.getAttribute("data-size"));
-      if (SIZES.indexOf(n) === -1 || n === state.size) return;
-      newBoard(n);
-      setStatus("New " + n + "×" + n + " scramble.");
+      applyPieceCount(Number(b.getAttribute("data-pieces")));
     });
 
-    // photo picker
+    // custom piece count
+    function applyCustomPieces() {
+      var raw = els.piecesInput.value;
+      if (raw === "") return;
+      applyPieceCount(Number(raw));
+    }
+    on(els.piecesGo, "click", applyCustomPieces);
+    on(els.piecesInput, "keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); applyCustomPieces(); }
+    });
+
+    // upload
+    on(els.uploadInput, "change", function (ev) {
+      var file = ev.target.files && ev.target.files[0];
+      ev.target.value = ""; // allow re-selecting the same file later
+      if (!file) return;
+      if (!/^image\//.test(file.type)) {
+        setStatus("Please choose an image file.");
+        return;
+      }
+      handleUploadFile(file);
+    });
+
+    // photo picker (built-ins + the upload chip)
     on(els.picker, "click", function (ev) {
       var b = ev.target.closest ? ev.target.closest(".jig-pick") : null;
       if (!b) return;
+      if (b.classList.contains("jig-pick-upload")) {
+        if (state.activeKind !== "upload" && state.uploaded) {
+          state.activeKind = "upload";
+          regenerateBoard(true);
+          setStatus("Your photo, scrambled and ready.");
+        }
+        return;
+      }
       var id = b.getAttribute("data-img");
-      if (!id || id === state.imageId) return;
+      if (!id || (state.activeKind === "builtin" && id === state.activeBuiltinId)) return;
       var img = imageById(id);
       if (!img) return;
-      state.imageId = id;
-      newBoard(state.size, true);
+      applyBuiltin(id, true);
       setStatus(img.label + ", scrambled and ready.");
     });
 
     // shuffle
     on(els.shuffle, "click", function () {
-      newBoard(state.size);
+      regenerateBoard(true);
       setStatus("Shuffled.");
     });
 
     on(els.again, "click", function () {
-      newBoard(state.size);
+      regenerateBoard(true);
       setStatus("Shuffled.");
     });
 
@@ -738,10 +1048,6 @@
     host = containerEl;
     state = load();
 
-    // make sure the restored photo is one we still ship
-    if (!imageById(state.imageId)) state.imageId = IMAGES[0].id;
-    state.size = SIZES.indexOf(state.size) === -1 ? DEFAULT_SIZE : state.size;
-
     host.textContent = "";
     host.appendChild(build());
     mounted = true;
@@ -767,7 +1073,8 @@
     stopTimer();
     save();
     offAll();
-    loadToken++;          // orphan any in-flight image probes
+    loadToken++;          // orphan any in-flight image probes / uploads
+    revokePending();
     drag = null;
     selected = -1;
     peekOn = false;
@@ -782,7 +1089,8 @@
   window.MoonpieJigsaw = {
     mount: mount,
     unmount: unmount,
-    // internal seam, exposed for the shuffle unit test
-    _shuffle: shuffleOrder
+    // internal seams, exposed for unit tests
+    _shuffle: shuffleOrder,
+    _computeGrid: computeGrid
   };
 })();

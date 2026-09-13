@@ -5,9 +5,14 @@
  * PLACES with their own physics, switched by the room the app is in
  * (document.body.dataset.world):
  *
- *   garden (the default)  - real photographed lily petals, fall with gravity
- *                            and a lazy sway, exactly like a petal actually
- *                            drifting down off a branch.
+ *   garden (the default)  - a jar of things suspended in liquid: lily
+ *                            petals, red hearts, pink hearts and pinwheel
+ *                            lollipops, each drifting on its own slow current
+ *                            with a gentle multi-frequency wobble and a soft
+ *                            bob, the way things actually hang in a snow
+ *                            globe rather than falling straight down. Not a
+ *                            single kind of thing repeated - a jarful of
+ *                            different small treats.
  *   space  ("distance")   - hearts rise weightless, no gravity, a slow gentle
  *                            sway, like held balloons in zero-g.
  *   ocean  ("care")       - bubbles rise with a wobble that grows the closer
@@ -29,6 +34,7 @@
                "./assets/flowers/lily-5.webp", "./assets/flowers/lily-6.webp"];
 
   const AMBIENT = 11;
+  const AMBIENT_COUNT = { garden: 16, space: AMBIENT, ocean: AMBIENT }; // garden carries 4 kinds now, so it earns more
   const calm = matchMedia("(prefers-reduced-motion: reduce)");
 
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -59,16 +65,57 @@
 
   /* -------------------------------------------------------------- spawners */
 
-  function petal(seeded) {
-    const s = rnd(0.055, 0.13);
-    return {
-      kind: "petal", img: pick(art),
-      x: rnd(-40, W + 40), y: seeded ? rnd(-H * 0.2, H) : rnd(-220, -60),
-      s, vy: rnd(16, 34) * (0.6 + s * 4), vx: rnd(-9, 9),
-      rot: rnd(0, Math.PI * 2), spin: rnd(-0.5, 0.5),
-      sway: rnd(0.35, 0.9), phase: rnd(0, Math.PI * 2),
-      alpha: rnd(0.42, 0.82),
+  // A jar of small things suspended in liquid, not a shower of one thing.
+  // Weighted so lilies still lead (this is the Love Garden), with hearts and
+  // lollipops mixed through - "etc." left room to add more kinds later by
+  // just adding another entry here.
+  const GARDEN_KINDS = [
+    { sub: "lily", weight: 4 },
+    { sub: "heartRed", weight: 2 },
+    { sub: "heartPink", weight: 2 },
+    { sub: "lollipop", weight: 2 },
+  ];
+  const GARDEN_TOTAL_WEIGHT = GARDEN_KINDS.reduce((sum, k) => sum + k.weight, 0);
+  function pickGardenKind() {
+    let roll = Math.random() * GARDEN_TOTAL_WEIGHT;
+    for (const k of GARDEN_KINDS) {
+      if (roll < k.weight) return k.sub;
+      roll -= k.weight;
+    }
+    return "lily";
+  }
+
+  const LOLLIPOP_HUES = [
+    { base: "#ff5d7d", stripe: "#fff2f6" },
+    { base: "#ff8fbd", stripe: "#ffffff" },
+    { base: "#e8384f", stripe: "#ffe3e9" },
+  ];
+  const HEART_RED_HUES = ["#e8384f", "#ff5d7d", "#c9142f"];
+  const HEART_PINK_HUES = ["#ffb3d1", "#ff8fbd", "#ffd3e6", "#e6c9ff"];
+
+  // Suspended in liquid: a slowly wandering anchor point (a gentle current,
+  // not gravity) plus two out-of-sync sine wobbles and a separate slower bob,
+  // so nothing moves in a straight line or a single clean period - it reads
+  // as fluid, not mechanical.
+  function gardenFloat(seeded, forceSub) {
+    const sub = forceSub || pickGardenKind();
+    const s = sub === "lily" ? rnd(0.05, 0.115) : rnd(0.55, 1.05);
+    const p = {
+      kind: "float", sub,
+      img: sub === "lily" ? pick(art) : null,
+      baseX: rnd(-60, W + 60), baseY: seeded ? rnd(-60, H + 60) : rnd(-60, H + 60),
+      driftAngle: rnd(0, Math.PI * 2), driftSpeed: rnd(3, 9), driftTurn: rnd(-0.12, 0.12),
+      ampX: rnd(14, 34), freqX: rnd(0.12, 0.3), phaseX: rnd(0, Math.PI * 2),
+      ampY: rnd(10, 26), freqY: rnd(0.1, 0.26), phaseY: rnd(0, Math.PI * 2),
+      bobAmp: rnd(6, 14), bobFreq: rnd(0.2, 0.4), bobPhase: rnd(0, Math.PI * 2),
+      s, rot: rnd(0, Math.PI * 2), spin: rnd(-0.3, 0.3),
+      alpha: sub === "lily" ? rnd(0.5, 0.88) : rnd(0.55, 0.85),
+      hue: sub === "heartRed" ? pick(HEART_RED_HUES)
+         : sub === "heartPink" ? pick(HEART_PINK_HUES)
+         : sub === "lollipop" ? pick(LOLLIPOP_HUES)
+         : null,
     };
+    return p;
   }
 
   // weightless, rising, gently swaying - a held balloon, not a falling leaf
@@ -97,13 +144,14 @@
     };
   }
 
-  const spawners = { garden: petal, space: heart, ocean: bubble };
+  const spawners = { garden: gardenFloat, space: heart, ocean: bubble };
 
   function reseed() {
     parts = parts.filter(p => p.kind === "confetti");   // keep any reward fx running
     const spawn = spawners[scene];
     if (!spawn) return;
-    for (let i = 0; i < AMBIENT; i++) parts.push(spawn(true));
+    const count = AMBIENT_COUNT[scene] || AMBIENT;
+    for (let i = 0; i < count; i++) parts.push(spawn(true));
   }
 
   /* ----------------------------------------------------------------- step */
@@ -122,11 +170,24 @@
         continue;
       }
 
-      if (p.kind === "petal") {
-        p.y += p.vy * dt;
-        p.x += (p.vx + Math.sin(t * p.sway + p.phase) * 16) * dt;
+      if (p.kind === "float") {
+        // the anchor drifts on a slow, gently curving current...
+        p.driftAngle += p.driftTurn * dt;
+        p.baseX += Math.cos(p.driftAngle) * p.driftSpeed * dt;
+        p.baseY += Math.sin(p.driftAngle) * p.driftSpeed * dt;
+        // ...wrapped like a toroidal jar, so nothing is ever "spawned" or
+        // "despawned" - it just drifts back in from the opposite edge
+        const margin = 70;
+        if (p.baseX < -margin) p.baseX = W + margin;
+        else if (p.baseX > W + margin) p.baseX = -margin;
+        if (p.baseY < -margin) p.baseY = H + margin;
+        else if (p.baseY > H + margin) p.baseY = -margin;
+        // ...while two out-of-phase wobbles plus a slower bob ride on top,
+        // which is what makes it read as suspended in liquid rather than on
+        // a conveyor belt
+        p.x = p.baseX + Math.sin(t * p.freqX + p.phaseX) * p.ampX;
+        p.y = p.baseY + Math.sin(t * p.freqY + p.phaseY) * p.ampY + Math.sin(t * p.bobFreq + p.bobPhase) * p.bobAmp;
         p.rot += p.spin * dt;
-        if (p.y > H + 120) { parts.splice(i, 1); parts.push(petal(false)); }
         continue;
       }
 
@@ -184,10 +245,60 @@
     ctx.restore();
   }
 
+  // A pinwheel candy - two-tone wedges rather than a true logarithmic spiral,
+  // which is cheap to draw and still reads unmistakably as a lollipop at the
+  // small sizes these float at.
+  function drawLollipop(ctx, x, y, size, rot, alpha, hue) {
+    const r = size * 10;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    // the stick, behind the candy
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.fillRect(-size * 0.9, r * 0.2, size * 1.8, r * 1.7);
+    // the candy disc
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = hue.base;
+    ctx.shadowColor = hue.base;
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // alternating wedges on top, clipped to the disc, for the swirl
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.clip();
+    const wedges = 8;
+    for (let i = 0; i < wedges; i++) {
+      if (i % 2 !== 0) continue;
+      const a0 = (i / wedges) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, a0, a0 + (Math.PI * 2) / wedges);
+      ctx.closePath();
+      ctx.fillStyle = hue.stripe;
+      ctx.fill();
+    }
+    ctx.restore();
+    // a small glassy highlight, same trick as the bubbles
+    ctx.beginPath();
+    ctx.arc(-r * 0.3, -r * 0.3, r * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,255,255,.4)";
+    ctx.lineWidth = Math.max(1, r * 0.06);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
     for (const p of parts) {
-      if (p.kind === "petal" || p.kind === "confetti") {
+      if (p.kind === "petal" || p.kind === "confetti" || (p.kind === "float" && p.sub === "lily")) {
         if (!p.img || !p.img.width) continue;
         const w = p.img.width * p.s, h = p.img.height * p.s;
         ctx.save();
@@ -195,10 +306,12 @@
         ctx.translate(p.x, p.y); ctx.rotate(p.rot);
         ctx.drawImage(p.img, -w / 2, -h / 2, w, h);
         ctx.restore();
-      } else if (p.kind === "heart") {
+      } else if (p.kind === "heart" || (p.kind === "float" && (p.sub === "heartRed" || p.sub === "heartPink"))) {
         drawHeart(ctx, p.x, p.y, p.s, p.rot, p.alpha, p.hue);
       } else if (p.kind === "bubble") {
         drawBubble(ctx, p.x, p.y, p.s, p.alpha);
+      } else if (p.kind === "float" && p.sub === "lollipop") {
+        drawLollipop(ctx, p.x, p.y, p.s, p.rot, p.alpha, p.hue);
       }
     }
   }

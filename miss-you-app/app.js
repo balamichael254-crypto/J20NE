@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {} };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -28,23 +28,28 @@ const screenHistory = [];
 const renderedScreens = new Set(["home", "atlas"]);
 let widgetSyncStarted = false;
 
+// `section` decides which hub grid a room shows up in - "atlas" for anything
+// browsable/playable (letters, games, content), "us" for the shared/private
+// relationship space (vault, memories, garden, distance, gifts). Care and
+// Home aren't listed here at all: they're main tabs in their own right now,
+// not tiles inside another hub. See the tabbar in index.html for the four
+// main pages this maps onto.
 const worlds = [
-  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden", photo: "./assets/flowers/hero-lily.webp" },
-  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter", photo: "./assets/mood/notebook-4.webp" },
-  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem", photo: "./assets/mood/moon-sky-1.webp" },
-  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice", photo: "./assets/mood/jar-note-4.webp" },
-  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day", photo: "./assets/mood/bunny-morning-hero.webp" },
-  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place", photo: "./assets/worlds/santorini-1.webp" },
-  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song", photo: "./assets/mood/vinyl-2.webp" },
-  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise", photo: "./assets/mood/bunny-lily-4.webp" },
-  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance", photo: "./assets/mood/moon-back-4.webp" },
-  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason", photo: "./assets/mood/bunny-glow-4.webp" },
-  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory", photo: "./assets/mood/polaroid-2.webp" },
-  { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp" },
-  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp" },
-  { id: "games", icon: "🎮", title: "Love Arcade", sub: "tap tiny feelings", count: 6, tone: "game", photo: "./assets/mood/drink-4.webp" },
-  { id: "care", icon: "🫶", title: "Emergency Care", sub: "when missing gets heavy", count: 5, tone: "care", photo: "./assets/mood/bunny-loveheart-hero.webp" },
-  { id: "us", icon: "💞", title: "Us", sub: "a heart, a lantern, our numbers", count: 3, tone: "us", photo: "./assets/worlds/anniversary-1.webp" }
+  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden", photo: "./assets/flowers/hero-lily.webp", section: "us" },
+  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter", photo: "./assets/mood/notebook-4.webp", section: "atlas" },
+  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem", photo: "./assets/mood/moon-sky-1.webp", section: "atlas" },
+  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice", photo: "./assets/mood/jar-note-4.webp", section: "atlas" },
+  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day", photo: "./assets/mood/bunny-morning-hero.webp", section: "atlas" },
+  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place", photo: "./assets/worlds/santorini-1.webp", section: "atlas" },
+  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song", photo: "./assets/mood/vinyl-2.webp", section: "atlas" },
+  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise", photo: "./assets/mood/bunny-lily-4.webp", section: "atlas" },
+  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance", photo: "./assets/mood/moon-back-4.webp", section: "us" },
+  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason", photo: "./assets/mood/bunny-glow-4.webp", section: "atlas" },
+  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory", photo: "./assets/mood/polaroid-2.webp", section: "us" },
+  { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp", section: "us" },
+  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp", section: "atlas" },
+  { id: "games", icon: "🎮", title: "Love Arcade", sub: "arcade, sudoku, puzzles", count: 9, tone: "game", photo: "./assets/mood/drink-4.webp", section: "atlas" },
+  { id: "watchlist", icon: "🎬", title: "Watchlist", sub: "movies for both of us", count: 60, tone: "watchlist", photo: "./assets/mood/bunny-sleep-1.webp", section: "atlas" }
 ];
 
 const comfortNotes = {
@@ -90,13 +95,13 @@ const letters = [
     preview: "The one I wrote before the pretty ones, so it sits where you cannot miss it.",
     salutation: "My Princess,",
     body: [
-      "I am putting this one at the top so it is the first thing you find. Life is going to get loud. It already is getting loud. There will be stretches where I am tired in a way that makes me go quiet, where work swallows me whole, where something I planned falls apart and I have to start it again from nothing. I want to say this now, while things are calm enough for me to say it properly. None of that has anything to do with how I feel about you.",
-      "On the worst day I will still want you. People think love softens under pressure. Mine gets sharper. When everything else is uncertain you are the one thing I am sure of, and I will keep choosing you every morning on purpose, like it is the first decision of my day and the only one I never get wrong.",
-      "I am not going anywhere from the rest of it either. Years from now I want to still lose my train of thought because you walked past me in one of my shirts. I want to still put my hand on the back of your neck and feel you go quiet for me. I want your voice in the dark saying my name like it belongs to you, because it does. I am going to keep learning you. I am going to keep finding new ways to take you apart slowly on an ordinary Tuesday, for no reason at all except that I can.",
-      "And when the chaos does come, when we are exhausted and unglamorous and arguing about something stupid, you are still mine. You are still Daddy's little Princess. That does not expire and you never have to earn it back. You do not have to be sweet, or easy, or okay. Come to me messy. Come to me angry. Come to me needing far too much. I will be standing right there with my hands open.",
-      "I will not do this perfectly. I will get it wrong sometimes and have to come back and fix it, and I will come back every time. That is the whole promise, babyy. I keep trying, and when I fail you I try again, and I pick you, and then I pick you again."
+      "I am putting this one at the top so it is the first thing you find. We are both about to start college, both about to get busier than we have ever been. New schedules, new pressure, new people, new versions of ourselves we have not met yet. I know some days there will barely be room to breathe, let alone talk. I want to say this now, while things are still calm enough for me to say it properly, so it is already true before the chaos gets here.",
+      "This is a vow, not just a nice sentence. Whatever college throws at me, whatever it costs to keep up, I am choosing you. Not once. Every single day, on purpose, like it is the first decision I make when I wake up. When I am exhausted and behind on everything and have nothing impressive to offer you that day, I am still choosing you. That part does not move.",
+      "I will still try, even on the days trying is hard. If I get distracted by deadlines and disappear for a bit, I will come back. If I get something wrong, I will notice and fix it instead of pretending I did not. I am not promising I will be perfect at this. I am promising I will keep showing up for it, semester after semester, until showing up for you is just the shape of my life.",
+      "And whatever else changes, you are still Daddy's little Princess. That is not something you have to earn back after a bad week or a missed call. It does not expire because we are both tired or both far away or both drowning in coursework. Come to me stressed. Come to me behind on sleep. Come to me needing more than you think you are allowed to need. I am still right here, choosing you.",
+      "So this is me, before either of our schedules gets impossible, telling you exactly where I stand. Busy is not the same as gone. Tired is not the same as done. I am choosing you today, and I am going to keep choosing you, long after the two of us stop counting."
     ],
-    closing: "Still yours. On the loud days most of all."
+    closing: "Still choosing you. Every single day of it."
   },
   {
     title: "Every Night With You",
@@ -286,15 +291,34 @@ const places = [
   ["Our Tiny Kitchen", "./assets/worlds/kitchen-1.webp", "Coffee, sleepy hair, stealing bites, arguing lovingly about the last piece."]
 ];
 
-const songs = [
-  ["Sleep Well", "d4vd", "For the soft nights when missing each other gets too loud."],
-  ["Best Part", "Daniel Caesar ft. H.E.R.", "Because you are exactly that: the part my day keeps waiting for."],
-  ["Those Eyes", "New West", "A song for tiny things, private jokes, and the ordinary ways love proves itself."],
-  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct way."],
-  ["Melting", "Kali Uchis", "For the moments where all I can do is be dramatically in love with you."],
-  ["Japanese Denim", "Daniel Caesar", "For late calls, warm silence, and wanting more time."],
-  ["Glue Song", "beabadoobee", "Because you stuck, Moonpie. Beautifully, inconveniently, permanently."]
+// Base list plus whatever content.js knows (that one carries real Spotify
+// track ids). Merged and deduped by title so nothing written twice gets
+// dropped, and songs.js only has to be extended in one of the two places.
+const baseSongs = [
+  ["Sleep Well", "d4vd", "For the soft nights when missing each other gets too loud.", null, "soft"],
+  ["Those Eyes", "New West", "A song for tiny things, private jokes, and the ordinary ways love proves itself.", null, "soft"],
+  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct way.", null, "big"],
+  ["Melting", "Kali Uchis", "For the moments where all I can do is be dramatically in love with you.", null, "big"],
+  ["Japanese Denim", "Daniel Caesar", "For late calls, warm silence, and wanting more time.", null, "soft"],
+  ["Glue Song", "beabadoobee", "Because you stuck, Moonpie. Beautifully, inconveniently, permanently.", null, "fun"],
+  ["Just the Two of Us", "Bill Withers", "Older than both of us and still exactly right.", null, "soft"],
+  ["Sunday Best", "Surfaces", "A whole song about being someone's good mood. That's you, to me.", null, "fun"],
+  ["I Wanna Be Yours", "Arctic Monkeys", "Weird, devoted, and somehow the most romantic sentence I know.", null, "big"],
+  ["Adore You", "Harry Styles", "For when 'I like you' is not nearly enough volume.", null, "fun"],
+  ["Golden Hour", "JVKE", "The kind of song that makes an ordinary evening feel cinematic.", null, "soft"],
+  ["Die For You", "The Weeknd", "Dramatic on purpose. Some feelings deserve the drama."],
 ];
+const songs = (() => {
+  const byTitle = new Map(baseSongs.map(entry => [entry[0].toLowerCase(), entry]));
+  (expansion.songs || []).forEach(([title, artist, note, spotifyId]) => {
+    const key = title.toLowerCase();
+    const existing = byTitle.get(key);
+    // content.js carries the real Spotify ids; keep our note if we already
+    // had one for this title, but always take the id if we were missing it
+    byTitle.set(key, existing ? [existing[0], existing[1], existing[2], spotifyId || existing[3], existing[4]] : [title, artist, note, spotifyId]);
+  });
+  return [...byTitle.values()];
+})();
 
 const promises = [
   "I will keep choosing you when it is easy and when distance makes it annoying.",
@@ -377,23 +401,51 @@ const reasons = [
   "You. Just you. Always, only, entirely you."
 ];
 
+// One suggestion shown at a time via #new-one-thing, cycled through
+// pickFresh so the full set gets seen before anything repeats, rather than
+// all eight sitting on the page as a numbered list every single visit.
 const careSteps = [
-  ["01", "Come closer", "Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours."],
-  ["02", "Tell me the true thing", "You never have to package your feelings neatly for me. Send: 'Babyy, I need you close today.' That is already enough."],
-  ["03", "Let your body feel safer", "Drink some water, loosen your shoulders, unclench your jaw, and find the softest thing within reach."],
-  ["04", "Borrow my voice", "Open Every Night With You or Your Voice and read it slowly. Every sentence is me sitting beside you for a minute."],
-  ["05", "Make the room gentler", "Lower one bright light, play one of our songs, and let this lilac little universe stay open beside you."],
-  ["06", "Give the ache somewhere to go", "Write one tiny widget, draw a heart, or leave me the exact sentence you wish I could hear right now."],
-  ["07", "Choose one future", "Open Our Worlds and pick where we are going tonight. Imagine the first ten minutes there together."],
-  ["08", "Rest without proving anything", "If it is late, let yourself sleep. You never have to stay awake to prove you miss me. I will still love you in the morning."]
+  ["Come closer", "Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours."],
+  ["Tell me the true thing", "You never have to package your feelings neatly for me. Send: 'Babyy, I need you close today.' That is already enough."],
+  ["Let your body feel safer", "Drink some water, loosen your shoulders, unclench your jaw, and find the softest thing within reach."],
+  ["Borrow my voice", "Open Every Night With You or Your Voice and read it slowly. Every sentence is me sitting beside you for a minute."],
+  ["Make the room gentler", "Lower one bright light, play one of our songs, and let this lilac little universe stay open beside you."],
+  ["Give the ache somewhere to go", "Write one tiny widget, draw a heart, or leave me the exact sentence you wish I could hear right now."],
+  ["Choose one future", "Open Our Worlds and pick where we are going tonight. Imagine the first ten minutes there together."],
+  ["Rest without proving anything", "If it is late, let yourself sleep. You never have to stay awake to prove you miss me. I will still love you in the morning."]
 ];
+function nextOneThing() { return pickFresh(careSteps, "lastOneThingIndex"); }
 
+// Three takes per feeling instead of one fixed script, so tapping "I miss you
+// badly" for the fortieth time does not read back the exact words it read on
+// the first. Picked with the same never-twice-in-a-row rule as everything
+// else on this screen (see pickFresh).
 const careResponses = {
-  missing: ["💗", "I miss you too, babyy.", "Do not fight the feeling. Come sit with me here. Picture my arms around you, my cheek against your hair, and the first long airport hug waiting for us. Send me one tiny note if you want me to know this moment found you."],
-  reassurance: ["🌸", "You are still my girl.", "Nothing about a quiet hour, a delayed reply, or a difficult mood changes how beautiful and important you are to me. You do not need to earn the answer again. I love you, I choose you, and you will always be my little babyy."],
-  overwhelmed: ["🪷", "Only the next tiny thing.", "You do not have to solve the whole day right now. Put both feet down. Name three things you can see, two things you can feel, and one sound near you. Then drink a little water. I am proud of you for making this minute gentler."],
-  sleep: ["💕", "Let the night hold you softly.", "You are allowed to stop for today. Put the phone close, lower the light, and imagine me whispering goodnight until your breathing becomes slow. I am not disappearing while you sleep. I will still be yours in the morning."]
+  missing: [
+    ["💗", "I miss you too, babyy.", "Do not fight the feeling. Come sit with me here. Picture my arms around you, my cheek against your hair, and the first long airport hug waiting for us. Send me one tiny note if you want me to know this moment found you."],
+    ["💗", "Good. I want you to miss me.", "It means some part of you is still reaching for me across all this distance. That is not a weakness, that is loyalty with nowhere to go yet. Let it be loud for a minute. I am reaching back."],
+    ["💗", "This is the hard part, not the whole story.", "Missing me this much is the cost of loving someone worth the wait. It will not always feel this sharp. Tell me one thing you wish I was there to see right now."]
+  ],
+  reassurance: [
+    ["🌸", "You are still my girl.", "Nothing about a quiet hour, a delayed reply, or a difficult mood changes how beautiful and important you are to me. You do not need to earn the answer again. I love you, I choose you, and you will always be my little babyy."],
+    ["🌸", "Say it again, I will hear it again.", "You are not too much for needing to hear this more than once. I would tell you a thousand times and mean it a thousand times. You are safe with me, exactly as often as you need to check."],
+    ["🌸", "Nothing has changed. Not one thing.", "Whatever spiral got you here, it is lying to you. My side has not moved. I am not one bad day, one slow reply, or one hard week away from anywhere but here, choosing you."]
+  ],
+  overwhelmed: [
+    ["🪷", "Only the next tiny thing.", "You do not have to solve the whole day right now. Put both feet down. Name three things you can see, two things you can feel, and one sound near you. Then drink a little water. I am proud of you for making this minute gentler."],
+    ["🪷", "You do not have to hold all of it at once.", "Set down whatever you are carrying that is not actually due today. One task, one breath, one minute. That is the whole assignment right now."],
+    ["🪷", "It is allowed to just be a lot.", "You do not need a reason big enough to justify feeling this way. It is a lot because it is a lot. Let this minute be smaller than the rest of the day, even if nothing else shrinks yet."]
+  ],
+  sleep: [
+    ["💕", "Let the night hold you softly.", "You are allowed to stop for today. Put the phone close, lower the light, and imagine me whispering goodnight until your breathing becomes slow. I am not disappearing while you sleep. I will still be yours in the morning."],
+    ["💕", "Your brain is just doing its job badly.", "Restless nights are not a sign something is wrong, they are just your mind refusing to clock out on time. Give it something boring to hold instead: count my texts, replay one memory slowly, from the start."],
+    ["💕", "I am not going anywhere while you sleep.", "You do not have to stay up to make sure I am real. I will still be exactly this yours when you open your eyes. Let yourself go first tonight."]
+  ]
 };
+function nextCareResponse(mode) {
+  const list = careResponses[mode];
+  return list ? pickFresh(list, `lastCareResponse:${mode}`) : null;
+}
 
 const challenges = [
   ["Voice-note dare", "Send one voice note where you say exactly what you miss, no making it neat."],
@@ -420,7 +472,8 @@ if (expansion.poems?.length) poems.splice(0, poems.length, ...expansion.poems);
 if (expansion.notices?.length) notices.splice(0, notices.length, ...expansion.notices);
 if (expansion.reasons?.length) reasons.splice(0, reasons.length, ...expansion.reasons);
 if (expansion.memories?.length) memories.splice(0, memories.length, ...expansion.memories);
-if (expansion.songs?.length) songs.splice(0, songs.length, ...expansion.songs);
+// songs is merged with expansion.songs above, at declaration - not spliced
+// here, or this would throw the merge away and leave only content.js's list.
 const placesWorld = worlds.find(world => world.id === "places");
 if (placesWorld) placesWorld.count = futureWorlds.length || places.length;
 const poemsWorld = worlds.find(world => world.id === "poems");
@@ -604,6 +657,7 @@ function ensureScreenRendered(name) {
     birthday: renderBirthday,
     care: renderCare,
     games: renderGames,
+    watchlist: renderWatchlist,
     doodles: () => { renderWidgets(); setupCanvas(); },
     us: initHearthOnce
   };
@@ -627,6 +681,10 @@ function openScreen(name, options = {}) {
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
   if (name === "garden") requestAnimationFrame(resizeGardenTree);
   if (name === "games") fetchBubbleScores();
+  // Leaving the arcade tears the chosen game down. Sudoku holds a timer,
+  // jigsaw holds object URLs and a drag listener on document; neither should
+  // outlive the screen they belong to.
+  if (name !== "games") unmountGame();
   if (name === "us") refreshHearth();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
@@ -635,6 +693,386 @@ function openScreen(name, options = {}) {
   }
   if (changed) flowerPageTransition();
   revealNav(2600);
+}
+
+/* ============================================================================
+   The arcade games. Each module exposes { mount(el), unmount() } and paints
+   its own DOM into #game-stage, so only one is ever live and switching is a
+   real teardown rather than a hidden div. The chosen game is remembered so
+   she comes back to the one she was playing.
+   ========================================================================= */
+const GAME_MODULES = {
+  sudoku: () => window.MoonpieSudoku,
+  jigsaw: () => window.MoonpieJigsaw,
+  memory: () => window.MoonpieMemory,
+};
+let activeGame = null;
+
+function unmountGame() {
+  if (!activeGame) return;
+  try { GAME_MODULES[activeGame]?.()?.unmount?.(); } catch (error) { console.warn("game unmount", error); }
+  activeGame = null;
+  const stage = $("#game-stage");
+  if (stage) { stage.innerHTML = ""; stage.classList.remove("open"); }
+  $$(".game-pick").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+}
+
+function mountGame(id) {
+  const module = GAME_MODULES[id]?.();
+  const stage = $("#game-stage");
+  if (!stage) return;
+  // Tapping the game you are already playing closes it, so the picker is a
+  // toggle rather than a one-way door.
+  if (activeGame === id) { unmountGame(); state.lastGame = ""; saveState(); return; }
+  unmountGame();
+  if (!module?.mount) {
+    stage.innerHTML = '<p class="game-stage-missing">That one did not load. Pull the app down to refresh and try again.</p>';
+    stage.classList.add("open");
+    return;
+  }
+  activeGame = id;
+  state.lastGame = id;
+  saveState();
+  stage.classList.add("open");
+  try {
+    module.mount(stage);
+  } catch (error) {
+    console.warn("game mount", error);
+    activeGame = null;
+    stage.innerHTML = '<p class="game-stage-missing">That one did not want to open. Try another?</p>';
+    return;
+  }
+  const button = $(`.game-pick[data-game="${id}"]`);
+  if (button) { button.classList.add("active"); button.setAttribute("aria-selected", "true"); }
+  requestAnimationFrame(() => stage.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+function initGamePicker() {
+  $$(".game-pick").forEach(button => {
+    button.addEventListener("click", () => mountGame(button.dataset.game));
+  });
+}
+
+/* ============================================================================
+   Watchlist. Browse by genre, then two taps that matter: save it for later,
+   or mark it already seen. Both lists are just arrays of film ids in state,
+   so they sync with everything else and survive the catalogue growing.
+
+   A film can be in exactly one list at a time. Marking something seen pulls
+   it off the watchlist, because that is what finishing a film means, and
+   leaving it in both would make the counts lie.
+   ========================================================================= */
+// Real posters, real trailers, and the whole TMDB catalogue instead of a
+// list we wrote by hand and would have had to keep extending. api/movies.js
+// proxies TMDB so the key never reaches the client. If that endpoint is not
+// configured yet (no TMDB_API_KEY set on Vercel) or the network is down, we
+// fall back to a small curated offline list from movies.js so the screen
+// never just breaks.
+let wlView = "browse";
+let wlGenre = "all";
+let wlQuery = "";
+let wlPage = 1;
+let wlTotalPages = 1;
+let wlResults = [];
+let wlLoading = false;
+let wlGenresCache = null;
+let wlOffline = false;
+let wlSearchTimer = null;
+let wlRequestToken = 0;
+
+// A few curated genres up front (the ones she will actually reach for), the
+// rest of TMDB's real list after. Icons are cosmetic guesses by name; a
+// genre with no guess just gets a plain film icon rather than nothing.
+const WL_GENRE_ICONS = {
+  Romance: "\u{1F495}", Comedy: "\u{1F602}", Thriller: "\u{1F52A}", Horror: "\u{1F47B}",
+  Animation: "\u{1F338}", Action: "\u{1F4A5}", "Science Fiction": "\u{1F30C}", Drama: "\u{1F3AD}",
+  Family: "\u{1F9F8}", Adventure: "\u{1F9ED}", Fantasy: "\u{1F9DA}", Mystery: "\u{1F575}\u{FE0F}",
+  Crime: "\u{1F575}\u{FE0F}", Documentary: "\u{1F3A5}", Music: "\u{1F3B5}", War: "\u{2694}\u{FE0F}",
+  History: "\u{1F4DC}", Western: "\u{1F920}", "TV Movie": "\u{1F4FA}"
+};
+const WL_CURATED_GENRES = [
+  { id: "all", name: "Everything", icon: "✨" },
+  { id: "comfort", name: "Comfort", icon: "\u{1F9F8}" },
+  { id: "korean", name: "Korean & Asian", icon: "\u{1F3EE}" }
+];
+
+async function wlApi(params) {
+  const query = new URLSearchParams(params).toString();
+  const result = await fetch(`../api/movies?${query}`);
+  if (!result.ok) throw new Error(`movies api ${result.status}`);
+  return result.json();
+}
+
+function wlRuntime(mins) {
+  if (!mins) return "";
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+// A film lives in one list at a time - marking something seen pulls it off
+// the watchlist, because that is what finishing a film means, and leaving it
+// in both would make the counts lie. Stores a small snapshot object (not
+// just an id) so the Watchlist/Seen tabs work fully offline.
+function wlToggle(listKey, movie) {
+  const other = listKey === "watchSaved" ? "watchSeen" : "watchSaved";
+  const list = Array.isArray(state[listKey]) ? state[listKey] : (state[listKey] = []);
+  const at = list.findIndex(m => m.id === movie.id);
+  if (at >= 0) list.splice(at, 1);
+  else {
+    list.push({ id: movie.id, title: movie.title, year: movie.year, poster: movie.poster, rating: movie.rating });
+    const otherList = Array.isArray(state[other]) ? state[other] : (state[other] = []);
+    const otherAt = otherList.findIndex(m => m.id === movie.id);
+    if (otherAt >= 0) otherList.splice(otherAt, 1);
+  }
+  saveState();
+  wlRenderCounts();
+  wlRenderGrid();
+}
+
+// Every id that comes off a data-* attribute arrives as a string, but TMDB
+// ids are numbers - normalize once here rather than re-deriving this rule
+// at every comparison site.
+function wlParseId(raw) {
+  if (typeof raw !== "string") return raw;
+  return raw.startsWith("local-") ? raw : Number(raw);
+}
+function wlIsSaved(id) { const key = wlParseId(id); return (state.watchSaved || []).some(m => m.id === key); }
+function wlIsSeen(id) { const key = wlParseId(id); return (state.watchSeen || []).some(m => m.id === key); }
+
+function wlCardHtml(movie) {
+  const saved = wlIsSaved(movie.id);
+  const seen = wlIsSeen(movie.id);
+  const poster = movie.poster
+    ? `<img src="${escapeHtml(movie.poster)}" alt="" loading="lazy" decoding="async">`
+    : `<div class="wl-poster-fallback" aria-hidden="true">\u{1F3AC}</div>`;
+  return `
+    <article class="wl-card${seen ? " is-seen" : ""}" data-wl-open="${movie.id}">
+      <div class="wl-poster">${poster}${movie.rating ? `<span class="wl-rating">★ ${movie.rating}</span>` : ""}</div>
+      <div class="wl-card-main">
+        <h3>${escapeHtml(movie.title)}${movie.year ? ` <span class="wl-year">${escapeHtml(movie.year)}</span>` : ""}</h3>
+        ${movie.overview ? `<p class="wl-why">${escapeHtml(movie.overview)}</p>` : ""}
+      </div>
+      <div class="wl-card-actions">
+        <button class="wl-act wl-save${saved ? " on" : ""}" data-wl-save="${movie.id}" type="button"
+          aria-pressed="${saved}" aria-label="${saved ? "remove from" : "add to"} watchlist">&#9825;</button>
+        <button class="wl-act wl-seen${seen ? " on" : ""}" data-wl-seen="${movie.id}" type="button"
+          aria-pressed="${seen}" aria-label="${seen ? "unmark" : "mark"} as already watched">&#10003;</button>
+      </div>
+    </article>
+  `;
+}
+
+function wlFindShown(id) {
+  const key = wlParseId(id);
+  return wlResults.find(m => m.id === key) || (state.watchSaved || []).find(m => m.id === key) || (state.watchSeen || []).find(m => m.id === key);
+}
+
+function wlRenderCounts() {
+  $("#wl-count-saved").textContent = (state.watchSaved || []).length;
+  $("#wl-count-seen").textContent = (state.watchSeen || []).length;
+}
+
+function wlRenderGrid() {
+  const listEl = $("#wl-list");
+  if (!listEl) return;
+  let shown;
+  if (wlView === "saved") shown = state.watchSaved || [];
+  else if (wlView === "seen") shown = state.watchSeen || [];
+  else shown = wlResults;
+
+  const empty = $("#wl-empty");
+  if (!shown.length && !wlLoading) {
+    empty.textContent = wlView === "saved"
+      ? "Nothing saved yet. Go and heart a few, then come back when you cannot decide."
+      : wlView === "seen"
+        ? "Nothing ticked off yet. Tick the ones you have already seen so I stop suggesting them."
+        : wlQuery
+          ? `Nothing found for "${wlQuery}". Try a different spelling?`
+          : "Nothing in here yet.";
+    empty.classList.remove("hidden");
+  } else {
+    empty.classList.add("hidden");
+  }
+  listEl.innerHTML = shown.map(wlCardHtml).join("");
+
+  const more = $("#wl-load-more");
+  if (more) more.classList.toggle("hidden", wlView !== "browse" || wlPage >= wlTotalPages || !shown.length);
+}
+
+function wlRenderGenres() {
+  const bar = $("#wl-genres");
+  if (!bar) return;
+  bar.classList.toggle("hidden", wlView !== "browse");
+  if (wlView !== "browse") return;
+  const real = (wlGenresCache || []).map(g => ({ id: String(g.id), name: g.name, icon: WL_GENRE_ICONS[g.name] || "\u{1F3AC}" }));
+  const all = [...WL_CURATED_GENRES, ...real];
+  bar.innerHTML = all.map(g =>
+    `<button class="wl-genre${wlGenre === g.id ? " active" : ""}" data-wl-genre="${g.id}" type="button">${g.icon} ${escapeHtml(g.name)}</button>`
+  ).join("");
+}
+
+async function wlLoadPage(reset) {
+  if (wlLoading) return;
+  wlLoading = true;
+  const myToken = ++wlRequestToken;
+  const status = $("#wl-status");
+  if (status) { status.textContent = "finding more..."; status.classList.remove("hidden"); }
+  try {
+    const data = wlQuery
+      ? await wlApi({ op: "search", q: wlQuery, page: wlPage })
+      : await wlApi({ op: "discover", genre: wlGenre, page: wlPage });
+    if (myToken !== wlRequestToken) return; // a newer request already landed
+    wlOffline = false;
+    wlTotalPages = data.totalPages || 1;
+    wlResults = reset ? data.results : [...wlResults, ...data.results];
+    wlRenderGrid();
+  } catch (error) {
+    if (myToken !== wlRequestToken) return;
+    console.warn("watchlist fetch", error);
+    if (reset && !wlResults.length) wlLoadOfflineFallback();
+  } finally {
+    if (myToken === wlRequestToken) {
+      wlLoading = false;
+      if (status) status.classList.add("hidden");
+    }
+  }
+}
+
+// Only used if api/movies is not configured yet or the network is down, so
+// the screen still shows something instead of an empty page.
+// Maps the handful of real TMDB genre ids the curated chips can produce back
+// to the offline list's own slugs, so a genre tap still does something
+// sensible while the live catalogue is unreachable.
+const WL_OFFLINE_GENRE_MAP = { 10749: "romance", 35: "comedy", 53: "thriller", 27: "horror", 16: "animation", 28: "action", 878: "scifi", 18: "drama" };
+
+function wlLoadOfflineFallback() {
+  wlOffline = true;
+  const catalogue = window.MOONPIE_MOVIES || { films: [] };
+  let films = catalogue.films;
+  if (wlGenre !== "all") {
+    const slug = WL_OFFLINE_GENRE_MAP[wlGenre] || wlGenre; // "comfort"/"korean" pass through as-is
+    films = films.filter(f => f.g === slug);
+  }
+  if (wlQuery) {
+    const q = wlQuery.toLowerCase();
+    films = films.filter(f => f.title.toLowerCase().includes(q));
+  }
+  wlResults = films.map(f => ({
+    id: `local-${f.id}`, title: f.title, year: String(f.year), overview: f.why,
+    poster: null, rating: null, mins: f.mins
+  }));
+  wlTotalPages = 1;
+  wlRenderGrid();
+  const empty = $("#wl-empty");
+  if (empty && wlResults.length) {
+    empty.textContent = "Could not reach the live catalogue right now - showing our built-in picks instead.";
+    empty.classList.remove("hidden");
+  }
+}
+
+function wlResetAndLoad() {
+  wlPage = 1;
+  wlResults = [];
+  wlLoadPage(true);
+}
+
+async function wlOpenDetail(id) {
+  const modal = $("#wl-modal");
+  const body = $("#wl-modal-body");
+  if (!modal || !body) return;
+  const known = wlFindShown(id);
+  body.innerHTML = `<p class="wl-modal-loading">loading...</p>`;
+  modal.showModal();
+
+  if (String(id).startsWith("local-") || wlOffline) {
+    const saved = wlIsSaved(id), seen = wlIsSeen(id);
+    body.innerHTML = `
+      <h2>${escapeHtml(known?.title || "")}</h2>
+      <p class="wl-modal-meta">${escapeHtml(known?.year || "")}${known?.mins ? ` &middot; ${wlRuntime(known.mins)}` : ""}</p>
+      <p>${escapeHtml(known?.overview || "")}</p>
+      <p class="wl-modal-note">Trailers need the live catalogue to be connected. This one is from our built-in list.</p>
+      <div class="wl-modal-actions">
+        <button class="secondary-btn wl-modal-save${saved ? " on" : ""}" type="button" data-wl-save="${id}">${saved ? "remove from watchlist" : "add to watchlist"}</button>
+        <button class="secondary-btn wl-modal-seen${seen ? " on" : ""}" type="button" data-wl-seen="${id}">${seen ? "unmark as watched" : "mark as watched"}</button>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const detail = await wlApi({ op: "detail", id });
+    const saved = wlIsSaved(detail.id), seen = wlIsSeen(detail.id);
+    body.innerHTML = `
+      ${detail.backdrop ? `<img class="wl-modal-backdrop" src="${escapeHtml(detail.backdrop)}" alt="" loading="lazy">` : ""}
+      <h2>${escapeHtml(detail.title)}${detail.year ? ` <span class="wl-year">${escapeHtml(detail.year)}</span>` : ""}</h2>
+      <p class="wl-modal-meta">${detail.runtime ? wlRuntime(detail.runtime) + " &middot; " : ""}${escapeHtml((detail.genres || []).join(", "))}${detail.rating ? ` &middot; ★ ${detail.rating}` : ""}</p>
+      <p>${escapeHtml(detail.overview || "")}</p>
+      ${detail.trailerKey
+        ? `<div class="wl-trailer"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(detail.trailerKey)}" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+        : `<p class="wl-modal-note">No trailer found for this one.</p>`}
+      <div class="wl-modal-actions">
+        <button class="secondary-btn wl-modal-save${saved ? " on" : ""}" type="button" data-wl-save="${detail.id}">${saved ? "remove from watchlist" : "add to watchlist"}</button>
+        <button class="secondary-btn wl-modal-seen${seen ? " on" : ""}" type="button" data-wl-seen="${detail.id}">${seen ? "unmark as watched" : "mark as watched"}</button>
+      </div>
+    `;
+    // keep the freshest snapshot (poster/rating can differ from the grid card)
+    if (!wlResults.some(m => m.id === detail.id)) wlResults.push(detail);
+  } catch (error) {
+    console.warn("watchlist detail", error);
+    body.innerHTML = `<p class="wl-modal-note">Could not load details right now.</p>`;
+  }
+}
+
+function renderWatchlist() {
+  wlRenderCounts();
+  wlRenderGenres();
+  if (!wlGenresCache) {
+    wlApi({ op: "genres" }).then(data => { wlGenresCache = data.genres || []; wlRenderGenres(); }).catch(() => {});
+  }
+  wlResetAndLoad();
+}
+
+function initWatchlist() {
+  const screen = $("#screen-watchlist");
+  if (!screen) return;
+  // one delegated listener: the grid re-renders constantly, so per-button
+  // listeners would leak on every toggle
+  screen.addEventListener("click", event => {
+    const save = event.target.closest("[data-wl-save]");
+    if (save) { event.stopPropagation(); const m = wlFindShown(save.dataset.wlSave); if (m) wlToggle("watchSaved", m); return refreshWlModalButtons(save.dataset.wlSave); }
+    const seen = event.target.closest("[data-wl-seen]");
+    if (seen) { event.stopPropagation(); const m = wlFindShown(seen.dataset.wlSeen); if (m) wlToggle("watchSeen", m); return refreshWlModalButtons(seen.dataset.wlSeen); }
+    const genre = event.target.closest("[data-wl-genre]");
+    if (genre) { wlGenre = genre.dataset.wlGenre; wlQuery = ""; const search = $("#wl-search"); if (search) search.value = ""; wlRenderGenres(); wlResetAndLoad(); return; }
+    const tab = event.target.closest("[data-wl-view]");
+    if (tab) { wlView = tab.dataset.wlView; $$(".wl-tab").forEach(t => { const on = t.dataset.wlView === wlView; t.classList.toggle("active", on); t.setAttribute("aria-selected", String(on)); }); wlRenderGenres(); wlRenderGrid(); return; }
+    const more = event.target.closest("#wl-load-more");
+    if (more) { wlPage += 1; return wlLoadPage(false); }
+    const open = event.target.closest("[data-wl-open]");
+    if (open) return wlOpenDetail(open.dataset.wlOpen);
+  });
+
+  const search = $("#wl-search");
+  search?.addEventListener("input", () => {
+    clearTimeout(wlSearchTimer);
+    wlSearchTimer = setTimeout(() => {
+      wlQuery = search.value.trim();
+      wlResetAndLoad();
+    }, 380);
+  });
+
+  $("#wl-modal-close")?.addEventListener("click", () => $("#wl-modal")?.close());
+}
+
+// After toggling save/seen from inside the open detail modal, update its own
+// buttons in place rather than closing it.
+function refreshWlModalButtons(id) {
+  const modal = $("#wl-modal");
+  if (!modal?.open) return;
+  const saveBtn = modal.querySelector(`[data-wl-save="${id}"]`);
+  const seenBtn = modal.querySelector(`[data-wl-seen="${id}"]`);
+  if (saveBtn) { const on = wlIsSaved(id); saveBtn.classList.toggle("on", on); saveBtn.textContent = on ? "remove from watchlist" : "add to watchlist"; }
+  if (seenBtn) { const on = wlIsSeen(id); seenBtn.classList.toggle("on", on); seenBtn.textContent = on ? "unmark as watched" : "mark as watched"; }
 }
 
 function goBack() {
@@ -707,8 +1145,8 @@ function applyHeroScene() {
   $("#hero-line").textContent = scene.line;
 }
 
-function renderAtlas() {
-  const html = worlds.map((world, i) => `
+function worldTileHtml(world, i) {
+  return `
     <button class="world-tile tone-${world.tone}" data-open="${world.id}" type="button" style="--i:${i};background-image:url('${world.photo}')">
       <span class="world-icon">${world.icon}</span>
       <span class="world-copy">
@@ -717,10 +1155,40 @@ function renderAtlas() {
       </span>
       <span class="world-count">${world.count}</span>
     </button>
-  `).join("");
-  $("#home-worlds").innerHTML = html;
-  $("#atlas-grid").innerHTML = html;
+  `;
 }
+
+// The four rooms the quick tiles on Home already link to. Home must not
+// print them a third time.
+const HOME_QUICK_IDS = ["letters", "places", "care", "birthday"];
+
+/* Home used to list every room, which meant the first screen was Atlas and
+   Us reprinted end to end. It now shows three rooms chosen from the date, so
+   Home is a suggestion rather than a catalogue, and it is different tomorrow.
+   Deterministic from the day, so it does not reshuffle on every render. */
+function roomsForToday(count = 3) {
+  const pool = worlds.filter(w => !HOME_QUICK_IDS.includes(w.id));
+  const now = new Date();
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  const picks = [];
+  for (let n = 0; picks.length < Math.min(count, pool.length); n++) {
+    // 7 is coprime with most pool sizes, so consecutive days walk the pool
+    // instead of landing on the same few rooms.
+    const world = pool[(day * 7 + n) % pool.length];
+    if (!picks.includes(world)) picks.push(world);
+  }
+  return picks;
+}
+
+function renderAtlas() {
+  // Three hubs, three different jobs: Home suggests, Atlas holds things to
+  // do, Us holds what the two of them keep. No room appears in more than one.
+  $("#home-worlds").innerHTML = roomsForToday().map(worldTileHtml).join("");
+  $("#atlas-grid").innerHTML = worlds.filter(w => w.section === "atlas").map(worldTileHtml).join("");
+  const usGrid = $("#us-grid");
+  if (usGrid) usGrid.innerHTML = worlds.filter(w => w.section === "us").map(worldTileHtml).join("");
+}
+
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -775,24 +1243,63 @@ function renderDay() {
   `).join("");
 }
 
+// Places she has actually stepped into, by name (stable across a reorder or
+// addition to the list, unlike an index would be).
+function visitedWorldNames() {
+  return Array.isArray(state.worldsVisited) ? state.worldsVisited : [];
+}
+function markWorldVisited(name) {
+  const visited = visitedWorldNames();
+  if (!visited.includes(name)) {
+    visited.push(name);
+    state.worldsVisited = visited;
+    saveState();
+  }
+}
+
 function renderPlaces() {
   const list = futureWorlds.length ? futureWorlds : places.map(([name, image, intro]) => ({ name, intro, eyebrow: "future coordinate", photos: [image], moments: [] }));
-  $("#place-rail").innerHTML = list.map((place, index) => `
-    <button class="world-portal" type="button" data-world-portal="${index}">
+  const visited = visitedWorldNames();
+
+  // A progress line, so this screen is a place she is getting through
+  // together rather than a static gallery that looks identical forever.
+  const progress = $("#places-progress");
+  if (progress) {
+    const seen = list.filter(place => visited.includes(place.name)).length;
+    progress.textContent = seen === 0
+      ? `${list.length} worlds waiting. Pick the first one.`
+      : seen === list.length
+        ? `You have opened every world. I am already building more.`
+        : `${seen} of ${list.length} worlds opened together.`;
+  }
+
+  // A different one leads the rail each day, so the first thing she sees
+  // here does not stay frozen on visit one forever.
+  const day = Math.floor(Date.now() / 86400000);
+  const featuredIndex = list.length ? day % list.length : 0;
+
+  $("#place-rail").innerHTML = list.map((place, index) => {
+    const seen = visited.includes(place.name);
+    return `
+    <button class="world-portal${seen ? " is-visited" : ""}${index === featuredIndex ? " is-featured" : ""}" type="button" data-world-portal="${index}">
       <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="${index < 2 ? "eager" : "lazy"}" fetchpriority="${index < 2 ? "high" : "low"}" decoding="async" width="960" height="720" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
       <span class="world-portal-copy">
-        <span class="portal-number">world ${String(index + 1).padStart(2, "0")}</span>
+        <span class="portal-number">${index === featuredIndex ? "tonight&rsquo;s pick" : "world " + String(index + 1).padStart(2, "0")}</span>
         <h3>${escapeHtml(place.name)}</h3>
         <p>${escapeHtml(place.eyebrow)}</p>
-        <small>enter this world · ${place.photos.length} scenes · ${place.moments.length} moments</small>
+        <small>${seen ? "visited &middot; " : ""}${place.photos.length} scenes &middot; ${place.moments.length} moments</small>
       </span>
+      ${seen ? '<span class="world-portal-check" aria-hidden="true">&#10003;</span>' : ""}
     </button>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function openFutureWorld(index) {
   const place = futureWorlds[index];
   if (!place) return;
+  markWorldVisited(place.name);
+  renderPlaces();
   const modal = $("#world-modal");
   $("#world-modal-body").innerHTML = `
     <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
@@ -807,8 +1314,8 @@ function openFutureWorld(index) {
   flowerPageTransition();
 }
 
-function renderSongs() {
-  $("#song-list").innerHTML = songs.map(([name, artist, note, spotifyId], i) => `
+function songCardHtml([name, artist, note, spotifyId], i) {
+  return `
     <article class="song-card spotify-card premium-card">
       <div class="song-note">
         <p class="card-label">track ${String(i + 1).padStart(2, "0")}</p>
@@ -818,7 +1325,22 @@ function renderSongs() {
       </div>
       ${spotifyId ? `<iframe title="Play ${escapeHtml(name)} on Spotify" data-src="https://open.spotify.com/embed/track/${encodeURIComponent(spotifyId)}?utm_source=generator&theme=0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
     </article>
-  `).join("");
+  `;
+}
+
+function renderSongs() {
+  // A featured pick up top, stable for the whole day and different tomorrow -
+  // so opening this screen twice in an hour doesn't reshuffle it, but coming
+  // back next week finds something new leading the list.
+  const day = Math.floor(Date.now() / 86400000);
+  const featuredIndex = day % songs.length;
+  const featured = songs[featuredIndex];
+  const rest = songs.filter((_, i) => i !== featuredIndex);
+  $("#song-featured").innerHTML = `
+    <p class="card-label">playing for you tonight</p>
+    ${songCardHtml(featured, featuredIndex).replace('class="song-card spotify-card premium-card"', 'class="song-card spotify-card premium-card song-featured-card"')}
+  `;
+  $("#song-list").innerHTML = rest.map(songCardHtml).join("");
 }
 
 function renderPromises() {
@@ -1054,6 +1576,7 @@ function drawGardenTree(progress = 0.16) {
 }
 
 function setupGardenTree() {
+  renderGardenCaptions();
   if (gardenTreeCanvas) return;
   gardenTreeCanvas = $("#garden-tree-canvas");
   if (!gardenTreeCanvas) return;
@@ -1061,6 +1584,14 @@ function setupGardenTree() {
   gardenPetals = buildGardenPetals();
   resizeGardenTree();
   window.addEventListener("resize", resizeGardenTree);
+  // Already bloomed on a previous visit: skip the sprout state and the tap
+  // prompt, and paint the full tree immediately.
+  if (state.gardenBloomed) {
+    $("#garden-stage")?.classList.add("bloomed");
+    $(".home-garden")?.classList.add("bloomed");
+    gardenProgress = 1;
+    requestAnimationFrame(() => drawGardenTree(1));
+  }
 }
 
 function animateGardenTree() {
@@ -1102,6 +1633,47 @@ function bloomGarden() {
     toast("look, Moonpie. Your garden is blooming");
     if (window.Poo) window.Poo.react("love");
   }, GARDEN_BLOOM_DURATION - 1200);
+  // The whole point of a garden is that it does not need re-planting every
+  // time you walk past it. Once bloomed, it stays bloomed.
+  state.gardenBloomed = true;
+  saveState();
+}
+
+// Captions under the tree that acknowledge how long it has actually been
+// growing, instead of saying the same "tap the heart" sentence on visit 40
+// that it said on visit 1.
+const gardenAges = [
+  { min: 0,   line: "Still a seed. One tap and it starts growing." },
+  { min: 1,   line: "It bloomed once, and it is staying that way. This tree does not wilt." },
+  { min: 30,  line: "A month of this tree standing here for you. It has not moved, and it is not going to." },
+  { min: 90,  line: "Three months in and the roots are the whole point now, not the bloom." },
+  { min: 180, line: "Half a year of this exact tree, in this exact spot, still full of hearts." },
+  { min: 365, line: "A year of a tree that only ever grew one way: toward you." }
+];
+function gardenAgeLine() {
+  const days = daysTogether();
+  let line = gardenAges[0].line;
+  for (const stage of gardenAges) if (days >= stage.min) line = stage.line;
+  return line;
+}
+
+const bouquetLines = [
+  "Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.",
+  "I keep picking the same flowers because they are the ones that made me think of you the first time.",
+  "One day I get to actually hand you this bouquet instead of a photo of it. That day is on the calendar in my head."
+];
+const roseLines = [
+  "The deep red kind, the ones that look almost too velvet to be real.",
+  "Roses are supposed to be the obvious choice. I am not embarrassed about being obvious for you.",
+  "This one is for the version of romance that does not need to be original to be true."
+];
+function renderGardenCaptions() {
+  const bouquetCopy = $("#bouquet-copy");
+  const roseCopy = $("#rose-copy");
+  if (bouquetCopy) bouquetCopy.textContent = pickFresh(bouquetLines, "lastBouquetLine");
+  if (roseCopy) roseCopy.textContent = pickFresh(roseLines, "lastRoseLine");
+  const age = $("#garden-age-line");
+  if (age) age.textContent = gardenAgeLine();
 }
 
 const girlfriendDayCompliments = [
@@ -1192,6 +1764,28 @@ function revealGift(kind, box) {
   flowerConfetti(30);
 }
 
+// Three letters instead of one, cycled the same never-twice-running way as
+// everything else, so sealing a wish for the tenth time hands back different
+// words instead of the same paragraph she has already memorized.
+const birthdayLetters = [
+  [
+    "You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.",
+    "My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.",
+    "Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it."
+  ],
+  [
+    "I built this whole thing because a text felt too small for what I am trying to say to you, and it turns out even this is not quite big enough.",
+    "You are the reason I check my phone hoping, not anxious. That is a small difference that changed my whole day, every day, since you.",
+    "Keep wishing. I am collecting every one of them, quietly, for the version of us that gets to hand them all back at once."
+  ],
+  [
+    "Somewhere in the time it took you to make that wish, I was probably thinking about you too. That is just what happens now.",
+    "I do not need the occasion to mean this. Any Tuesday works. This one just happened to be the Tuesday you opened the app.",
+    "Whatever you wished for tonight, put it next to the others. We are building a very long list of things I intend to make happen."
+  ]
+];
+function nextBirthdayLetter() { return pickFresh(birthdayLetters, "lastBirthdayLetter"); }
+
 function renderBirthday() {
   $("#birthday-wish").innerHTML = `
     <div class="birthday-stage" data-birthday-stage="wish">
@@ -1207,18 +1801,16 @@ function renderBirthday() {
       <p class="card-label">wish sealed</p>
       <div class="birthday-envelope">💌</div>
       <h2>This one's for you, Moonpie.</h2>
-      <p class="birthday-letter">You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.</p>
-      <p class="birthday-letter">My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.</p>
-      <p class="birthday-letter">Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it.</p>
+      <div id="birthday-letter-body"></div>
       <button class="secondary-btn wide" id="replay-birthday" type="button">make another wish</button>
     </div>
   `;
 }
 
 function renderCare() {
-  $("#care-list").innerHTML = careSteps.map(([n, title, text]) => `
-    <article class="care-step"><span>${n}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div></article>
-  `).join("");
+  const [title, text] = nextOneThing();
+  $("#one-thing-title").textContent = title;
+  $("#one-thing-note").textContent = text;
 }
 
 /* ============================================================================
@@ -1400,7 +1992,7 @@ const careNudges = {
 };
 
 function showCareResponse(mode) {
-  const response = careResponses[mode];
+  const response = nextCareResponse(mode);
   if (!response) return;
   $$("[data-care-mode]").forEach(button => button.classList.toggle("active", button.dataset.careMode === mode));
   $("#care-response").innerHTML = `<span>${response[0]}</span><h3>${escapeHtml(response[1])}</h3><p>${escapeHtml(response[2])}</p>`;
@@ -1787,6 +2379,8 @@ function setupOpeningRitual() {
 
 function sealBirthdayWish() {
   const wish = $("#birthday-wish-text")?.value.trim();
+  const body = $("#birthday-letter-body");
+  if (body) body.innerHTML = nextBirthdayLetter().map(p => `<p class="birthday-letter">${escapeHtml(p)}</p>`).join("");
   showBirthdayStage("letter");
   flowerConfetti(72);
   burstAt(window.innerWidth / 2, window.innerHeight / 2, 20);
@@ -2242,6 +2836,13 @@ function setupEvents() {
     saveState();
     window.Poo?.react?.("curious");
   });
+  $("#new-one-thing")?.addEventListener("click", () => {
+    const [title, text] = nextOneThing();
+    $("#one-thing-title").textContent = title;
+    $("#one-thing-note").textContent = text;
+    saveState();
+    burstAt(window.innerWidth / 2, window.innerHeight * 0.5, 6);
+  });
   $("#new-reason").addEventListener("click", nextReason);
   $("#save-text-widget").addEventListener("click", saveTextWidget);
   $("#clear-text-widget").addEventListener("click", () => $("#widget-text").value = "");
@@ -2399,6 +3000,8 @@ function init() {
   setupHoldOrb();
   setupEvents();
   setupSmartNav();
+  initGamePicker();
+  initWatchlist();
   setupInstall();
   setupOpeningRitual();
   if (state.hasEnteredUniverse) setupWidgetSync();

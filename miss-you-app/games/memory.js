@@ -437,7 +437,7 @@
     el.moves.textContent = String(state.moves);
     el.time.textContent = fmtTime(state.elapsed);
     var best = state.best[state.size];
-    el.best.textContent = (best == null) ? "—" : (best + " moves");
+    el.best.textContent = (best == null) ? "not yet" : (best + " moves");
   }
 
   function paintSizes() {
@@ -581,7 +581,7 @@
 
     paintStats();
     var line = "all pairs found in " + state.moves + " moves · " + fmtTime(state.elapsed);
-    setStatus(isBest ? ("new best on " + SIZES[state.size].label + " — " + line) : line, true);
+    setStatus(isBest ? ("new best on " + SIZES[state.size].label + ". " + line) : line, true);
     el.root.classList.add("is-won");
     save();
     celebrate();

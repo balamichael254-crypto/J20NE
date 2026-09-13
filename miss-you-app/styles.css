@@ -74,12 +74,44 @@ html{min-height:100%;background:var(--bg);-webkit-text-size-adjust:100%}
 body{
   margin:0;min-height:100dvh;color:var(--ink);overflow-x:hidden;
   font-family:"Quicksand",ui-rounded,system-ui,sans-serif;font-weight:500;
+  background:var(--bg);
+}
+
+/* ==========================================================================
+   The paper. A flat gradient reads as "a website"; what reads as a keepsake
+   is patterned stationery, so the ground is built the way real paper is:
+   a printed motif, then the grain of the stock it is printed on, then the
+   colour of the stock itself. All three are inline SVG - no extra requests,
+   and they stay crisp at any density because they are vectors.
+   ========================================================================== */
+.paper-ground{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg)}
+
+/* the printed motif: a lily sprig, a heart and a scatter of seeds, tiled the
+   way wrapping paper is - offset rows so the eye never finds the grid. */
+.paper-ground::before{
+  content:"";position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='none' stroke='%23a982e0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 40c0-7 5-13 11-13-2 7-5 11-11 13zM22 40c0-7-5-13-11-13 2 7 5 11 11 13zM22 40c6 2 11 6 12 13-7 0-12-6-12-13zM22 40c-6 2-11 6-12 13 7 0 12-6 12-13zM22 40v16'/%3E%3Cpath d='M92 26c3-4 9-3 9 2 0 5-9 10-9 10s-9-5-9-10c0-5 6-6 9-2z'/%3E%3Cpath d='M104 92c0-6 4-11 9-11-1 6-4 9-9 11zM104 92c0-6-4-11-9-11 1 6 4 9 9 11zM104 92v13'/%3E%3Cpath d='M46 104c2-3 7-2 7 2 0 4-7 8-7 8s-7-4-7-8c0-4 5-5 7-2z'/%3E%3C/g%3E%3Cg fill='%23a982e0'%3E%3Ccircle cx='68' cy='62' r='1.9'/%3E%3Ccircle cx='16' cy='80' r='1.6'/%3E%3Ccircle cx='120' cy='56' r='1.6'/%3E%3Ccircle cx='58' cy='16' r='1.6'/%3E%3Ccircle cx='84' cy='120' r='1.9'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:132px 132px;
+  opacity:.16;
+}
+
+/* the grain of the stock. Fractal noise at low alpha is the single cheapest
+   thing that stops a surface looking like flat CSS colour. */
+.paper-ground::after{
+  content:"";position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
+  background-size:180px 180px;
+  opacity:.09;mix-blend-mode:multiply;
+}
+
+/* a breath of warmth top-left and blush top-right so the page has a light
+   source, rather than being evenly lit like a spreadsheet. */
+.paper-wash{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(900px 440px at 84% -4%, rgba(255,168,205,.34), transparent 62%),
-    radial-gradient(820px 420px at 4% 8%, rgba(205,182,242,.6), transparent 62%),
-    radial-gradient(700px 560px at 52% 102%, rgba(255,217,142,.2), transparent 62%),
-    linear-gradient(172deg,var(--bg-2) 0%,var(--bg) 52%,#e3d6f7 100%);
-  background-attachment:fixed;
+    radial-gradient(680px 380px at 6% 2%, rgba(255,255,255,.85), transparent 64%),
+    radial-gradient(620px 420px at 96% 6%, rgba(255,168,205,.26), transparent 62%),
+    radial-gradient(700px 480px at 50% 104%, rgba(168,130,224,.18), transparent 66%);
 }
 
 img{max-width:100%;display:block}
@@ -95,21 +127,42 @@ img{max-width:100%;display:block}
 .scene-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .scene-layer{position:absolute;inset:-10%;opacity:0;transition:opacity .6s ease}
 
-/* --- garden: huge, soft, bleeding past the edges - the default room ----- */
+/* --- garden: real lilies, in focus, spilling in past the corners.
+   These are photographic cut-outs on transparency, so they are laid in
+   SHARP and large. Blurring them, which is what an earlier pass did, throws
+   away the only thing that made them worth shooting and leaves a purple
+   smear. Only the far layer gets any blur, and only as depth of field.
+   Readability is bought back with .garden-veil, not by hiding the flowers. */
 .scene-garden{opacity:1}
-.scene-bloom{
-  position:absolute;filter:blur(7px) saturate(1.05);
-  border-radius:50%;object-fit:cover;
+.scene-bloom{position:absolute;object-fit:contain;object-position:center}
+
+.bloom-tl{
+  width:min(86vw,430px);top:calc(-1 * env(safe-area-inset-top,0px) - 34px);left:-15vw;
+  opacity:.92;transform-origin:22% 18%;
+  animation:bloomBreatheA 26s ease-in-out infinite;
 }
-.bloom-a{width:78vw;height:78vw;top:-22vw;right:-26vw;opacity:.42;
-  animation:bloomDriftA 34s ease-in-out infinite}
-.bloom-b{width:64vw;height:64vw;bottom:-20vw;left:-24vw;opacity:.38;
-  animation:bloomDriftB 40s ease-in-out infinite}
-.bloom-c{width:50vw;height:50vw;top:38vh;left:52vw;opacity:.24;filter:blur(9px) saturate(1.1) brightness(.8);
-  animation:bloomDriftC 46s ease-in-out infinite}
-@keyframes bloomDriftA{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(-3vw,3vw) rotate(4deg)}}
-@keyframes bloomDriftB{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(3vw,-2vw) rotate(-3deg)}}
-@keyframes bloomDriftC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-2vw,-3vw) scale(1.06)}}
+.bloom-br{
+  width:min(88vw,450px);bottom:-8vh;right:-18vw;
+  opacity:.88;transform-origin:78% 82%;
+  animation:bloomBreatheB 31s ease-in-out infinite;
+}
+/* the far one: small, soft, pushed back - this is the layer that earns a blur */
+.bloom-far{
+  width:min(44vw,230px);top:46vh;left:-13vw;
+  opacity:.38;filter:blur(3.5px) saturate(.92);
+  animation:bloomBreatheC 38s ease-in-out infinite;
+}
+@keyframes bloomBreatheA{0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}50%{transform:translate(6px,10px) rotate(1.6deg) scale(1.035)}}
+@keyframes bloomBreatheB{0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}50%{transform:translate(-8px,-9px) rotate(-1.8deg) scale(1.045)}}
+@keyframes bloomBreatheC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(10px,-14px) scale(1.07)}}
+
+/* A soft column of light down the middle. The flowers stay fully saturated
+   at the edges where nothing is written, and the text column keeps its
+   contrast. Without this, sharp photos behind body copy are unreadable. */
+.garden-veil{
+  position:absolute;inset:0;
+  background:radial-gradient(118% 62% at 50% 42%, rgba(244,238,254,.90) 0%, rgba(244,238,254,.66) 42%, rgba(244,238,254,0) 78%);
+}
 
 /* --- space: weightless, twinkling, distant ------------------------------ */
 .scene-space{background:radial-gradient(140% 100% at 50% 0%,#2a1a52 0%,#160c34 46%,#0c0620 100%)}
@@ -192,7 +245,7 @@ img{max-width:100%;display:block}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .scene-bloom,.starfield,.space-planet,.shooting-star,.ocean-caustics,.ocean-shell,.ocean-starfish{animation:none}
+  .scene-bloom,.paper-ground::before,.starfield,.space-planet,.shooting-star,.ocean-caustics,.ocean-shell,.ocean-starfish{animation:none}
 }
 
 /* which room is which place - swapped by data-world on <body> */
@@ -402,7 +455,7 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
   position:fixed;z-index:45;left:50%;translate:-50% 0;
   bottom:calc(11px + env(safe-area-inset-bottom));
   width:min(calc(100% - 26px),486px);
-  display:grid;grid-template-columns:repeat(5,1fr);align-items:end;gap:2px;
+  display:grid;grid-template-columns:repeat(4,1fr);align-items:end;gap:2px;
   padding:9px 9px 10px;border-radius:30px;
   background:linear-gradient(165deg,#fff,var(--lav-50));
   border:2px solid var(--edge);box-shadow:var(--sh-lg);
@@ -418,16 +471,6 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 .tab.active{color:var(--lav-700);background:var(--lav-100)}
 .tab:active{transform:scale(.94)}
 .tab svg{width:22px;height:22px;display:block}
-
-.tab-poo{
-  margin-top:-30px;border-radius:50%;aspect-ratio:1;justify-content:center;
-  background:linear-gradient(160deg,#fff,var(--lav-200));
-  border:3px solid var(--edge);
-  box-shadow:0 10px 22px rgba(138,95,212,.34);padding:0;
-}
-.tab-poo.active{background:linear-gradient(160deg,var(--lav-200),var(--pink))}
-.tab-poo img{width:76%;height:76%;object-fit:contain}
-.tab-poo span{display:none}
 
 /* ================================================================= the gate */
 .entry-gate,.day-opening{
@@ -570,23 +613,72 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 .comfort-card h3{margin:6px 0 8px}
 .comfort-card .primary-btn{margin-top:13px}
 
-/* quick tiles - two-up, so the page isn't one long column of rectangles */
-.quick-row{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+/* ==========================================================================
+   Quick tiles, as things stuck into a scrapbook rather than buttons in a
+   grid. Four decisions do the work, and none of them is the fill colour:
+
+   1. every tile is rotated a fraction of a degree, alternating, so the row
+      reads as hand-placed instead of laid out by a machine. Perfect
+      alignment is the single loudest tell of a "safe" app layout.
+   2. a strip of washi tape holds each one down - translucent, striped,
+      and crooked, the way tape actually lands.
+   3. a dashed rule set in from the edge, like a stamp or a ticket.
+   4. a real lily, in focus, tucked behind the corner and clipped by it.
+   ========================================================================== */
+.quick-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px;padding-top:9px}
 .quick-tile{
-  position:relative;min-height:106px;padding:15px;border-radius:var(--r-lg);
-  border:2px solid var(--edge);cursor:pointer;text-align:left;
+  position:relative;min-height:112px;padding:15px;border-radius:var(--r-lg);
+  border:2px solid var(--edge);cursor:pointer;text-align:left;overflow:hidden;
   display:flex;flex-direction:column;justify-content:flex-end;gap:2px;
   font-family:"Quicksand",sans-serif;color:var(--lav-700);
-  box-shadow:var(--sh);transition:transform .18s;
+  box-shadow:var(--sh);transition:transform .2s cubic-bezier(.2,.9,.3,1.3),box-shadow .2s;
+  isolation:isolate;
 }
-.quick-tile:active{transform:translateY(3px)}
-.quick-tile b{font-family:"Baloo",sans-serif;font-size:1.04rem;font-weight:700}
-.quick-tile small{font-size:.73rem;color:var(--ink-faint);font-weight:600}
-.quick-tile .qi{position:absolute;top:12px;left:15px;font-size:1.5rem}
-.quick-tile.q-letters{background:linear-gradient(160deg,#fff,var(--lav-100))}
-.quick-tile.q-worlds{background:linear-gradient(160deg,#fff,#ffe6f1)}
-.quick-tile.q-care{background:linear-gradient(160deg,#fff,#ffeede)}
-.quick-tile.q-gifts{background:linear-gradient(160deg,#fff,#e6f6ef)}
+.quick-tile:nth-child(odd){transform:rotate(-1.1deg)}
+.quick-tile:nth-child(even){transform:rotate(.9deg)}
+.quick-tile:active{transform:rotate(0deg) translateY(3px) scale(.98);box-shadow:var(--sh-sm)}
+
+/* the dashed ticket rule */
+.quick-tile::before{
+  content:"";position:absolute;inset:7px;border-radius:calc(var(--r-lg) - 8px);
+  border:1.5px dashed rgba(168,130,224,.34);pointer-events:none;z-index:2;
+}
+/* the washi tape */
+.quick-tile::after{
+  content:"";position:absolute;top:-9px;left:50%;width:66px;height:21px;z-index:3;
+  background:
+    repeating-linear-gradient(58deg,rgba(255,255,255,.5) 0 4px,rgba(255,255,255,0) 4px 9px),
+    linear-gradient(180deg,rgba(255,168,205,.62),rgba(205,182,242,.62));
+  box-shadow:0 2px 5px rgba(120,80,170,.18);
+  pointer-events:none;
+}
+.quick-tile:nth-child(odd)::after{translate:-50% 0;rotate:-4deg}
+.quick-tile:nth-child(even)::after{translate:-50% 0;rotate:5deg}
+
+/* the flower behind the corner */
+.quick-tile .qbloom{
+  position:absolute;right:-22px;bottom:-20px;width:72px;height:72px;z-index:0;
+  object-fit:contain;opacity:.45;rotate:14deg;pointer-events:none;
+  transition:rotate .4s ease,opacity .3s ease;
+  /* fade it out toward the caption so it never competes with the words */
+  mask-image:radial-gradient(70% 70% at 78% 78%,#000 40%,rgba(0,0,0,.2) 100%);
+}
+.quick-tile:active .qbloom{rotate:2deg;opacity:.72}
+
+.quick-tile b,.quick-tile small,.quick-tile .qi{position:relative;z-index:1}
+.quick-tile b{font-family:"Baloo",sans-serif;font-size:1.04rem;font-weight:700;line-height:1.15}
+.quick-tile small{font-size:.73rem;color:var(--ink-soft);font-weight:700}
+.quick-tile .qi{position:absolute;top:15px;left:15px;font-size:1.5rem;z-index:1;
+  filter:drop-shadow(0 3px 5px rgba(120,80,170,.22))}
+
+.quick-tile.q-letters{background:linear-gradient(160deg,#fffdff,var(--lav-100))}
+.quick-tile.q-worlds{background:linear-gradient(160deg,#fffdfe,#ffe6f1)}
+.quick-tile.q-care{background:linear-gradient(160deg,#fffefc,#ffeede)}
+.quick-tile.q-gifts{background:linear-gradient(160deg,#fdfffe,#e6f6ef)}
+
+@media (prefers-reduced-motion:reduce){
+  .quick-tile:nth-child(odd),.quick-tile:nth-child(even){transform:none}
+}
 
 .home-section{margin-top:19px}
 .world-strip{display:flex;gap:11px;overflow-x:auto;padding:3px 2px 9px;scrollbar-width:none}
@@ -643,64 +735,79 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
    modal just popping up cold.
    =================================================================== */
 .envelope{
+  /* --paper/--paper-2 drive BOTH the flap and the body everywhere - a theme
+     that wants to look dark (moon) sets these to dark values instead of
+     overriding the envelope's own background separately. That mismatch was
+     the actual bug: the flap kept pulling light paper vars while the body
+     was overridden to dark purple underneath it, so the "fold" read as a
+     jagged two-tone glitch instead of a seam in one sheet of paper. */
   --paper:var(--lav-50); --paper-2:var(--lav-100); --seal:var(--pink-hot); --ink-on:var(--ink);
+  --soft-on:var(--ink-soft); --faint-on:var(--ink-faint);
   position:relative;cursor:pointer;text-align:left;width:100%;
-  padding:38px 18px 18px;border-radius:var(--r-lg);overflow:hidden;
-  background:linear-gradient(168deg,var(--paper) 0%,var(--paper-2) 100%);
+  padding:46px 18px 18px;border-radius:var(--r-lg);overflow:hidden;
+  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 100%);
   border:2px solid var(--edge);box-shadow:var(--sh);
   font-family:"Quicksand",sans-serif;color:var(--ink-on);
   transition:transform .18s;
 }
 .envelope:active{transform:translateY(3px)}
 
-/* the flap - a triangle folded down from the top edge, with its own subtle
-   fold-line shadow so it reads as paper, not a flat wedge of colour */
+/* the flap - a shallow fold from the top edge, not a diagonal slash across
+   the card. The apex sits at 42% of the flap's own height, close to how a
+   real envelope flap actually looks from the front: a wide, low triangle,
+   not a wedge reaching halfway down the page. */
 .envelope-flap{
-  position:absolute;top:0;left:0;right:0;height:64px;z-index:1;
-  background:linear-gradient(160deg,var(--paper-2),var(--paper));
-  clip-path:polygon(0 0,100% 0,50% 78%);
-  box-shadow:0 3px 4px rgba(0,0,0,.06) inset;
+  position:absolute;top:0;left:0;right:0;height:44px;z-index:1;
+  background:linear-gradient(200deg,var(--paper) 0%,var(--paper-2) 100%);
+  clip-path:polygon(0 0,100% 0,100% 8%,50% 42%,0 8%);
   transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .3s ease;
   transform-origin:top center;
 }
+/* the fold seam itself - a thin shadow line tracing the flap's lower edge,
+   the one detail that actually reads as "paper folded", not "shape drawn" */
+.envelope-flap::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:100%;
+  clip-path:polygon(0 0,100% 0,100% 8%,50% 42%,0 8%);
+  box-shadow:0 2px 3px rgba(20,6,30,.16) inset;
+  pointer-events:none;
+}
 .envelope-seal{
-  position:absolute;top:14px;left:50%;translate:-50% 0;z-index:2;
-  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  position:absolute;top:18px;left:50%;translate:-50% 0;z-index:2;
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 34% 28%,color-mix(in srgb,var(--seal) 40%,#fff),var(--seal));
-  color:#fff;font-family:"Baloo",sans-serif;font-weight:700;font-size:.72rem;
-  box-shadow:0 4px 0 -1px rgba(0,0,0,.16),0 6px 12px rgba(0,0,0,.22);
+  color:#fff;font-family:"Baloo",sans-serif;font-weight:700;font-size:.68rem;
+  box-shadow:0 3px 0 -1px rgba(0,0,0,.18),0 5px 10px rgba(0,0,0,.24);
   transition:transform .34s cubic-bezier(.4,0,.2,1),opacity .28s ease;
 }
 .envelope-tab{
-  position:absolute;top:10px;left:16px;z-index:2;
-  font-family:"Dancing Script",cursive;font-size:.92rem;color:var(--ink-on);opacity:.72;
+  position:absolute;top:9px;left:16px;z-index:2;
+  font-family:"Dancing Script",cursive;font-size:.86rem;color:var(--ink-on);opacity:.68;
 }
 .envelope-body{
   position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;
-  padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--ink-on) 18%,transparent);
+  padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--ink-on) 20%,transparent);
 }
-.envelope-body strong{font-family:"Baloo",sans-serif;font-size:1.08rem;font-weight:700}
-.envelope-body small{font-size:.87rem;color:var(--ink-soft)}
-.envelope-body em{font-style:normal;font-size:.73rem;color:var(--ink-faint);margin-top:2px}
+.envelope-body strong{font-family:"Baloo",sans-serif;font-size:1.08rem;font-weight:700;color:var(--ink-on)}
+.envelope-body small{font-size:.87rem;color:var(--soft-on)}
+.envelope-body em{font-style:normal;font-size:.73rem;color:var(--faint-on);margin-top:2px}
 
 /* unsealing: the flap swings up and out of the way, the seal breaks and
    fades, right before the letter modal takes over */
-.envelope.opening .envelope-flap{transform:translateY(-14px) rotateX(35deg);opacity:0}
+.envelope.opening .envelope-flap{transform:translateY(-10px) rotateX(35deg);opacity:0}
 .envelope.opening .envelope-seal{transform:translate(-50%,-6px) scale(.7) rotate(-14deg);opacity:0}
 .envelope.opening .envelope-tab{opacity:0;transition:opacity .2s ease}
 
-/* one paper colour + seal colour per theme */
-.envelope.theme-airport{--paper:#eaf2fb;--paper-2:#d6e6f7;--seal:var(--lav-500)}
-.envelope.theme-birthday{--paper:#fff0f6;--paper-2:#ffd9e8;--seal:var(--pink-hot)}
-.envelope.theme-kitchen{--paper:#fff3ea;--paper-2:#ffe1cc;--seal:var(--peach)}
-.envelope.theme-lilies{--paper:#fdf1f7;--paper-2:#fad9e9;--seal:var(--red)}
-.envelope.theme-moon{--paper:#efe9fb;--paper-2:#d9cdf5;--seal:var(--lav-700);--ink-on:#f3ecff;
-  background:linear-gradient(168deg,#3a2a63,#5c4694)}
-.envelope.theme-moon .envelope-body small{color:rgba(243,236,255,.78)}
-.envelope.theme-moon .envelope-body em{color:rgba(243,236,255,.5)}
-.envelope.theme-safe{--paper:#eaf7f1;--paper-2:#cfeee0;--seal:var(--mint)}
-.envelope.theme-stars{--paper:#e7e3fb;--paper-2:#c9c0f0;--seal:var(--gold)}
-.envelope.theme-voice{--paper:#fdeaef;--paper-2:#f7c9d5;--seal:var(--red)}
+/* one paper colour + seal colour per theme - every theme sets --paper and
+   --paper-2 and nothing else, so the flap and body always match */
+.envelope.theme-airport{--paper:#eaf2fb;--paper-2:#c9dff2;--seal:var(--lav-500)}
+.envelope.theme-birthday{--paper:#fff0f6;--paper-2:#ffcbe0;--seal:var(--pink-hot)}
+.envelope.theme-kitchen{--paper:#fff3ea;--paper-2:#ffd7b8;--seal:var(--peach)}
+.envelope.theme-lilies{--paper:#fdf1f7;--paper-2:#f6c9de;--seal:var(--red)}
+.envelope.theme-moon{--paper:#4a3878;--paper-2:#2f2054;--seal:var(--gold);
+  --ink-on:#f6f1ff;--soft-on:rgba(246,241,255,.8);--faint-on:rgba(246,241,255,.52)}
+.envelope.theme-safe{--paper:#eaf7f1;--paper-2:#b8e4cd;--seal:var(--mint)}
+.envelope.theme-stars{--paper:#e7e3fb;--paper-2:#b7abe8;--seal:var(--gold)}
+.envelope.theme-voice{--paper:#fdeaef;--paper-2:#f2b1c5;--seal:var(--red)}
 
 .letter-salutation{font-family:"Dancing Script",cursive;font-size:1.3rem;color:var(--pink-hot);margin-bottom:8px}
 .letter-closing{font-family:"Dancing Script",cursive;font-size:1.24rem;color:var(--lav-600);margin-top:14px}
@@ -999,11 +1106,17 @@ body[data-world="vault"] .poo-companion{display:none}
    directly in the scene: a heart you tap, a lantern you open, numbers that
    sit in the grass like fireflies. No premium-card anywhere on this screen.
    ========================================================================== */
+/* NOTE the .active: this rule sits after `.screen{display:none}` and has the
+   same specificity, so an unqualified `display:flex` here wins on every
+   screen and leaves the immersive screens permanently painted underneath
+   whatever else is open. It must only lay itself out when it is the open
+   screen. */
 .screen-immersive{
   margin:0 -15px;padding:0;
   min-height:calc(100dvh - 168px);
-  display:flex;flex-direction:column;
+  flex-direction:column;
 }
+.screen-immersive.active{display:flex}
 .hearth{
   position:relative;flex:1;min-height:560px;
   display:flex;flex-direction:column;align-items:center;
@@ -1142,7 +1255,7 @@ body[data-world="vault"] .poo-companion{display:none}
 .us-teaser{
   display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
   padding:16px 18px;border-radius:var(--r-lg);
-  background:linear-gradient(120deg,#3a2038 0%,#7a3a4a 55%,#c97a56 100%);
+  background:linear-gradient(118deg,#39215e 0%,#5b3490 48%,#8f4f96 78%,#c26a9a 100%);
   border:2px solid var(--edge);color:#fff;
   box-shadow:var(--sh);transition:transform .18s;
 }
@@ -1200,3 +1313,207 @@ body[data-world="vault"] .poo-companion{display:none}
   .hero-polaroid{width:86px}
   .home-vine{width:54px;opacity:.38}
 }
+
+/* --- the Us hub grid, sitting on the dusk scene, so its tiles need to be
+       readable against a dark backdrop rather than the lilac paper. ------- */
+.us-hub{margin-top:22px}
+.us-hub-label{color:rgba(255,255,255,.72);margin-bottom:10px}
+#us-grid .world-tile{border-color:rgba(255,255,255,.3)}
+
+/* ==========================================================================
+   The arcade picker. Three stickers in a row; the chosen one lifts and the
+   stage opens under it. Same hand-placed language as the home quick tiles,
+   so the arcade reads as part of the same scrapbook.
+   ========================================================================== */
+.game-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:4px 0 14px}
+.game-pick{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:13px 7px 11px;border-radius:var(--r);cursor:pointer;
+  border:2px solid var(--edge);background:linear-gradient(165deg,#fffdff,var(--lav-100));
+  color:var(--lav-700);font-family:"Quicksand",sans-serif;text-align:center;
+  box-shadow:var(--sh-sm);transition:transform .2s cubic-bezier(.2,.9,.3,1.3),box-shadow .2s,background .2s;
+  min-height:var(--tap);
+}
+.game-pick:nth-child(1){rotate:-1.4deg}
+.game-pick:nth-child(3){rotate:1.4deg}
+.game-pick-mark{font-size:1.5rem;line-height:1;filter:drop-shadow(0 3px 5px rgba(120,80,170,.22))}
+.game-pick b{font-family:"Baloo",sans-serif;font-size:.9rem;font-weight:700}
+.game-pick small{font-size:.63rem;color:var(--ink-faint);font-weight:700;line-height:1.25}
+.game-pick:active{transform:translateY(2px) scale(.97)}
+.game-pick.active{
+  rotate:0deg;
+  background:linear-gradient(160deg,var(--pink),var(--lav-300));
+  color:#fff;border-color:var(--edge);box-shadow:var(--sh);
+  transform:translateY(-3px);
+}
+.game-pick.active small{color:rgba(255,255,255,.9)}
+
+.game-stage{display:none}
+.game-stage.open{display:block;margin-bottom:18px;animation:stageIn .34s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes stageIn{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:none}}
+.game-stage-missing{
+  padding:18px;border-radius:var(--r);text-align:center;font-weight:700;
+  background:rgba(255,255,255,.72);color:var(--ink-soft);border:2px dashed rgba(168,130,224,.4);
+}
+@media (prefers-reduced-motion:reduce){
+  .game-pick:nth-child(1),.game-pick:nth-child(3){rotate:none}
+  .game-stage.open{animation:none}
+}
+
+/* ==========================================================================
+   Watchlist. Two taps per film and nothing else: a heart to save it, a tick
+   to say it is already watched. The card stays quiet so a long scroll of
+   them does not shout, and a watched card visibly settles down.
+   ========================================================================== */
+.wl-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:2px 0 13px}
+.wl-tab{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  min-height:var(--tap);padding:9px 6px;border-radius:var(--r);cursor:pointer;
+  border:2px solid var(--edge);background:rgba(255,255,255,.8);color:var(--ink-soft);
+  font-family:"Baloo",sans-serif;font-size:.85rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:background .2s,color .2s,transform .18s;
+}
+.wl-tab:active{transform:scale(.97)}
+.wl-tab.active{background:linear-gradient(150deg,var(--pink),var(--lav-300));color:#fff}
+.wl-badge{
+  display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;
+  border-radius:10px;background:rgba(120,80,170,.16);color:inherit;
+  font-size:.66rem;font-weight:800;
+}
+.wl-tab.active .wl-badge{background:rgba(255,255,255,.34)}
+
+.wl-genres{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.wl-genre{
+  padding:8px 13px;border-radius:999px;cursor:pointer;
+  border:2px solid var(--edge);background:rgba(255,255,255,.78);color:var(--lav-700);
+  font-family:"Quicksand",sans-serif;font-size:.78rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:background .2s,color .2s,transform .18s;
+}
+.wl-genre:active{transform:scale(.95)}
+.wl-genre.active{background:linear-gradient(150deg,var(--lav-400),var(--lav-500));color:#fff}
+
+/* the search bar - always visible, since with a real catalogue behind this
+   screen a search is the fastest way to a specific title */
+.wl-search-row{margin-bottom:12px}
+.wl-search{
+  width:100%;min-height:var(--tap);padding:0 16px;border-radius:999px;
+  border:2px solid var(--edge);background:rgba(255,255,255,.85);
+  font-family:"Quicksand",sans-serif;font-size:.92rem;color:var(--ink);
+  box-shadow:var(--sh-sm);
+}
+.wl-search::placeholder{color:var(--ink-faint)}
+.wl-search:focus-visible{outline:2px solid var(--lav-400);outline-offset:2px}
+
+/* poster grid instead of a stacked list: two columns of real posters is the
+   whole point of moving off a hand-written text list */
+.wl-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.wl-card{
+  display:flex;flex-direction:column;cursor:pointer;overflow:hidden;
+  border-radius:var(--r);border:2px solid var(--edge);
+  background:linear-gradient(165deg,#fffdff,var(--lav-50));
+  box-shadow:var(--sh-sm);transition:opacity .25s,transform .18s;
+}
+.wl-card:active{transform:scale(.98)}
+.wl-card.is-seen{opacity:.6}
+.wl-card.is-seen h3{text-decoration:line-through;text-decoration-color:rgba(120,80,170,.45)}
+
+.wl-poster{position:relative;width:100%;aspect-ratio:2/3;background:var(--lav-100)}
+.wl-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.wl-poster-fallback{
+  width:100%;height:100%;display:grid;place-items:center;font-size:2.4rem;
+  background:linear-gradient(160deg,var(--lav-100),var(--lav-200));
+}
+.wl-rating{
+  position:absolute;top:7px;right:7px;padding:3px 7px;border-radius:999px;
+  background:rgba(20,10,30,.62);color:#ffd98e;font-size:.68rem;font-weight:800;
+  backdrop-filter:blur(2px);
+}
+
+.wl-card-main{flex:1;min-width:0;padding:9px 10px 4px}
+.wl-card h3{
+  margin:0 0 4px;font-family:"Baloo",sans-serif;font-size:.86rem;font-weight:700;
+  color:var(--lav-700);line-height:1.2;
+}
+.wl-year{font-size:.72rem;font-weight:600;color:var(--ink-faint)}
+.wl-why{
+  margin:0;font-size:.72rem;line-height:1.4;color:var(--ink-soft);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+.wl-card-actions{display:flex;gap:7px;padding:8px 10px 10px}
+.wl-act{
+  flex:1;min-height:38px;display:grid;place-items:center;cursor:pointer;
+  border-radius:11px;border:2px solid var(--edge);background:#fff;
+  font-size:.98rem;line-height:1;color:var(--ink-faint);
+  transition:transform .18s cubic-bezier(.2,.9,.3,1.4),background .2s,color .2s;
+}
+.wl-act:active{transform:scale(.9)}
+.wl-save.on{background:linear-gradient(150deg,var(--pink-hot),var(--red));color:#fff;border-color:var(--edge)}
+.wl-seen.on{background:linear-gradient(150deg,var(--mint,#9fe0c6),var(--lav-300));color:#fff;border-color:var(--edge)}
+
+.wl-empty{
+  grid-column:1/-1;padding:22px 18px;margin:0 0 12px;border-radius:var(--r);text-align:center;
+  font-weight:700;color:var(--ink-soft);line-height:1.5;
+  background:rgba(255,255,255,.7);border:2px dashed rgba(168,130,224,.4);
+}
+.wl-status{
+  text-align:center;font-size:.78rem;font-weight:700;color:var(--ink-faint);
+  margin:14px 0 0;
+}
+.wl-load-more{margin-top:14px}
+
+/* the detail / trailer dialog, sharing the app's shared dialog reset */
+.wl-modal{padding:0;overflow:visible}
+.wl-modal-body{
+  padding:22px 20px 24px;overflow-y:auto;max-height:86dvh;
+  background:linear-gradient(168deg,#fff,var(--lav-50));border:3px solid var(--edge);
+  box-shadow:var(--sh-lg);border-radius:var(--r-xl);
+}
+.wl-modal-close{
+  position:absolute;top:-2px;left:-2px;z-index:2;padding:9px 14px;border-radius:999px;
+  border:2px solid var(--edge);background:#fff;box-shadow:var(--sh-sm);
+  font-family:"Quicksand",sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;
+}
+.wl-modal-backdrop{width:calc(100% + 40px);margin:-22px -20px 14px;aspect-ratio:16/9;object-fit:cover;display:block}
+.wl-modal-body h2{margin:6px 0 4px;font-size:1.3rem;color:var(--lav-700)}
+.wl-modal-meta{font-size:.78rem;font-weight:700;color:var(--ink-faint);margin:0 0 10px}
+.wl-modal-loading,.wl-modal-note{color:var(--ink-soft);font-weight:600;text-align:center;padding:12px 0}
+.wl-trailer{
+  position:relative;width:100%;aspect-ratio:16/9;margin:14px 0 4px;
+  border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm);background:#000;
+}
+.wl-trailer iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.wl-modal-actions{display:flex;gap:9px;margin-top:14px}
+.wl-modal-actions .secondary-btn{flex:1}
+.wl-modal-save.on,.wl-modal-seen.on{background:linear-gradient(150deg,var(--pink-hot),var(--lav-400));color:#fff}
+
+/* ==========================================================================
+   Garden richness: the tree stays bloomed across visits (app.js persists
+   state.gardenBloomed and skips straight to the grown copy), and the caption
+   changes with how long it has actually been growing. Two copy blocks live
+   in the same card and only one shows at a time.
+   ========================================================================== */
+.garden-copy-grown{display:none}
+.garden-stage.bloomed .garden-copy-new{display:none}
+.garden-stage.bloomed .garden-copy-grown{display:block}
+
+/* Care page additions -------------------------------------------------- */
+.card-mint{background:linear-gradient(168deg,#f0fbf6 0%,#dcf3e8 100%)!important}
+.one-thing-card h3{margin-bottom:6px}
+
+/* the world-portal rail: a visited badge, and a subtle lift for the one
+   featured today so the rail is not visually identical every time it opens */
+.world-portal-check{
+  position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;background:linear-gradient(150deg,var(--pink-hot),var(--red));
+  color:#fff;font-size:.85rem;box-shadow:0 3px 8px rgba(0,0,0,.25);
+}
+.world-portal.is-featured{box-shadow:0 0 0 3px var(--gold),var(--sh)}
+.places-progress{
+  font-size:.78rem;font-weight:700;color:var(--ink-soft);margin:-6px 0 4px;
+}
+
+/* Songs: the featured card gets a warmer border so it reads as "chosen for
+   tonight" rather than just being first in a list. */
+.song-list-label{margin:16px 0 8px;color:var(--ink-faint)}
+.song-featured-card{border-color:var(--pink-hot)!important;box-shadow:var(--sh-lg)!important}
