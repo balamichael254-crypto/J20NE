@@ -1616,12 +1616,14 @@ function renderPlaces() {
    own photographs set into it, and every stop something she can actually
    claim rather than only read.
    ========================================================================= */
-const WORLD_DAY_ARC = ["first light", "late morning", "early afternoon", "golden hour", "after dark", "very late"];
+// Seven labels for seven stops, so a full world maps one to one instead of
+// rounding two stops onto the same hour.
+const WORLD_DAY_ARC = ["first light", "mid morning", "late morning", "early afternoon", "golden hour", "after dark", "very late"];
 // Some of these worlds are explicitly nocturnal - Paris After Midnight opens
 // after dinner, the aurora one can't happen at noon - so running the dawn
 // arc over them produced "first light" on a world whose own name says
 // midnight. Worlds that describe themselves as night get a night arc.
-const WORLD_NIGHT_ARC = ["after dinner", "late evening", "near midnight", "the small hours", "almost dawn"];
+const WORLD_NIGHT_ARC = ["after dinner", "dusk", "late evening", "near midnight", "past midnight", "the small hours", "almost dawn"];
 const WORLD_NIGHT_HINTS = /midnight|aurora|night|evening|lantern|star|moon|dusk|sunset|nocturn/i;
 
 function worldArcFor(place) {
@@ -1667,13 +1669,17 @@ function setWorldNext(name) {
   return state.worldNext === name;
 }
 
-function worldMomentHtml(place, [title, text], i, total) {
+function worldMomentHtml(place, [title, text, hasPhoto], i, total) {
   const picked = worldPicks(place.name).includes(i);
-  // the place's two photographs are set into the day rather than stacked at
-  // the top: one near the start, one at the turn into evening
-  const photoAt = total > 2 ? Math.min(2, total - 1) : -1;
-  const photo = i === photoAt && place.photos[1]
-    ? `<img class="world-step-photo" src="${escapeHtml(place.photos[1])}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+  // Stops carry their own photograph at assets/worlds/<slug>/NN.webp. The
+  // build marks which of those actually exist (see tools/build_worlds.py) so
+  // a stop whose photo has not been fetched renders as text rather than as a
+  // lazy image reserving space it will later give back.
+  const src = hasPhoto && place.slug
+    ? `./assets/worlds/${place.slug}/${String(i).padStart(2, "0")}.webp`
+    : (i === Math.min(2, total - 1) && place.photos[1] ? place.photos[1] : "");
+  const photo = src
+    ? `<img class="world-step-photo" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async" width="900" height="563" onerror="this.remove()">`
     : "";
   return `
     <article class="world-step${picked ? " is-picked" : ""}">

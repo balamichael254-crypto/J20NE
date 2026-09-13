@@ -1,139 +1,233 @@
 (function () {
   const gallery = slug => [`./assets/worlds/${slug}-1.webp`, `./assets/worlds/${slug}-2.webp`];
 
-  const world = (name, eyebrow, intro, gallery, moments, palette) => ({
-    name, eyebrow, intro, palette,
+  const world = (name, eyebrow, intro, slug, gallery, moments, palette) => ({
+    name, eyebrow, intro, palette, slug,
     photos: gallery,
     moments
   });
 
   const worlds = [
-    world("The First Airport Hug", "where distance finally loses", "The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.", gallery("airport-hug"), [
-      ["The sighting", "I find you in the crowd and forget how walking normally works. You smile, I laugh from pure disbelief, and the room becomes background."],
-      ["The hug", "No polite little greeting. I hold you until both of us stop feeling like people who live inside a screen."],
-      ["The first drive", "Your hand stays in mine between the seats. We keep looking at each other because being real is still surprising."],
-      ["The first ordinary hour", "We buy water, argue about snacks, and discover that even airport traffic feels romantic when goodbye is not waiting at the end of it."]
-    ], "rose"),
-    world("Santorini in Lilac Light", "white walls, lavender sky", "We wake where the sea holds every shade of blue, but sunset belongs to lilac. I take too many pictures of you, then put the phone away because no photograph can keep the way you look when the light turns soft.", gallery("santorini"), [
-      ["Cliffside breakfast", "Warm bread, fruit, coffee, and your sleepy face across a tiny table above the water."],
-      ["The wandering hour", "We follow narrow white lanes with no map, choosing every turn by whichever doorway has the prettiest flowers."],
-      ["A dress for sunset", "You wear something that moves in the wind. I spend the whole evening pretending the sky is what has me speechless."],
-      ["Midnight balcony", "Bare feet, one blanket, and the sound of the sea below us while we talk about the life waiting after the holiday."]
-    ], "lilac"),
-    world("Maldives, No Schedule", "a room floating on water", "Here the day has no sharp edges. The floor is warm, the water is clear, and time is measured by swims, fruit, naps, kisses, and whether your hair is still wet.", gallery("maldives"), [
-      ["Water-villa morning", "We open the curtains and the ocean is already at the door. You step outside before breakfast because waiting would be ridiculous."],
-      ["The slow swim", "No race and nowhere to reach. We float beside each other, fingers touching whenever the water drifts us apart."],
-      ["Dinner on the sand", "Lanterns, bare feet, and a table close enough to the tide that the sea keeps trying to join us."],
-      ["Stars with no city", "We lie outside after midnight and choose constellations badly. I name one Moonpie and refuse correction."]
-    ], "pearl"),
-    world("Paris After Midnight", "the city when it whispers", "Not rushed Paris. Ours begins after dinner, when the streets shine from rain and the city becomes quiet enough for our footsteps to sound like part of the music.", gallery("paris"), [
-      ["The tiny cafe", "You choose the prettier pastry. I claim I only want one bite and immediately become a liar."],
-      ["A bridge at midnight", "We stop above the river without needing a reason. The lights shake on the water and I kiss your forehead slowly."],
-      ["The tower sparkles", "I watch your face instead. Paris has had enough attention; this moment belongs to you."],
-      ["Walking home", "Our hands are cold, our feet hurt, and neither of us wants a taxi because the walk is still part of the date."]
-    ], "blush"),
-    world("Kyoto Blossom Rain", "petals in your hair", "Spring keeps letting go of pink petals around us. We walk beneath old trees, speak more quietly without deciding to, and keep finding small beautiful things tucked beside the path.", gallery("kyoto"), [
-      ["Temple morning", "We arrive before the crowds. Bells sound somewhere beyond the trees and your hand finds mine inside my coat pocket."],
-      ["Tea for two", "We sit by a paper window while steam curls between us. You taste mine. I knew you would."],
-      ["Petal weather", "A gust fills the path with blossoms. I brush one from your hair and leave the prettiest one there."],
-      ["Lantern evening", "The lanes glow gold after dark. We walk slowly because the night deserves our full attention."]
-    ], "petal"),
-    world("Zanzibar Barefoot Morning", "salt, spice, and sunlight", "The morning starts with the sea and ends somewhere inside a market full of color. Everything is warm: the sand, the bread, the air, and your shoulder against mine.", gallery("zanzibar"), [
-      ["Sunrise feet", "We walk where the water keeps erasing our footprints, leaving only the ones we are still making."],
-      ["Spice market", "We smell everything, buy too much fruit, and choose a tiny gift that will always mean this day."],
-      ["Dhow at dusk", "The sail catches the last light while the island becomes a line behind us. You lean into me when the wind rises."],
-      ["Rooftop dinner", "Music drifts up from the street. We share grilled seafood and keep stealing from each other's plates."]
-    ], "coral"),
-    world("The Swiss Window Seat", "mountains passing like cinema", "We take the slow train on purpose. Snow, lakes, villages, and green valleys move past the glass while your head rests on my shoulder and our snacks slowly disappear.", gallery("switzerland"), [
-      ["Window-seat treaty", "You get the window. I get the privilege of watching your face change every time the view becomes impossible."],
-      ["A small mountain town", "We get off without a plan, find hot chocolate, and walk until our cheeks are cold."],
-      ["The quiet carriage", "You fall asleep for twenty minutes. I stay still even when my arm complains because this is exactly where I want you."],
-      ["Lake evening", "The mountains turn violet in the water. We sit on the edge of the dock and say almost nothing."]
-    ], "mist"),
-    world("New York Winter Lights", "cold hands, warm city", "The city moves fast, so we make our own slow pocket inside it. Your scarf is too cute, my hand is your heater, and every window is dressed like it knew you were coming.", gallery("new-york"), [
-      ["Coffee rescue", "We step into the first warm cafe we see, thaw our fingers around cups, and draw tiny hearts in the fogged window."],
-      ["Bookstore hiding", "We choose one book for each other and write secret notes inside the covers."],
-      ["Lights after dark", "The whole avenue glows. You look up, and I get the ridiculous feeling the city did all this for your birthday."],
-      ["Late-night pizza", "Fancy plans end with us laughing over a slice that is too hot. Perfect."]
-    ], "winter"),
-    world("Bali Hidden Garden", "green doors and flower baths", "We disappear behind carved doors into a garden that feels invented. Water runs over stone, flowers float everywhere, and the morning smells like rain and frangipani.", gallery("bali"), [
-      ["Breakfast among leaves", "Fruit, warm pancakes, and birds that sound like they have been hired for atmosphere."],
-      ["The flower bath", "Lilies and rose petals drift around you. I sit nearby and wonder how the room is coping with this much beauty."],
-      ["Scooter road", "We move through rice fields slowly, stopping whenever the view asks us to."],
-      ["Rain on the roof", "A tropical shower keeps us inside. We make tea and let the day become softer than planned."]
-    ], "leaf"),
-    world("Cappadocia Before Sunrise", "balloons above the quiet", "We wake while the world is still dark, wrap ourselves in layers, and climb to the roof. Then color begins lifting into the sky, one balloon at a time.", gallery("cappadocia"), [
-      ["The 4:30 alarm", "We complain together, dress badly, and become instantly awake when the first balloon flame glows in the valley."],
-      ["The sky fills", "Hundreds rise in the pink morning. I stand behind you with my arms around your waist so we can watch as one shape."],
-      ["Breakfast after wonder", "Warm bread tastes better after seeing something impossible."],
-      ["Cave-room nap", "We return under thick blankets and sleep until the day forgives the early alarm."]
-    ], "sunrise"),
-    world("Venice After Rain", "reflections under every bridge", "Rain empties the lanes and polishes the stone. The city becomes silver, lilac, and gold, with little boats cutting through reflections that look painted.", gallery("venice"), [
-      ["One shared umbrella", "It is technically too small. That is fine. It keeps us close and gives us an excuse to laugh at our wet shoulders."],
-      ["Getting beautifully lost", "Every alley seems wrong until it opens beside water. Then it was obviously the right one."],
-      ["A quiet gondola", "No performance. Just the sound of the oar, rain dripping from balconies, and you leaning back against me."],
-      ["Tiramisu verdict", "We order one to share and immediately regret not ordering two."]
-    ], "rain"),
-    world("Nairobi and Diani, Our Kenya Date", "candlelight in Nairobi, bare feet in Diani", "We begin dressed up across a candlelit table in Nairobi, then trade city lights for Diani sand and two loungers facing the Indian Ocean. Home gets to feel like a holiday too.", gallery("kenya"), [
-      ["Candlelit Nairobi", "I arrive with lilies, you walk toward our table looking impossible, and dinner takes hours because neither of us wants to rush a single story."],
-      ["The road to Diani", "Your playlist is on, your hand is in mine, and the city slowly gives way to palms and that first bright line of ocean."],
-      ["Two loungers, one view", "We claim the prettiest spot by the water, order cold drinks, and let the Indian Ocean keep time for us."],
-      ["Barefoot after sunset", "We walk back along the sand with no rushed goodbye waiting at the end, only another morning together."]
-    ], "homegold"),
-    world("Seychelles Secret Cove", "granite, lilies, clear water", "We find a small curve of beach between smooth rocks and claim it for the afternoon. The water is glassy, the shade is cool, and nobody needs anything from us.", gallery("seychelles"), [
-      ["The hidden path", "We carry a towel, fruit, and too much excitement through palms until the water appears."],
-      ["A private picnic", "Mango, cold drinks, sandwiches, and sand absolutely everywhere."],
-      ["Reading beside you", "We each open a book, read three pages, then start talking again because silence with you is never an obligation."],
-      ["Last swim", "We say one more five times. The sun lowers and the water turns lavender."]
-    ], "shell"),
-    world("London Bookshop Rain", "stories, tea, and your hand", "Rain gives us permission to spend the day indoors. We move from bookshop to cafe to museum, carrying one umbrella and a growing stack of things we chose for each other.", gallery("london"), [
-      ["The note in the book", "I slip a sentence onto the title page before giving it to you: read this whenever you need another voice beside mine."],
-      ["Afternoon tea", "Tiny sandwiches become an event. You choose the prettiest cake and I support this excellent decision."],
-      ["Museum wandering", "We pick our favorite painting in every room and invent stories for the people inside them."],
-      ["Rainy bus window", "Upstairs, front seat, city lights on wet glass, your head tucked against me."]
-    ], "book"),
-    world("Rome at Golden Hour", "warm stone and slow evenings", "Rome feels sunlit even after the sun leaves. We walk between fountains and old walls, stopping for photographs, cold drinks, and kisses in streets that have seen every kind of love.", gallery("rome"), [
-      ["Morning espresso", "You make a face at how small the cup is. I make a face at how quickly you steal a sip of mine."],
-      ["A coin and a wish", "We each make one at the fountain and refuse to say it. I suspect both wishes contain the same two people."],
-      ["Pasta lesson", "Flour everywhere, serious concentration, and one shape that looks nothing like the teacher's."],
-      ["Steps after sunset", "We sit while the city glows below, tired in the happiest possible way."]
-    ], "terracotta"),
-    world("Northern Lights Cabin", "the sky learning magic", "Outside is snow and impossible color. Inside is warm wood, thick socks, soup on the stove, and a window wide enough to let the entire sky join us.", gallery("aurora"), [
-      ["Cabin afternoon", "We cook badly, dance in socks, and keep checking the sky like impatient children."],
-      ["The first green ribbon", "You call my name from the window. We run outside without enough layers because wonder has terrible planning skills."],
-      ["Under one blanket", "The lights move above us while I hold you from behind and try to remember every second accurately."],
-      ["Firelight after", "Back inside, cheeks cold, hands warm, both of us too awake to sleep."]
-    ], "aurora"),
-    world("Marrakech Lantern Night", "rose walls and amber light", "The city is color layered over sound. We wander through courtyards, tiled rooms, spice stalls, and rooftop lanterns until the night feels like a story told just to us.", gallery("marrakech"), [
-      ["Courtyard morning", "Orange juice, patterned tiles, a fountain, and sunlight moving slowly across the walls."],
-      ["Choosing a keepsake", "We search the market for one small object that will sit in our future home and remember this day for us."],
-      ["Rooftop sunset", "The call to prayer moves through the city while the sky turns dusty pink."],
-      ["Lantern dinner", "Warm bread, shared plates, cinnamon, candlelight, and your face glowing across the table."]
-    ], "amber"),
-    world("Amalfi Lemon Afternoon", "sunlight the color of joy", "The road curls above the sea and every balcony grows flowers. We spend the afternoon between lemon trees, striped umbrellas, cold drinks, and views that keep interrupting our conversation.", gallery("amalfi"), [
-      ["The coastal drive", "I pretend to focus on the road while you keep pointing out views that deserve immediate stopping."],
-      ["Lemon garden lunch", "Pasta, lemonade, shade, and the kind of long meal that resets a whole nervous system."],
-      ["The swimming stairs", "We descend too many steps, jump into clear water, and agree the climb back can be future-us's problem."],
-      ["Balcony music", "At night we leave the doors open, play something soft, and sway more than dance."]
-    ], "lemon"),
-    world("Our Tiny Kitchen", "the destination called ordinary", "This one matters as much as every passport stamp. It is our kitchen, our mugs, your things beside mine, and the quiet miracle of not needing a call to share the same room.", gallery("kitchen"), [
-      ["Sleepy coffee", "You appear wrapped in something soft while I am halfway through making your drink exactly how you like it."],
-      ["Dinner experiment", "We choose a recipe, ignore one instruction, make a mess, and eat it proudly anyway."],
-      ["Music between chores", "A song catches us while the dishes wait. We dance for one minute and let the water run."],
-      ["The refrigerator evidence", "Photos, tiny notes, a shopping list, and proof everywhere that two lives have learned to overlap."]
-    ], "cream"),
-    world("The Sunday Bedroom Fort", "rain outside, us inside", "Blankets become walls, pillows become architecture, and Sunday becomes a country with only two citizens. Nothing impressive happens. That is why I want it so much.", gallery("bedroom-fort"), [
-      ["Fort construction", "We take it far too seriously and disagree about structural pillow placement."],
-      ["The snack delivery", "Everything arrives on one tray because leaving the fort repeatedly would violate its laws."],
-      ["A movie we barely watch", "We pause to talk, rewind, get distracted, and eventually accept that the plot is not the point."],
-      ["Falling asleep nearby", "No countdown to hang up. No screen going dark. Just your breathing changing while I am still there."]
-    ], "cloud"),
-    world("Twenty-Fifth of February", "our date, made into a place", "Imagine a world where the calendar always reads 25 February. Lilies bloom in every doorway, the sky stays tender, and every path leads back to the moment we chose to call ours.", gallery("anniversary"), [
-      ["The anniversary garden", "We plant one lily for every year and leave room for the years still coming."],
-      ["Letters at noon", "We exchange one page each: what I loved this year, what I learned about you, what I promise next."],
-      ["The same song", "We play one song that belongs to us and let memory fill in the parts no recording holds."],
-      ["The next-year wish", "Before midnight we each name one ordinary thing we want to be doing together by the next 25 February."]
-    ], "anniversary")
+    world('The First Airport Hug', 'where distance finally loses',
+      'The doors slide open and every rehearsed sentence disappears. There is only you, me, the dropped bag, and the kind of hug that makes a whole year of waiting leave the body at once.',
+      'airport-hug', gallery('airport-hug'), [
+      ['The last hour of waiting', 'I get there early because of course I do. I check the arrivals board like it might change its mind about you.'],
+      ['The sighting', 'I find you in the crowd and forget how walking normally works. You smile, I laugh from pure disbelief, and the room becomes background.'],
+      ['The hug', 'Bag hits the floor. Neither of us says anything useful for a while. Somebody probably films us. Let them.'],
+      ['The first drive', 'You take the passenger seat like it was always yours. Same playlist, but louder now that you are actually in the car.'],
+      ['The first ordinary hour', 'We buy nothing important at a shop near mine. Watching you pick out snacks feels like a scene I waited a year for.'],
+      ['Putting your things down', 'Your bag opens in my room and suddenly it is our room. Your things on my shelf. I keep looking at them.'],
+      ['The first night in', 'No plans, no restaurant, nowhere to be. Just the lamp on and both of us talking until neither of us makes sense.'],
+    ]),
+    world('Santorini in Lilac Light', 'white walls, lavender sky',
+      'Whitewashed steps, a sea that never stops being blue, and a sunset that turns everything the colour of the inside of a shell. We move slowly here because there is nothing to be late for.',
+      'santorini', gallery('santorini'), [
+      ['Cliffside breakfast', 'Fruit, strong coffee, and the whole caldera doing its thing below us. You take a photo of the view. I take one of you.'],
+      ['The blue domes', 'We walk the lanes until we find the ones from every postcard, and they are somehow better in person.'],
+      ['The wandering hour', 'Narrow steps, cats asleep in doorways, no map open. We get pleasantly lost and call it exploring.'],
+      ['A swim below the cliffs', 'The water is colder than it looks and you shriek about it. Ten minutes later you refuse to get out.'],
+      ['A dress for sunset', 'You change into the one that catches the light. I run out of vocabulary and just look at you instead.'],
+      ['Dinner above the water', 'A small table, too much food, and the sky going from gold to lilac behind your head.'],
+      ['Midnight balcony', 'Everything quiet, one blanket between us, the sea black and moving somewhere down there.'],
+    ]),
+    world('Maldives, No Schedule', 'a room floating on water',
+      'Our room sits on stilts above water so clear it hardly looks real. There is nothing to do here, which is the entire point, and we get very good at it.',
+      'maldives', gallery('maldives'), [
+      ['Water-villa morning', 'You open the door straight onto the sea. There are steps down from the deck and no reason not to use them.'],
+      ['Breakfast in the water', 'Someone floats a tray of breakfast to us. It is ridiculous. We eat all of it.'],
+      ['The slow swim', 'Warm water, no current, nowhere to swim to. We float and argue gently about nothing.'],
+      ['Fish that ignore us', 'Snorkels on. A whole city of fish below carrying on with its day, entirely unbothered by us.'],
+      ['Dinner on the sand', 'A table set right on the beach, lanterns pushed into the sand, waves close enough to hear between sentences.'],
+      ['Stars with no city', 'No streetlights for a hundred miles. The sky is absurd. You go quiet, which is how I know it got you too.'],
+      ['Last swim before the flight', 'One more, quickly, still in yesterday\'s clothes. We are late because of it and neither of us minds.'],
+    ]),
+    world('Paris After Midnight', 'the city when it whispers',
+      'Not rushed Paris. Ours begins after dinner, when the streets shine from rain and the city becomes quiet enough for our footsteps to sound like part of the music.',
+      'paris', gallery('paris'), [
+      ['The tiny cafe', 'You choose the prettier pastry. I claim I only want one bite and immediately become a liar.'],
+      ['A bridge at midnight', 'We stop halfway across because you want to look at the water. The city keeps going without us.'],
+      ['The tower sparkles', 'On the hour it does the thing. You have seen it a hundred times online and still gasp. I love that about you.'],
+      ['The bookshop still open', 'A yellow window at one in the morning. We go in for two minutes and stay for forty.'],
+      ['Streets after rain', 'Everything doubled in the wet stone. You walk slower here without noticing you are doing it.'],
+      ['Walking home', 'No taxi. We choose the long way on purpose and neither of us says why.'],
+      ['The last métro we miss', 'It goes without us while we are still deciding. Good. Now the night has to keep going.'],
+    ]),
+    world('Kyoto Blossom Rain', 'petals in your hair',
+      'Spring keeps letting go of pink petals around us. We walk beneath old trees, speak more quietly without deciding to, and keep finding small beautiful things tucked beside the path.',
+      'kyoto', gallery('kyoto'), [
+      ['Temple morning', 'We arrive before the crowds. Bells sound somewhere beyond the trees and your hand finds mine inside my coat pocket.'],
+      ['The red gates', 'A tunnel of them going up the hill, further than either of us expects. We climb further than we meant to.'],
+      ['Tea for two', 'We sit by a paper window while steam curls between us. You taste mine. I knew you would.'],
+      ['Petal weather', 'A gust fills the path with blossoms. I brush one from your hair and leave the prettiest one there.'],
+      ['The bamboo hour', 'Green light, wind in the tops, the sound of a place breathing. We stop talking for a while.'],
+      ['Lantern evening', 'The lanes glow gold after dark. We walk slowly because the night deserves our full attention.'],
+      ['River, last light', 'We sit on the bank with cold drinks and watch the light leave the water.'],
+    ]),
+    world('Zanzibar Barefoot Morning', 'salt, spice, and sunlight',
+      'Warm water, warmer air, and a coast that runs on its own time. Everything smells faintly of cloves and the sea, and shoes stop being relevant almost immediately.',
+      'zanzibar', gallery('zanzibar'), [
+      ['Sunrise feet', 'The tide is far out. We walk on wet sand for what feels like a mile and the sun comes up the whole way.'],
+      ['Stone Town doors', 'Carved wooden doors on every corner, each one older than both of us. You photograph nearly all of them.'],
+      ['Spice market', 'You hold cardamom to my nose and I pretend to be an expert. We buy far too much of everything.'],
+      ['The blue hour swim', 'Bath-warm water and nobody else in it. We stay in until our fingers go strange.'],
+      ['Dhow at dusk', 'A wooden sail against an orange sky. We sit at the front and let the boat do the talking.'],
+      ['Rooftop dinner', 'Grilled fish, lime, and the call to prayer drifting over the roofs while we eat.'],
+      ['Night on the sand', 'Warm dark, no wind, the water still going in and out. We stay far later than we planned.'],
+    ]),
+    world('The Swiss Window Seat', 'mountains passing like cinema',
+      'A slow red train, a window each, and the Alps unrolling outside like something rehearsed. Neither of us gets tired of it, which is the surprising part.',
+      'switzerland', gallery('switzerland'), [
+      ['Window-seat treaty', 'We agree to swap every twenty minutes. Neither of us honours it. It works out anyway.'],
+      ['The first tunnel', 'Dark, then suddenly an entire valley. You make the same small sound every time and I wait for it.'],
+      ['A small mountain town', 'We get off somewhere unplanned because it looked pretty. It is. We eat there.'],
+      ['Lunch with a view', 'Bread, cheese, something warm, and a mountain doing nothing dramatic outside the window.'],
+      ['The quiet carriage', 'You fall asleep on my shoulder somewhere after the lake. I do not move for forty minutes.'],
+      ['Lake evening', 'Still water, mountains upside down in it, cold air that makes standing close a practical decision.'],
+      ['Late arrival', 'A small station, our breath visible, and nowhere to be until tomorrow.'],
+    ]),
+    world('Bali Hidden Garden', 'green doors and flower baths',
+      'Everything is green and quietly alive. Water runs somewhere behind the walls, flowers keep turning up in unlikely places, and afternoons here last longer than they should.',
+      'bali', gallery('bali'), [
+      ['Breakfast among leaves', 'Fruit we cannot identify, coffee we can, and the jungle doing its enormous green thing on all sides.'],
+      ['The flower bath', 'Petals across the whole surface. You are delighted. I take the photo you pretend not to want.'],
+      ['The rice terraces', 'Steps of green going down a whole hillside. We walk them badly, in the wrong shoes, laughing.'],
+      ['Scooter road', 'Your arms around me, palm shadows flicking past, both of us going far too slowly to be cool.'],
+      ['The water temple', 'Cold spring water and something serious in the air. We stop being loud without discussing it.'],
+      ['Rain on the roof', 'It arrives all at once, the way it does here. We stay put and let it be loud.'],
+      ['Fireflies after dinner', 'The garden fills with small moving lights. You whisper for no reason. So do I.'],
+    ]),
+    world('Cappadocia Before Sunrise', 'balloons above the quiet',
+      'We get up in the dark for this, and it is worth every minute of the alarm. The valley fills with colour and then with balloons, and nobody speaks above a murmur.',
+      'cappadocia', gallery('cappadocia'), [
+      ['The 4:30 alarm', 'You threaten violence. You get up anyway. Ten minutes later you are the one hurrying me.'],
+      ['The valley in the dark', 'Cold air, strange rock shapes, and the sky only just beginning to think about it.'],
+      ['The sky fills', 'First one, then ten, then more than we can count. You hold my arm without looking away.'],
+      ['Our own basket', 'Off the ground before we are ready. You go completely silent, which from you means everything.'],
+      ['Breakfast after wonder', 'Eggs, olives, bread, and neither of us able to fully stop grinning about what we just saw.'],
+      ['Cave-room nap', 'Thick stone walls, cool dark, the whole day still ahead. We sleep for two hours and regret nothing.'],
+      ['Sunset on the rocks', 'Back out for the other end of the day, the whole valley going orange and pink.'],
+    ]),
+    world('Venice After Rain', 'reflections under every bridge',
+      'The rain stops just as we arrive and the whole city turns into a mirror. Every bridge doubles, every lamp doubles, and getting lost stops being a problem to solve.',
+      'venice', gallery('venice'), [
+      ['One shared umbrella', 'It is too small for two people. We use it anyway and both get half wet.'],
+      ['Getting beautifully lost', 'The map gives up. We turn down whichever alley looks better and it always does.'],
+      ['Coffee standing up', 'Like the locals, at a counter, quickly, for a fraction of the price. You approve of this system.'],
+      ['A quiet gondola', 'Touristy and we do not care. Under a low bridge you go quiet and hold my hand tighter.'],
+      ['The square at dusk', 'Pigeons, orchestras competing from opposite cafes, and the light going pink on the water.'],
+      ['Tiramisu verdict', 'We try it in three places to be scientific. You have strong opinions. I write them down.'],
+      ['Last vaporetto', 'The city sliding past on the water, cold air, your head on my shoulder.'],
+    ]),
+    world('Nairobi and Diani, Our Kenya Date', 'candlelight in Nairobi, bare feet in Diani',
+      'Home ground, done properly. A city evening that feels like an occasion, then a coast where nothing is required of us at all.',
+      'kenya', gallery('kenya'), [
+      ['Candlelit Nairobi', 'A table booked for a Tuesday for no reason. You in that dress, and me forgetting most of my sentences.'],
+      ['The road to Diani', 'Windows down, playlist loud, the landscape changing from town to green to salt air.'],
+      ['First sight of the water', 'That specific blue that does not photograph properly. You stop walking when you see it.'],
+      ['Two loungers, one view', 'Books we do not read, drinks that sweat in the heat, hours that stop counting themselves.'],
+      ['Fresh fish, no cutlery', 'Grilled that morning, eaten with our hands at a plastic table. Best meal of the trip and we both know it.'],
+      ['Barefoot after sunset', 'Warm sand, cold water at the ankles, and the two of us walking much further than intended.'],
+      ['Night drive back', 'Windows down again, quieter now, your hand on my knee and nobody saying much.'],
+    ]),
+    world('Seychelles Secret Cove', 'granite, lilies, clear water',
+      'Enormous smooth boulders, water you can see straight through, and a beach that appears to have been left off every map on purpose.',
+      'seychelles', gallery('seychelles'), [
+      ['The hidden path', 'A gap in the trees somebody told us about. Ten minutes of scrambling and then nobody else at all.'],
+      ['The granite boulders', 'Huge, warm from the sun, shaped like something poured rather than placed.'],
+      ['A private picnic', 'Bread, cheese, mangoes, and sand in absolutely everything by the end of it.'],
+      ['Water like glass', 'You can count your toes in three feet of it. We stand around in the shallows for an hour.'],
+      ['Reading beside you', 'Two books, no talking, your foot against mine. Somehow one of my favourite hours.'],
+      ['Last swim', 'The light goes gold and we go back in for one more, because leaving felt premature.'],
+      ['The walk back in the dark', 'Phone torch, warm air, your hand because the path is uneven and also because.'],
+    ]),
+    world('London Bookshop Rain', 'stories, tea, and your hand',
+      'Grey outside and warm inside. We duck into places to get out of the rain and end up staying much longer than the weather requires.',
+      'london', gallery('london'), [
+      ['The note in the book', 'I hide one for you on a shelf in the poetry section. You find it faster than I planned.'],
+      ['Second-hand stacks', 'Towers of them, no discernible system, and the specific smell of old paper you like.'],
+      ['Afternoon tea', 'Tiny sandwiches we make fun of and then finish entirely. You take the last scone. Fair enough.'],
+      ['Museum wandering', 'Big quiet rooms, whispered opinions about paintings, and a bench we sit on for far too long.'],
+      ['The rain gets serious', 'We give up on the plan and stand in a doorway watching it come down.'],
+      ['A pub with a fire', 'Corner table, something warm, coats steaming gently. Nowhere better to be.'],
+      ['Rainy bus window', 'Top deck, front seats, the whole city sliding past behind water on the glass.'],
+    ]),
+    world('Rome at Golden Hour', 'warm stone and slow evenings',
+      'Everything here is the colour of honey by six in the evening. Old stone, small streets, and a city entirely unbothered by being this beautiful.',
+      'rome', gallery('rome'), [
+      ['Morning espresso', 'Standing at the bar, one shot, thirty seconds, out again. You take to this immediately.'],
+      ['A coin and a wish', 'Over the shoulder, eyes shut. You will not tell me what you wished for. I have theories.'],
+      ['Ruins at noon', 'Two thousand years of stone and you asking better questions than the guide answers.'],
+      ['Pasta lesson', 'Flour everywhere, dough behaving badly, and you laughing at my technique for a solid ten minutes.'],
+      ['Gelato, second one', 'We said one. We are on our second. We will probably have a third.'],
+      ['Steps after sunset', 'We sit on warm stone with everyone else and watch the sky do the pink thing over the roofs.'],
+      ['The long way to dinner', 'Through three piazzas we did not need to cross, because you wanted to keep walking.'],
+    ]),
+    world('Northern Lights Cabin', 'the sky learning magic',
+      'A small wooden cabin, snow to the windows, and a sky that might do something extraordinary tonight. We keep checking. It keeps making us wait.',
+      'aurora', gallery('aurora'), [
+      ['Cabin afternoon', 'Firewood, thick socks, and the light already going at three in the afternoon.'],
+      ['Snow walk', 'Blue light, absolute silence, and the crunch of two sets of boots.'],
+      ['The waiting game', 'Hot drinks, one eye on the window, checking a forecast neither of us understands.'],
+      ['The first green ribbon', 'You see it before me and grab my arm hard enough to hurt. Worth it.'],
+      ['Under one blanket', 'Outside, freezing, refusing to go in while the sky is still doing that.'],
+      ['Firelight after', 'Back inside, faces cold, hands wrapped around mugs, both slightly stunned.'],
+      ['Morning, all white', 'Snow on everything, sun low and pink on it, and nowhere at all we need to be.'],
+    ]),
+    world('Marrakech Lantern Night', 'rose walls and amber light',
+      'Pink walls all day and amber light all evening. The city is loud in the best way, and our courtyard is completely silent the second the door shuts.',
+      'marrakech', gallery('marrakech'), [
+      ['Courtyard morning', 'Mint tea, tiled floor, a fountain going quietly, and the whole city locked outside the door.'],
+      ['The souk', 'Narrow, crowded, gorgeous, overwhelming. You navigate it better than I do.'],
+      ['Choosing a keepsake', 'One lamp, forty minutes of deliberation, and a negotiation you conduct with total confidence.'],
+      ['The blue garden', 'Cool, green, unreasonably photogenic. We slow right down inside it.'],
+      ['Rooftop sunset', 'The whole pink city going gold, swifts everywhere, and the call to prayer starting up across it.'],
+      ['Lantern dinner', 'Amber light through cut metal, food that keeps arriving, and no interest in leaving.'],
+      ['The square at night', 'Smoke, music, a hundred things happening at once. We hold hands so as not to lose each other.'],
+    ]),
+    world('Amalfi Lemon Afternoon', 'sunlight the color of joy',
+      'Cliffs going straight into blue water, lemons the size of your hand, and a coast road that makes you gasp on every second corner.',
+      'amalfi', gallery('amalfi'), [
+      ['The coastal drive', 'Hairpins, sheer drops, and you leaning across me to see the water each time.'],
+      ['The town from above', 'Stacked pastel houses going down to a small harbour. It looks invented.'],
+      ['Lemon garden lunch', 'Pasta, lemonade, shade, and a long meal that resets a whole nervous system.'],
+      ['The swimming stairs', 'Down a hundred steps to a tiny platform on the rocks. Cold, deep, perfect water.'],
+      ['A boat for an hour', 'Out past the cliffs where the water goes properly dark blue, engine off, just floating.'],
+      ['Balcony music', 'Someone practising somewhere below, badly, sweetly, while the light goes orange on the water.'],
+      ['Limoncello, cold', 'Tiny glasses, far too sweet, and both of us pretending we are used to it.'],
+    ]),
+    world('Our Tiny Kitchen', 'the destination called ordinary',
+      'The one I actually want most. Not a view, not a flight, just a small kitchen with both of us in it and nowhere either of us has to be.',
+      'kitchen', gallery('kitchen'), [
+      ['Sleepy coffee', 'You, half awake, holding the mug with both hands. I have wanted this exact scene for a long time.'],
+      ['The grocery run', 'Arguing about which pasta shape while blocking an entire aisle. Domestic and perfect.'],
+      ['Dinner experiment', 'We follow the recipe loosely and it goes fine. You taste-test everything. Quality control.'],
+      ['Music between chores', 'Something on the speaker, you dancing badly at the sink, me pretending not to watch.'],
+      ['Eating on the floor', 'The table is covered in something else. The floor works. It always does.'],
+      ['The refrigerator evidence', 'Photos, a bad drawing, one note you left on a Tuesday that I never took down.'],
+      ['Washing up, badly', 'You wash, I dry, one of us keeps flicking water. It takes twice as long as it should.'],
+    ]),
+    world('The Sunday Bedroom Fort', 'rain outside, us inside',
+      'Rain on the window, nothing in the calendar, and a fort constructed with unnecessary seriousness. The whole day happens within about four square metres.',
+      'bedroom-fort', gallery('bedroom-fort'), [
+      ['Fort construction', 'Every blanket in the house is now structural. You are in charge. I am labour.'],
+      ['Rain on the window', 'Grey light, water running down the glass, and absolutely nowhere to be.'],
+      ['The snack delivery', 'Two trips because I am ambitious. Crumbs immediately become a permanent feature.'],
+      ['A movie we barely watch', 'Twenty minutes in, we are talking over it. Neither of us knows how it ends.'],
+      ['The nap that happens', 'Not planned. Grey light, warm blankets, both of us out for an hour and a half.'],
+      ['Small talk, big topics', 'It starts about nothing and ends somewhere serious, the way it does when there is time.'],
+      ['Falling asleep nearby', 'Lights off, rain still going, your breathing slowing down before mine does.'],
+    ]),
+    world('Twenty-Fifth of February', 'our date, made into a place',
+      'Not a country. A date, turned into somewhere we can walk around. Everything in here is built out of the day the whole thing started.',
+      'anniversary', gallery('anniversary'), [
+      ['The anniversary garden', 'Everything planted on one date and still going. It gets bigger every year without asking us.'],
+      ['Letters at noon', 'We read what we wrote a year ago. Some of it is embarrassing. All of it is true.'],
+      ['The same song', 'The one from that week. It has not improved. It never had to.'],
+      ['A cake, no occasion', 'Well, one occasion. Candles anyway, in the afternoon, for no good reason.'],
+      ['The photo we retake', 'Same pose, different year, both of us slightly different. We keep every version.'],
+      ['Counting out loud', 'Days, months, the number of times we nearly gave up and did not. The last number is zero.'],
+      ['The next-year wish', 'One each, said out loud, written down, and put somewhere for next February.'],
+    ]),
   ];
 
   const poems = [
