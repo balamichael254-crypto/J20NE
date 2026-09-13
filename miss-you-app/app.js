@@ -1619,16 +1619,19 @@ function renderPlaces() {
 // Seven labels for seven stops, so a full world maps one to one instead of
 // rounding two stops onto the same hour.
 const WORLD_DAY_ARC = ["first light", "mid morning", "late morning", "early afternoon", "golden hour", "after dark", "very late"];
-// Some of these worlds are explicitly nocturnal - Paris After Midnight opens
-// after dinner, the aurora one can't happen at noon - so running the dawn
-// arc over them produced "first light" on a world whose own name says
-// midnight. Worlds that describe themselves as night get a night arc.
+// Three of these worlds are nocturnal end to end - Paris After Midnight opens
+// after dinner, the aurora cabin can't happen at noon, Marrakech is a lantern
+// night - so the dawn arc would put "first light" on a world whose own name
+// says midnight.
+//
+// This is a list rather than a keyword test on purpose. Sniffing the prose
+// for words like "sunset" looked clever and was wrong: Santorini's intro
+// mentions a sunset, so its BREAKFAST got labelled "after dinner".
 const WORLD_NIGHT_ARC = ["after dinner", "dusk", "late evening", "near midnight", "past midnight", "the small hours", "almost dawn"];
-const WORLD_NIGHT_HINTS = /midnight|aurora|night|evening|lantern|star|moon|dusk|sunset|nocturn/i;
+const NIGHT_WORLDS = new Set(["paris", "aurora", "marrakech"]);
 
 function worldArcFor(place) {
-  const text = `${place.name} ${place.eyebrow} ${place.intro}`;
-  return WORLD_NIGHT_HINTS.test(text) ? WORLD_NIGHT_ARC : WORLD_DAY_ARC;
+  return NIGHT_WORLDS.has(place.slug) ? WORLD_NIGHT_ARC : WORLD_DAY_ARC;
 }
 
 function worldTimeLabel(place, index, total) {

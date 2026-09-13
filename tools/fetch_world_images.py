@@ -65,6 +65,18 @@ def http_json(url):
             time.sleep(1.5 * (attempt + 1))
 
 
+# Unsplash demo applications get 50 requests an hour, and each stop costs two
+# (one search, one download ping - the ping is required by their API
+# guidelines whenever an image is actually taken). 140 stops therefore cannot
+# be done in one sitting; the script stops cleanly when the budget runs out
+# and picks up where it left off next time, since finished stops are skipped.
+RATE = {"remaining": None}
+
+
+class RateLimited(Exception):
+    pass
+
+
 def unsplash(query, page_size=12):
     """Preferred source when UNSPLASH_ACCESS_KEY is set.
 
@@ -84,7 +96,16 @@ def unsplash(query, page_size=12):
         "User-Agent": UA, "Accept-Version": "v1", "Authorization": f"Client-ID {key}"})
     try:
         with urllib.request.urlopen(req, timeout=45) as r:
+            rem = r.headers.get("X-Ratelimit-Remaining")
+            if rem is not None:
+                RATE["remaining"] = int(rem)
             data = json.load(r)
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            RATE["remaining"] = 0
+            raise RateLimited("unsplash hourly limit reached")
+        print(f"      ! unsplash: {e}")
+        return []
     except Exception as e:
         print(f"      ! unsplash: {e}")
         return []
@@ -254,7 +275,10 @@ def main():
             credits = json.load(f)
 
     missing = []
+    stopped_early = False
     for slug in slugs:
+        if stopped_early:
+            break                      # budget is gone; stop, don't announce every remaining world
         name, _eyebrow, _intro, moments = WORLDS[slug]
         print(f"\n=== {slug} ({name})")
         used = set()      # photos already taken by earlier stops in this world
@@ -263,7 +287,18 @@ def main():
             if os.path.exists(dest) and not force:
                 print(f"  {i:02d} have  {title}")
                 continue
-            cands = candidates_for(query)
+            # keep a couple in hand: a stop costs a search plus a download ping
+            if RATE["remaining"] is not None and RATE["remaining"] < 3:
+                print(f"\n  hourly Unsplash budget spent at {slug}/{i:02d}. "
+                      f"Re-run later; finished stops are skipped.")
+                stopped_early = True
+                break
+            try:
+                cands = candidates_for(query)
+            except RateLimited as e:
+                print(f"\n  {e} at {slug}/{i:02d}. Re-run later.")
+                stopped_early = True
+                break
             if not cands:
                 print(f"  {i:02d} MISS  {title}  <- \"{query}\"")
                 missing.append(f"{slug}/{i:02d} {query}")
