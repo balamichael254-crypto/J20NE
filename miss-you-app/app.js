@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {} };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {}, worldPicks: {}, worldNext: "" };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -1557,6 +1557,32 @@ function renderPlaces() {
         : `${seen} of ${list.length} worlds opened together.`;
   }
 
+  // Whatever she pinned as "the one we do next" gets pulled out of the rail
+  // and shown as a plan in progress, with the stops she actually picked -
+  // so the screen has somewhere it is going, not just twenty doors.
+  const nextHost = $("#place-next");
+  if (nextHost) {
+    const pinned = list.find(place => place.name === state.worldNext);
+    if (!pinned) {
+      nextHost.innerHTML = "";
+    } else {
+      const picks = worldPicks(pinned.name);
+      const chosen = picks.slice().sort((a, b) => a - b).map(i => pinned.moments[i]).filter(Boolean);
+      nextHost.innerHTML = `
+        <article class="world-next-card" style="background-image:url('${escapeHtml(pinned.photos[0])}')">
+          <div class="world-next-inner">
+            <p class="card-label">the one we do next</p>
+            <h3>${escapeHtml(pinned.name)}</h3>
+            ${chosen.length
+              ? `<ul class="world-next-picks">${chosen.map(([title]) => `<li>${escapeHtml(title)}</li>`).join("")}</ul>`
+              : `<p class="world-next-empty">No stops picked yet. Open it and choose the ones you want.</p>`}
+            <button class="tiny-button world-next-open" type="button" data-world-portal="${list.indexOf(pinned)}">open it</button>
+          </div>
+        </article>
+      `;
+    }
+  }
+
   // A different one leads the rail each day, so the first thing she sees
   // here does not stay frozen on visit one forever.
   const day = Math.floor(Date.now() / 86400000);
@@ -1567,16 +1593,124 @@ function renderPlaces() {
     return `
     <button class="world-portal${seen ? " is-visited" : ""}${index === featuredIndex ? " is-featured" : ""}" type="button" data-world-portal="${index}">
       <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="${index < 2 ? "eager" : "lazy"}" fetchpriority="${index < 2 ? "high" : "low"}" decoding="async" width="960" height="720" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
+      <span class="portal-number">${index === featuredIndex ? "tonight&rsquo;s pick" : "world " + String(index + 1).padStart(2, "0")}</span>
       <span class="world-portal-copy">
-        <span class="portal-number">${index === featuredIndex ? "tonight&rsquo;s pick" : "world " + String(index + 1).padStart(2, "0")}</span>
         <h3>${escapeHtml(place.name)}</h3>
         <p>${escapeHtml(place.eyebrow)}</p>
-        <small>${seen ? "visited &middot; " : ""}${place.photos.length} scenes &middot; ${place.moments.length} moments</small>
+        <small>${state.worldNext === place.name ? "next up &middot; " : ""}${worldPicks(place.name).length
+          ? `${worldPicks(place.name).length} stops you picked`
+          : `a whole day, ${place.moments.length} stops`}</small>
       </span>
       ${seen ? '<span class="world-portal-check" aria-hidden="true">&#10003;</span>' : ""}
     </button>
   `;
   }).join("");
+}
+
+/* ============================================================================
+   Our Worlds. The moments in content.js already run in a day's order - Kyoto
+   opens at a temple in the morning and ends under lanterns - but they were
+   rendered as identical numbered blocks labelled "experience 01", which
+   flattened a whole day into a wall of paragraphs. These read them back as
+   what they are: an itinerary you walk down, hour by hour, with the place's
+   own photographs set into it, and every stop something she can actually
+   claim rather than only read.
+   ========================================================================= */
+const WORLD_DAY_ARC = ["first light", "late morning", "early afternoon", "golden hour", "after dark", "very late"];
+// Some of these worlds are explicitly nocturnal - Paris After Midnight opens
+// after dinner, the aurora one can't happen at noon - so running the dawn
+// arc over them produced "first light" on a world whose own name says
+// midnight. Worlds that describe themselves as night get a night arc.
+const WORLD_NIGHT_ARC = ["after dinner", "late evening", "near midnight", "the small hours", "almost dawn"];
+const WORLD_NIGHT_HINTS = /midnight|aurora|night|evening|lantern|star|moon|dusk|sunset|nocturn/i;
+
+function worldArcFor(place) {
+  const text = `${place.name} ${place.eyebrow} ${place.intro}`;
+  return WORLD_NIGHT_HINTS.test(text) ? WORLD_NIGHT_ARC : WORLD_DAY_ARC;
+}
+
+function worldTimeLabel(place, index, total) {
+  const arc = worldArcFor(place);
+  if (total <= 1) return arc[0];
+  // stretch the arc across however many moments this world happens to have,
+  // so a 3-stop day and a 6-stop day both run start to finish
+  const slot = Math.round((index / (total - 1)) * (arc.length - 1));
+  return arc[Math.min(slot, arc.length - 1)];
+}
+
+// Read-only: rendering asks for pick counts on every tile, and creating the
+// array here would write twenty empty ones into saved state just for drawing
+// the screen.
+function worldPicks(name) {
+  const picks = state.worldPicks && state.worldPicks[name];
+  return Array.isArray(picks) ? picks : [];
+}
+
+// The writable one, used only when she actually picks something
+function worldPicksMutable(name) {
+  if (!state.worldPicks || typeof state.worldPicks !== "object") state.worldPicks = {};
+  if (!Array.isArray(state.worldPicks[name])) state.worldPicks[name] = [];
+  return state.worldPicks[name];
+}
+
+function toggleWorldPick(name, momentIndex) {
+  const picks = worldPicksMutable(name);
+  const at = picks.indexOf(momentIndex);
+  if (at >= 0) picks.splice(at, 1); else picks.push(momentIndex);
+  saveState();
+  return at < 0;   // true when it was just added
+}
+
+function setWorldNext(name) {
+  state.worldNext = state.worldNext === name ? "" : name;
+  saveState();
+  return state.worldNext === name;
+}
+
+function worldMomentHtml(place, [title, text], i, total) {
+  const picked = worldPicks(place.name).includes(i);
+  // the place's two photographs are set into the day rather than stacked at
+  // the top: one near the start, one at the turn into evening
+  const photoAt = total > 2 ? Math.min(2, total - 1) : -1;
+  const photo = i === photoAt && place.photos[1]
+    ? `<img class="world-step-photo" src="${escapeHtml(place.photos[1])}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+    : "";
+  return `
+    <article class="world-step${picked ? " is-picked" : ""}">
+      <span class="world-step-time">${escapeHtml(worldTimeLabel(place, i, total))}</span>
+      <div class="world-step-body">
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(text)}</p>
+        ${photo}
+        <button class="world-pick" type="button" data-world-pick="${i}" aria-pressed="${picked}">
+          <span aria-hidden="true">${picked ? "&#9829;" : "&#9825;"}</span>${picked ? "you want this one" : "I want this one"}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function worldPickSummary(place) {
+  const n = worldPicks(place.name).length;
+  if (!n) return "Tap the stops you want most and I'll build the day around them.";
+  if (n === place.moments.length) return "You picked the whole day. Noted, and honestly, same.";
+  return `${n} of ${place.moments.length} stops picked. I'm keeping the list.`;
+}
+
+function renderWorldModalBody(place) {
+  const isNext = state.worldNext === place.name;
+  const total = place.moments.length;
+  $("#world-modal-body").innerHTML = `
+    <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
+      <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of the futures I keep imagining with you.</p></div>
+    </section>
+    <p class="world-intro">${escapeHtml(place.intro)}</p>
+    <p class="world-pick-summary" id="world-pick-summary">${escapeHtml(worldPickSummary(place))}</p>
+    <div class="world-day">${place.moments.map((m, i) => worldMomentHtml(place, m, i, total)).join("")}</div>
+    <button class="primary-btn wide world-next-btn${isNext ? " is-on" : ""}" id="world-set-next" type="button">
+      ${isNext ? "this is the one we do next" : "make this the one we do next"}
+    </button>
+  `;
 }
 
 function openFutureWorld(index) {
@@ -1585,14 +1719,32 @@ function openFutureWorld(index) {
   markWorldVisited(place.name);
   renderPlaces();
   const modal = $("#world-modal");
-  $("#world-modal-body").innerHTML = `
-    <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
-      <div><p class="card-label">${escapeHtml(place.eyebrow)}</p><h2>${escapeHtml(place.name)}</h2><p>One of the futures I keep imagining with you.</p></div>
-    </section>
-    <p class="world-intro">${escapeHtml(place.intro)}</p>
-    ${place.photos.length > 1 ? `<div class="world-gallery"><figure><img src="${escapeHtml(place.photos[1])}" alt="A second scene from ${escapeHtml(place.name)}" loading="eager" decoding="async" width="960" height="720" onerror="this.closest('figure').remove()"><figcaption>one more view from our little world</figcaption></figure></div>` : ""}
-    <div class="world-moments">${place.moments.map(([title, text], momentIndex) => `<article class="world-moment"><span>experience ${String(momentIndex + 1).padStart(2, "0")}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`).join("")}</div>
-  `;
+  renderWorldModalBody(place);
+
+  const body = $("#world-modal-body");
+  body.onclick = event => {
+    const pick = event.target.closest("[data-world-pick]");
+    if (pick) {
+      const added = toggleWorldPick(place.name, Number(pick.dataset.worldPick));
+      renderWorldModalBody(place);
+      renderPlaces();
+      if (added) {
+        const rect = pick.getBoundingClientRect();
+        burstAt(rect.left + rect.width / 2, rect.top, 5);
+      }
+      return;
+    }
+    if (event.target.closest("#world-set-next")) {
+      const on = setWorldNext(place.name);
+      renderWorldModalBody(place);
+      renderPlaces();
+      if (on) {
+        window.Poo?.react?.("excited");
+        toast(`${place.name} it is. That one's next.`);
+      }
+    }
+  };
+
   document.body.classList.add("focus-mode");
   modal.showModal();
   flowerPageTransition();
