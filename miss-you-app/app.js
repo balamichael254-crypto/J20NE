@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -512,6 +512,10 @@ function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+function rnd(min, max) {
+  return min + Math.random() * (max - min);
+}
+
 function shuffledIndexes(length, avoidFirst = -1) {
   const deck = Array.from({ length }, (_, index) => index);
   for (let i = deck.length - 1; i > 0; i--) {
@@ -645,7 +649,7 @@ function flowerPageTransition() {
 function ensureScreenRendered(name) {
   if (renderedScreens.has(name)) return;
   const renderers = {
-    garden: setupGardenTree,
+    garden: () => { setupGardenTree(); setupBouquetBuilder(); },
     letters: renderLetters,
     poems: renderPoems,
     notices: renderNotices,
@@ -1177,6 +1181,153 @@ function renderLock() {
     if (!btn) return;
     lockTurn(Number(btn.dataset.lockIndex), Number(btn.dataset.lockDir));
   });
+}
+
+/* ============================================================================
+   Build-your-own bouquet. Real pointer-drag, not a fixed photo: a tray of
+   lily cutouts she drags into a paper-wrap drop zone, repositions afterward,
+   and taps to remove - the same three gestures a real florist counter would
+   give you, done with Pointer Events so touch and mouse need no separate
+   code path. Placement persists in state.bouquetItems.
+   ========================================================================= */
+const BOUQUET_DRAG_THRESHOLD = 6; // px of movement before a touch counts as a drag, not a tap
+
+function bouquetClamp(v) { return v < -8 ? -8 : v > 108 ? 108 : v; }
+
+function bouquetPlacedNode(item) {
+  const el = document.createElement("div");
+  el.className = `bouquet-placed${item.kind === "bow" ? " bow-placed" : ""}`;
+  el.dataset.bouquetId = item.id;
+  el.style.left = `${item.x}%`;
+  el.style.top = `${item.y}%`;
+  el.style.transform = `rotate(${item.rot}deg)`;
+  el.innerHTML = item.kind === "bow" ? "&#127872;" : `<img src="${escapeHtml(item.src)}" alt="">`;
+  return el;
+}
+
+function bouquetSyncHint() {
+  const wrap = $("#bouquet-vase");
+  wrap?.classList.toggle("has-items", (state.bouquetItems || []).length > 0);
+}
+
+function bouquetAddItem(kind, src, xPercent, yPercent) {
+  const item = { id: `b${Date.now()}${(Math.random() * 1000) | 0}`, kind, src, x: bouquetClamp(xPercent), y: bouquetClamp(yPercent), rot: rnd(-14, 14) };
+  (state.bouquetItems || (state.bouquetItems = [])).push(item);
+  saveState();
+  const node = bouquetPlacedNode(item);
+  node.classList.add("placing-in");
+  $("#bouquet-vase")?.appendChild(node);
+  bouquetSyncHint();
+  bindBouquetPlacedDrag(node);
+}
+
+function bouquetRemoveItem(id) {
+  const node = $(`.bouquet-placed[data-bouquet-id="${id}"]`);
+  if (node) {
+    node.classList.add("removing");
+    setTimeout(() => node.remove(), 220);
+  }
+  state.bouquetItems = (state.bouquetItems || []).filter(i => i.id !== id);
+  saveState();
+  bouquetSyncHint();
+}
+
+function bouquetPercentFromPoint(clientX, clientY) {
+  const rect = $("#bouquet-vase").getBoundingClientRect();
+  return { x: ((clientX - rect.left) / rect.width) * 100, y: ((clientY - rect.top) / rect.height) * 100 };
+}
+
+function bouquetPointInVase(clientX, clientY) {
+  const rect = $("#bouquet-vase")?.getBoundingClientRect();
+  if (!rect) return false;
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+// Dragging an existing stem: move it live while the pointer is down, but
+// only if it actually moved - a plain tap removes it instead, so the same
+// gesture set works for both "rearrange" and "take it back out."
+function bindBouquetPlacedDrag(node) {
+  node.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    const id = node.dataset.bouquetId;
+    const startX = event.clientX, startY = event.clientY;
+    let moved = false;
+    // capture can fail on older mobile webviews (and, harmlessly, on
+    // synthetic pointer events) - without the try/catch that failure was
+    // uncaught and skipped attaching the move/up listeners entirely, which
+    // silently broke both dragging and tap-to-remove at once
+    try { node.setPointerCapture(event.pointerId); } catch { /* fall through - listeners below still work without capture */ }
+
+    const onMove = moveEvent => {
+      const dx = moveEvent.clientX - startX, dy = moveEvent.clientY - startY;
+      if (!moved && Math.hypot(dx, dy) > BOUQUET_DRAG_THRESHOLD) { moved = true; node.classList.add("dragging"); }
+      if (!moved) return;
+      const pos = bouquetPercentFromPoint(moveEvent.clientX, moveEvent.clientY);
+      node.style.left = `${bouquetClamp(pos.x)}%`;
+      node.style.top = `${bouquetClamp(pos.y)}%`;
+    };
+    const onUp = upEvent => {
+      node.removeEventListener("pointermove", onMove);
+      node.removeEventListener("pointerup", onUp);
+      node.classList.remove("dragging");
+      if (moved) {
+        const pos = bouquetPercentFromPoint(upEvent.clientX, upEvent.clientY);
+        const item = (state.bouquetItems || []).find(i => i.id === id);
+        if (item) { item.x = bouquetClamp(pos.x); item.y = bouquetClamp(pos.y); saveState(); }
+      } else {
+        bouquetRemoveItem(id);
+      }
+    };
+    node.addEventListener("pointermove", onMove);
+    node.addEventListener("pointerup", onUp);
+  });
+}
+
+// Dragging a fresh pick out of the tray: it does not become a real placed
+// item until it is actually released over the wrap - released anywhere else
+// and it simply never existed, no half-added state to clean up.
+function bindBouquetTrayPick(button) {
+  button.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    const kind = button.dataset.bouquetKind;
+    const src = button.dataset.bouquetSrc;
+    const ghost = document.createElement("div");
+    ghost.className = `bouquet-ghost${kind === "bow" ? " bow-ghost" : ""}`;
+    ghost.innerHTML = kind === "bow" ? "&#127872;" : `<img src="${escapeHtml(src)}" alt="">`;
+    document.body.appendChild(ghost);
+    const moveGhost = (x, y) => { ghost.style.left = `${x - 30}px`; ghost.style.top = `${y - 30}px`; };
+    moveGhost(event.clientX, event.clientY);
+    try { button.setPointerCapture(event.pointerId); } catch { /* see the matching note in bindBouquetPlacedDrag */ }
+
+    const onMove = moveEvent => moveGhost(moveEvent.clientX, moveEvent.clientY);
+    const onUp = upEvent => {
+      button.removeEventListener("pointermove", onMove);
+      button.removeEventListener("pointerup", onUp);
+      ghost.remove();
+      if (bouquetPointInVase(upEvent.clientX, upEvent.clientY)) {
+        const pos = bouquetPercentFromPoint(upEvent.clientX, upEvent.clientY);
+        bouquetAddItem(kind, src, pos.x, pos.y);
+      }
+    };
+    button.addEventListener("pointermove", onMove);
+    button.addEventListener("pointerup", onUp);
+  });
+}
+
+function setupBouquetBuilder() {
+  const vase = $("#bouquet-vase");
+  if (!vase) return;
+  $$(".bouquet-pick").forEach(bindBouquetTrayPick);
+  $("#bouquet-clear")?.addEventListener("click", () => {
+    (state.bouquetItems || []).slice().forEach(item => bouquetRemoveItem(item.id));
+  });
+  // hydrate whatever she left here last time
+  (state.bouquetItems || []).forEach(item => {
+    const node = bouquetPlacedNode(item);
+    vase.appendChild(node);
+    bindBouquetPlacedDrag(node);
+  });
+  bouquetSyncHint();
 }
 
 /* ============================================================================

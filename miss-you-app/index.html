@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=103">
+  <link rel="stylesheet" href="./styles.css?v=105">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -257,12 +257,50 @@
             <button class="seed-heart" id="seed-heart" type="button" aria-label="bloom tree">&#9829;</button>
           </div>
         </article>
-        <article class="bouquet-card premium-card">
-          <img class="bouquet-img" src="./assets/flowers/bouquet-cutout.webp" alt="A bouquet of pink lilies and roses">
-          <div>
-            <p class="card-label">real flowers</p>
-            <h3>For you, Moonpie.</h3>
-            <p id="bouquet-copy">Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
+        <!-- A real drag-and-drop builder, not a static photo of a bouquet -
+             every lily below is draggable (pointer events, so touch and
+             mouse both just work) and where she leaves them is saved. -->
+        <article class="bouquet-card premium-card bouquet-builder-card">
+          <div class="section-row">
+            <div>
+              <p class="card-label">build it yourself</p>
+              <h3>Wrap me a bouquet.</h3>
+            </div>
+            <button class="tiny-button" id="bouquet-clear" type="button">clear the wrap</button>
+          </div>
+          <p>Drag as many lilies as you want into the wrap, tap one to take it back out. I will keep it exactly how you leave it.</p>
+
+          <div class="bouquet-builder" id="bouquet-builder">
+            <div class="bouquet-wrap-shape" id="bouquet-vase" aria-label="drop lilies here to build your bouquet">
+              <div class="bouquet-ribbon" aria-hidden="true"><span>&#127872;</span></div>
+              <p class="bouquet-vase-hint" id="bouquet-vase-hint">drag lilies here</p>
+            </div>
+            <div class="bouquet-tray" id="bouquet-tray" role="group" aria-label="flowers to drag into the wrap">
+            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily">
+              <img src="./assets/flowers/lily-3.webp" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily">
+              <img src="./assets/flowers/lily-5.webp" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/rose-icon.svg" type="button" aria-label="add a rose">
+              <img src="./assets/flowers/rose-icon.svg" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/tulip-icon.svg" type="button" aria-label="add a tulip">
+              <img src="./assets/flowers/tulip-icon.svg" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/sunflower-icon.svg" type="button" aria-label="add a sunflower">
+              <img src="./assets/flowers/sunflower-icon.svg" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="orchid" data-bouquet-src="./assets/flowers/orchid-icon.svg" type="button" aria-label="add an orchid">
+              <img src="./assets/flowers/orchid-icon.svg" alt="">
+            </button>
+            <button class="bouquet-pick" data-bouquet-kind="blossom" data-bouquet-src="./assets/flowers/cherry-blossom-icon.svg" type="button" aria-label="add a cherry blossom">
+              <img src="./assets/flowers/cherry-blossom-icon.svg" alt="">
+            </button>
+              <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow">
+                <span>&#127872;</span>
+              </button>
+            </div>
           </div>
         </article>
 
@@ -826,7 +864,7 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=62"></script>
+  <script src="./app.js?v=64"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=2"></script>
