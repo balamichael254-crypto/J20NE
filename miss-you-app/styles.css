@@ -888,7 +888,9 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
   color:#fff;font-size:1.4rem;line-height:1;box-shadow:0 8px 0 -3px rgba(232,85,120,.3);
 }
 .bouquet-card{display:flex;gap:15px;align-items:center}
-.bouquet-img{width:120px;flex:none;filter:drop-shadow(0 10px 18px rgba(111,72,176,.26))}
+/* the builder replaced the old photo-plus-caption layout with a full-width
+   drop zone and tray, so it opts back out of that side-by-side flex row */
+.bouquet-builder-card{display:block}
 
 .rose-card{display:flex;gap:15px;align-items:center}
 .rose-photo{width:112px;height:112px;flex:none;object-fit:cover;border-radius:var(--r);border:3px solid var(--edge);box-shadow:var(--sh)}
@@ -1638,3 +1640,74 @@ body[data-world="vault"] .poo-companion{display:none}
 .galaxy-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .galaxy-wish{max-width:320px}
 .galaxy-hint{margin:0;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
+
+/* ==========================================================================
+   Build-your-own bouquet. A drop zone shaped like a paper wrap cone (a
+   clip-path trapezoid, not a photo of a bouquet with more flowers dragged
+   on top of it, which would just look cluttered), a ribbon band near the
+   base, and a tray of real lily cutouts that drag in with pointer events -
+   the same API for touch and mouse, so nothing extra is needed for phones.
+   ========================================================================== */
+.bouquet-builder{display:flex;flex-direction:column;gap:16px;margin-top:6px}
+
+.bouquet-wrap-shape{
+  position:relative;width:100%;height:230px;
+  clip-path:polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+  background:
+    repeating-linear-gradient(58deg,rgba(255,255,255,.5) 0 5px,rgba(255,255,255,0) 5px 11px),
+    linear-gradient(165deg,#f3e6c8 0%,#e2c896 55%,#c9a870 100%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.4);
+  overflow:visible;touch-action:none;
+}
+.bouquet-ribbon{
+  position:absolute;left:0;right:0;bottom:26%;height:30px;
+  background:linear-gradient(180deg,var(--pink-hot),var(--red));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+.bouquet-ribbon span{font-size:1.1rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.bouquet-vase-hint{
+  position:absolute;top:14px;left:0;right:0;text-align:center;margin:0;
+  font-size:.78rem;font-weight:700;color:rgba(80,50,20,.5);pointer-events:none;
+  transition:opacity .25s;
+}
+.bouquet-wrap-shape.has-items .bouquet-vase-hint{opacity:0}
+
+/* placed stems: absolutely positioned within the wrap by percentage, so
+   they hold their spot regardless of viewport width */
+.bouquet-placed{
+  position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;
+  cursor:grab;touch-action:none;filter:drop-shadow(0 4px 8px rgba(60,30,10,.25));
+  transition:filter .15s;
+}
+.bouquet-placed img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.bouquet-placed.bow-placed{
+  display:grid;place-items:center;font-size:2rem;width:52px;height:52px;margin:-26px 0 0 -26px;
+}
+.bouquet-placed.dragging{cursor:grabbing;filter:drop-shadow(0 10px 16px rgba(60,30,10,.35));z-index:50!important}
+.bouquet-placed.placing-in{animation:bouquetDrop .28s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes bouquetDrop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+.bouquet-placed.removing{animation:bouquetPoof .22s ease-out forwards}
+@keyframes bouquetPoof{to{transform:scale(0.2) rotate(20deg);opacity:0}}
+
+.bouquet-tray{
+  display:flex;flex-wrap:wrap;gap:9px;padding:10px;border-radius:var(--r-lg);
+  background:rgba(255,255,255,.55);border:2px dashed rgba(168,130,224,.35);
+}
+.bouquet-pick{
+  width:50px;height:50px;border-radius:12px;cursor:grab;touch-action:none;
+  border:2px solid var(--edge);background:#fff;display:grid;place-items:center;
+  box-shadow:var(--sh-sm);transition:transform .15s;
+}
+.bouquet-pick img{width:80%;height:80%;object-fit:contain;pointer-events:none}
+.bouquet-pick:active{transform:scale(.92)}
+.bouquet-pick-bow{font-size:1.5rem}
+
+/* the ghost that follows the finger while dragging a fresh pick out of the
+   tray, before it has actually been dropped into the wrap yet */
+.bouquet-ghost{
+  position:fixed;z-index:400;width:60px;height:60px;pointer-events:none;
+  opacity:.92;filter:drop-shadow(0 8px 14px rgba(0,0,0,.3));
+}
+.bouquet-ghost img{width:100%;height:100%;object-fit:contain}
+.bouquet-ghost.bow-ghost{display:grid;place-items:center;font-size:2.1rem}

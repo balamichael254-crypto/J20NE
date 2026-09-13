@@ -42,3 +42,21 @@ Each file is traceable back to its source page at
 from `assets/lily-sprites.png` and `assets/lily-bouquet.png`, which already
 lived in this repository. They keep their alpha channel and are used for petal
 fall, confetti and decorative accents.
+
+## Vector flowers (bouquet builder)
+
+The lily photographs above are real photography, but a drag-and-drop bouquet
+builder needs individual, transparent, stem-shaped art per flower, and the
+only transparent cutouts on hand were six crops of the same lily. Rather than
+ship a builder where every "different flower" is the same species, five real
+additional species were sourced as public-domain (CC0) vector illustrations
+from Wikimedia Commons - each is traceable back to its own file history at
+`https://commons.wikimedia.org/wiki/File:<name>`.
+
+| File | Source Commons title | Licence |
+|---|---|---|
+| rose-icon.svg | RedRose2.svg | CC0 |
+| sunflower-icon.svg | Sunflower_clip_art.svg | CC0 |
+| tulip-icon.svg | Tulpe_tultip.svg | CC0 |
+| orchid-icon.svg | Orchid.svg | CC0 |
+| cherry-blossom-icon.svg | Cherry_blossom.svg | CC0 |
