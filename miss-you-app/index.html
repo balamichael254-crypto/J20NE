@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=102">
+  <link rel="stylesheet" href="./styles.css?v=103">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -425,6 +425,25 @@
         </div>
       </section>
 
+      <!-- A real particle system (see galaxy.js), not a looping video -
+           a canvas mounted fresh each visit, an orbiting nebula of drifting
+           light and a handful of words, and a button that sends every one
+           of those particles flying into the shape of real sampled letters. -->
+      <section class="screen world-screen screen-galaxy" id="screen-galaxy" aria-label="our galaxy">
+        <div class="section-head">
+          <p class="eyebrow">a little universe, just ours</p>
+          <h2>Our Galaxy</h2>
+          <p>Somewhere in all that drifting light, there is a wish waiting to land.</p>
+          <img class="head-charm" src="./assets/mood/moon-sky-2.webp" alt="">
+        </div>
+
+        <div class="galaxy-frame">
+          <div class="galaxy-stage" id="galaxy-stage"></div>
+          <button class="primary-btn wide galaxy-wish" id="galaxy-wish" type="button">make a wish</button>
+          <p class="galaxy-hint">tap it, then just watch</p>
+        </div>
+      </section>
+
       <section class="screen world-screen" id="screen-games" aria-label="games">
         <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>I made you a few tiny games for the moments you want something sweet to tap while you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
         <!-- The three real games. Each module owns its own DOM inside
@@ -807,8 +826,9 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=61"></script>
+  <script src="./app.js?v=62"></script>
   <script src="./bloom.js?v=5"></script>
+  <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>
   <script src="./games/sudoku.js?v=2"></script>
