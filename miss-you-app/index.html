@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=86">
+  <link rel="stylesheet" href="./styles.css?v=91">
   <link rel="stylesheet" href="./poo.css?v=6">
 </head>
 <body class="app-locked">
@@ -69,11 +69,14 @@
        glued onto a page and the page actually being a place - a small corner
        thumbnail reads as decoration, a wall of soft out-of-focus lilies you
        feel like you're standing inside reads as a scene. -->
+  <div class="paper-ground" aria-hidden="true"></div>
+  <div class="paper-wash" aria-hidden="true"></div>
   <div class="scene-bg" id="scene-bg" aria-hidden="true">
     <div class="scene-layer scene-garden">
-      <img class="scene-bloom bloom-a" src="./assets/flowers/lily-drama.webp" alt="">
-      <img class="scene-bloom bloom-b" src="./assets/flowers/hero-lily.webp" alt="">
-      <img class="scene-bloom bloom-c" src="./assets/flowers/lily-night-2.webp" alt="">
+      <img class="scene-bloom bloom-far" src="./assets/flowers/bloom-sprig.webp" alt="" decoding="async">
+      <img class="scene-bloom bloom-tl" src="./assets/flowers/corner-bloom-tl.webp" alt="" fetchpriority="high">
+      <img class="scene-bloom bloom-br" src="./assets/flowers/corner-bloom-br.webp" alt="" decoding="async">
+      <div class="garden-veil"></div>
     </div>
     <div class="scene-layer scene-space">
       <div class="starfield"></div>
@@ -135,18 +138,22 @@
 
         <div class="quick-row" aria-label="quick ways in">
           <button class="quick-tile q-letters" data-open="letters" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-1.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">💌</span>
             <b>Letters</b><small>16 waiting for you</small>
           </button>
           <button class="quick-tile q-worlds" data-open="places" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-3.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🌍</span>
             <b>Our worlds</b><small>20 places to go</small>
           </button>
           <button class="quick-tile q-care" data-open="care" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-5.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🫶</span>
             <b>Come here</b><small>when it&rsquo;s heavy</small>
           </button>
           <button class="quick-tile q-gifts" data-open="birthday" type="button">
+            <img class="qbloom" src="./assets/flowers/lily-2.webp" alt="" aria-hidden="true" decoding="async">
             <span class="qi" aria-hidden="true">🎁</span>
             <b>Little gifts</b><small>open one today</small>
           </button>
@@ -492,6 +499,25 @@
             </div>
           </div>
         </div>
+
+          <!-- The Us hub: everything that is about the two of us specifically,
+               as opposed to Atlas, which is things to do. Populated by
+               renderAtlas() from the worlds entries tagged section:"us". -->
+          <div class="us-hub">
+            <p class="card-label us-hub-label">ours to keep</p>
+            <!-- Our Eyes Only lives in Us, not Care: Care is for reaching
+                 for each other, Us is for what the two of us already hold. -->
+            <button class="premium-card vault-entry" data-open="vault" type="button">
+              <span class="vault-entry-mark" aria-hidden="true">🔒</span>
+              <span>
+                <b>Our Eyes Only</b>
+                <small>encrypted, just for the two of us</small>
+              </span>
+              <span class="vault-entry-go" aria-hidden="true">→</span>
+            </button>
+            <div class="atlas-grid" id="us-grid"></div>
+          </div>
+
       </section>
 
       <section class="screen" id="screen-vault" aria-label="our eyes only">
@@ -569,15 +595,6 @@
 
       <section class="screen" id="screen-care" aria-label="care">
         <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>You do not have to scroll around hoping to find the right comfort. Tell me what kind of moment this is and let me meet you there.</p></div>
-        <button class="premium-card vault-entry" data-open="vault" type="button">
-          <span class="vault-entry-mark" aria-hidden="true">🔒</span>
-          <span>
-            <b>Our Eyes Only</b>
-            <small>encrypted, just for the two of us</small>
-          </span>
-          <span class="vault-entry-go" aria-hidden="true">→</span>
-        </button>
-
         <article class="care-checkin premium-card">
           <p class="card-label">what does your heart need?</p>
           <div class="care-modes">
@@ -620,26 +637,28 @@
       </section>
     </main>
 
+    <!-- Four main pages, on purpose: Home (land here), Atlas (every browsable
+         feature - letters, games, songs, all of it), Care (the real-time
+         "she misses him right now" loop), Us (the shared/private relationship
+         space - vault, memories, garden, distance). Poo lost her own tab; she
+         still roams every screen and opens her room on tap, same as before -
+         a 5th tab just for her didn't fit "four main pages". -->
     <nav class="tabbar" aria-label="main navigation">
       <button class="tab active" data-open="home" type="button" aria-label="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.2 12 3.5l9 6.7V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
         <span>home</span>
       </button>
-      <button class="tab" data-open="letters" type="button" aria-label="letters">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3 7 8.1 5.6a1.6 1.6 0 0 0 1.8 0L21 7"/></svg>
-        <span>letters</span>
+      <button class="tab" data-open="atlas" type="button" aria-label="atlas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m12 6 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/></svg>
+        <span>atlas</span>
       </button>
-      <button class="tab tab-poo" data-poo type="button" aria-label="Poo, your companion">
-        <img src="./assets/poo/rig/neutral_body.png" alt="" aria-hidden="true">
-        <span>poo</span>
-      </button>
-      <button class="tab" data-open="places" type="button" aria-label="our worlds">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.2 9.5h17.6M3.2 14.5h17.6"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></svg>
-        <span>worlds</span>
-      </button>
-      <button class="tab" data-open="care" type="button" aria-label="just us">
+      <button class="tab" data-open="care" type="button" aria-label="care">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.6-4.6-9.2-9.4A5.1 5.1 0 0 1 12 7.2a5.1 5.1 0 0 1 9.2 3.9c-1.6 4.8-9.2 9.4-9.2 9.4Z"/></svg>
-        <span>just us</span>
+        <span>care</span>
+      </button>
+      <button class="tab" data-open="us" type="button" aria-label="us">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="6.2"/><circle cx="15" cy="12" r="6.2"/></svg>
+        <span>us</span>
       </button>
     </nav>
   </div>
@@ -659,7 +678,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./content.js?v=43"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=50"></script>
+  <script src="./app.js?v=51"></script>
   <script src="./bloom.js?v=3"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>

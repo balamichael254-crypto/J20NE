@@ -28,23 +28,28 @@ const screenHistory = [];
 const renderedScreens = new Set(["home", "atlas"]);
 let widgetSyncStarted = false;
 
+// `section` decides which hub grid a room shows up in - "atlas" for anything
+// browsable/playable (letters, games, content), "us" for the shared/private
+// relationship space (vault, memories, garden, distance, gifts). Care and
+// Home aren't listed here at all: they're main tabs in their own right now,
+// not tiles inside another hub. See the tabbar in index.html for the four
+// main pages this maps onto.
 const worlds = [
-  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden", photo: "./assets/flowers/hero-lily.webp" },
-  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter", photo: "./assets/mood/notebook-4.webp" },
-  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem", photo: "./assets/mood/moon-sky-1.webp" },
-  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice", photo: "./assets/mood/jar-note-4.webp" },
-  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day", photo: "./assets/mood/bunny-morning-hero.webp" },
-  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place", photo: "./assets/worlds/santorini-1.webp" },
-  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song", photo: "./assets/mood/vinyl-2.webp" },
-  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise", photo: "./assets/mood/bunny-lily-4.webp" },
-  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance", photo: "./assets/mood/moon-back-4.webp" },
-  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason", photo: "./assets/mood/bunny-glow-4.webp" },
-  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory", photo: "./assets/mood/polaroid-2.webp" },
-  { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp" },
-  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp" },
-  { id: "games", icon: "🎮", title: "Love Arcade", sub: "tap tiny feelings", count: 6, tone: "game", photo: "./assets/mood/drink-4.webp" },
-  { id: "care", icon: "🫶", title: "Emergency Care", sub: "when missing gets heavy", count: 5, tone: "care", photo: "./assets/mood/bunny-loveheart-hero.webp" },
-  { id: "us", icon: "💞", title: "Us", sub: "a heart, a lantern, our numbers", count: 3, tone: "us", photo: "./assets/worlds/anniversary-1.webp" }
+  { id: "garden", icon: "🌸", title: "Love Garden", sub: "tree, lilies, bouquet", count: 3, tone: "garden", photo: "./assets/flowers/hero-lily.webp", section: "us" },
+  { id: "letters", icon: "💌", title: "Letters", sub: "open one slowly", count: 10, tone: "letter", photo: "./assets/mood/notebook-4.webp", section: "atlas" },
+  { id: "poems", icon: "🪷", title: "Poems", sub: "written after midnight", count: 5, tone: "poem", photo: "./assets/mood/moon-sky-1.webp", section: "atlas" },
+  { id: "notices", icon: "🗒️", title: "Tiny Things", sub: "I notice everything", count: 12, tone: "notice", photo: "./assets/mood/jar-note-4.webp", section: "atlas" },
+  { id: "day", icon: "☀️", title: "One Perfect Day", sub: "come live it with me", count: 8, tone: "day", photo: "./assets/mood/bunny-morning-hero.webp", section: "atlas" },
+  { id: "places", icon: "🌍", title: "Our Worlds", sub: "places waiting for us", count: 12, tone: "place", photo: "./assets/worlds/santorini-1.webp", section: "atlas" },
+  { id: "songs", icon: "🎵", title: "Songs That Are You", sub: "listen while you read", count: 7, tone: "song", photo: "./assets/mood/vinyl-2.webp", section: "atlas" },
+  { id: "promises", icon: "🌸", title: "Promises", sub: "kept here for you", count: 9, tone: "promise", photo: "./assets/mood/bunny-lily-4.webp", section: "atlas" },
+  { id: "distance", icon: "🛰️", title: "While Apart", sub: "two dots, one thread", count: 6, tone: "distance", photo: "./assets/mood/moon-back-4.webp", section: "us" },
+  { id: "reasons", icon: "💗", title: "100 Reasons", sub: "pluck one from the sky", count: 100, tone: "reason", photo: "./assets/mood/bunny-glow-4.webp", section: "atlas" },
+  { id: "memory", icon: "📸", title: "Our Little World", sub: "the bits I keep", count: 9, tone: "memory", photo: "./assets/mood/polaroid-2.webp", section: "us" },
+  { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp", section: "us" },
+  { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp", section: "atlas" },
+  { id: "games", icon: "🎮", title: "Love Arcade", sub: "arcade, sudoku, puzzles", count: 9, tone: "game", photo: "./assets/mood/drink-4.webp", section: "atlas" },
+  { id: "watchlist", icon: "🎬", title: "Watchlist", sub: "movies for both of us", count: 60, tone: "watchlist", photo: "./assets/mood/bunny-sleep-1.webp", section: "atlas" }
 ];
 
 const comfortNotes = {
@@ -90,13 +95,13 @@ const letters = [
     preview: "The one I wrote before the pretty ones, so it sits where you cannot miss it.",
     salutation: "My Princess,",
     body: [
-      "I am putting this one at the top so it is the first thing you find. Life is going to get loud. It already is getting loud. There will be stretches where I am tired in a way that makes me go quiet, where work swallows me whole, where something I planned falls apart and I have to start it again from nothing. I want to say this now, while things are calm enough for me to say it properly. None of that has anything to do with how I feel about you.",
-      "On the worst day I will still want you. People think love softens under pressure. Mine gets sharper. When everything else is uncertain you are the one thing I am sure of, and I will keep choosing you every morning on purpose, like it is the first decision of my day and the only one I never get wrong.",
-      "I am not going anywhere from the rest of it either. Years from now I want to still lose my train of thought because you walked past me in one of my shirts. I want to still put my hand on the back of your neck and feel you go quiet for me. I want your voice in the dark saying my name like it belongs to you, because it does. I am going to keep learning you. I am going to keep finding new ways to take you apart slowly on an ordinary Tuesday, for no reason at all except that I can.",
-      "And when the chaos does come, when we are exhausted and unglamorous and arguing about something stupid, you are still mine. You are still Daddy's little Princess. That does not expire and you never have to earn it back. You do not have to be sweet, or easy, or okay. Come to me messy. Come to me angry. Come to me needing far too much. I will be standing right there with my hands open.",
-      "I will not do this perfectly. I will get it wrong sometimes and have to come back and fix it, and I will come back every time. That is the whole promise, babyy. I keep trying, and when I fail you I try again, and I pick you, and then I pick you again."
+      "I am putting this one at the top so it is the first thing you find. We are both about to start college, both about to get busier than we have ever been. New schedules, new pressure, new people, new versions of ourselves we have not met yet. I know some days there will barely be room to breathe, let alone talk. I want to say this now, while things are still calm enough for me to say it properly, so it is already true before the chaos gets here.",
+      "This is a vow, not just a nice sentence. Whatever college throws at me, whatever it costs to keep up, I am choosing you. Not once. Every single day, on purpose, like it is the first decision I make when I wake up. When I am exhausted and behind on everything and have nothing impressive to offer you that day, I am still choosing you. That part does not move.",
+      "I will still try, even on the days trying is hard. If I get distracted by deadlines and disappear for a bit, I will come back. If I get something wrong, I will notice and fix it instead of pretending I did not. I am not promising I will be perfect at this. I am promising I will keep showing up for it, semester after semester, until showing up for you is just the shape of my life.",
+      "And whatever else changes, you are still Daddy's little Princess. That is not something you have to earn back after a bad week or a missed call. It does not expire because we are both tired or both far away or both drowning in coursework. Come to me stressed. Come to me behind on sleep. Come to me needing more than you think you are allowed to need. I am still right here, choosing you.",
+      "So this is me, before either of our schedules gets impossible, telling you exactly where I stand. Busy is not the same as gone. Tired is not the same as done. I am choosing you today, and I am going to keep choosing you, long after the two of us stop counting."
     ],
-    closing: "Still yours. On the loud days most of all."
+    closing: "Still choosing you. Every single day of it."
   },
   {
     title: "Every Night With You",
@@ -707,8 +712,8 @@ function applyHeroScene() {
   $("#hero-line").textContent = scene.line;
 }
 
-function renderAtlas() {
-  const html = worlds.map((world, i) => `
+function worldTileHtml(world, i) {
+  return `
     <button class="world-tile tone-${world.tone}" data-open="${world.id}" type="button" style="--i:${i};background-image:url('${world.photo}')">
       <span class="world-icon">${world.icon}</span>
       <span class="world-copy">
@@ -717,9 +722,17 @@ function renderAtlas() {
       </span>
       <span class="world-count">${world.count}</span>
     </button>
-  `).join("");
-  $("#home-worlds").innerHTML = html;
-  $("#atlas-grid").innerHTML = html;
+  `;
+}
+
+function renderAtlas() {
+  // Home gets a preview of every room regardless of which hub it lives in;
+  // Atlas and Us each only show their own section - that split is the whole
+  // point of having two hubs instead of one long list.
+  $("#home-worlds").innerHTML = worlds.map(worldTileHtml).join("");
+  $("#atlas-grid").innerHTML = worlds.filter(w => w.section === "atlas").map(worldTileHtml).join("");
+  const usGrid = $("#us-grid");
+  if (usGrid) usGrid.innerHTML = worlds.filter(w => w.section === "us").map(worldTileHtml).join("");
 }
 
 function escapeHtml(value) {
