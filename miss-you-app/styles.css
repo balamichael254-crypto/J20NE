@@ -862,12 +862,37 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 .timeline-row{position:relative;padding-left:40px}
 .timeline-row::before{content:"";position:absolute;left:16px;top:21px;width:10px;height:10px;border-radius:50%;background:var(--pink-hot);box-shadow:0 0 0 4px rgba(245,109,168,.22)}
 
-.distance-globe{text-align:center;padding:26px 20px}
-.orbit-dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin:0 7px}
-.orbit-dot.one{background:var(--pink-hot);box-shadow:0 0 0 5px rgba(245,109,168,.2)}
-.orbit-dot.two{background:var(--lav-500);box-shadow:0 0 0 5px rgba(160,121,226,.2)}
-.orbit-line{height:3px;margin:15px auto;width:60%;background:linear-gradient(90deg,var(--pink-hot),var(--lav-500));border-radius:3px;opacity:.55}
-.distance-globe p{font-family:"Baloo",sans-serif;font-weight:600;font-size:1.16rem;color:var(--ink)}
+/* the signal thread - a real thread you pull, not decoration: two labeled
+   dots, a line between them, and a pulse that actually travels across it
+   every time the button is pressed */
+.signal-card{text-align:center;padding:28px 20px 24px}
+.signal-thread{position:relative;height:34px;margin:0 auto 16px;width:min(100%,300px)}
+.signal-thread::before{
+  content:"";position:absolute;top:50%;left:15px;right:15px;height:3px;translate:0 -50%;
+  background:linear-gradient(90deg,var(--pink-hot),var(--lav-500));border-radius:3px;opacity:.5;
+}
+.signal-dot{
+  position:absolute;top:50%;translate:0 -50%;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;font-size:.62rem;font-weight:800;color:#fff;
+  text-transform:uppercase;letter-spacing:.03em;
+}
+.signal-dot-you{left:0;background:radial-gradient(circle at 32% 28%,#ffcfe6,var(--pink-hot) 70%);box-shadow:0 0 0 5px rgba(245,109,168,.2)}
+.signal-dot-me{right:0;background:radial-gradient(circle at 32% 28%,#e6d6ff,var(--lav-500) 70%);box-shadow:0 0 0 5px rgba(160,121,226,.2)}
+.signal-pulse{
+  position:absolute;top:50%;left:17px;width:10px;height:10px;border-radius:50%;
+  translate:0 -50%;background:#fff;box-shadow:0 0 8px 2px rgba(255,255,255,.9);opacity:0;
+}
+.signal-pulse.firing{animation:signalTravel 1.1s cubic-bezier(.3,.7,.3,1)}
+@keyframes signalTravel{
+  0%{opacity:1;left:17px}
+  92%{opacity:1}
+  100%{opacity:0;left:calc(100% - 27px)}
+}
+.signal-caption{font-family:"Baloo",sans-serif;font-weight:600;font-size:1.1rem;color:var(--ink);margin:0 0 16px}
+.signal-count{margin:12px 0 0;font-size:.78rem;font-weight:700;color:var(--ink-faint)}
+@media (prefers-reduced-motion:reduce){
+  .signal-pulse.firing{animation:none;opacity:1;left:calc(100% - 27px);transition:left 1s linear,opacity .3s linear 1s}
+}
 
 /* --------------------------------------------------------------- garden */
 .garden-stage{display:flex;flex-direction:column;gap:15px}
@@ -1650,25 +1675,60 @@ body[data-world="vault"] .poo-companion{display:none}
    ========================================================================== */
 .bouquet-builder{display:flex;flex-direction:column;gap:16px;margin-top:6px}
 
-.bouquet-wrap-shape{
-  position:relative;width:100%;height:230px;
-  clip-path:polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+/* The stage: a little flower-stall corner, not a flower dropped on a blank
+   card. A scalloped awning up top, the wrap standing on a soft shadow like
+   it's actually resting on a counter, walls just barely tinted so the paper
+   cone reads as an object in a room, not a sticker on a page. */
+.bouquet-stage{
+  position:relative;padding:28px 14px 22px;border-radius:var(--r-lg);
   background:
-    repeating-linear-gradient(58deg,rgba(255,255,255,.5) 0 5px,rgba(255,255,255,0) 5px 11px),
-    linear-gradient(165deg,#f3e6c8 0%,#e2c896 55%,#c9a870 100%);
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.4);
+    radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,.5), transparent 65%),
+    linear-gradient(180deg,#efe2f7 0%,#f7ecd8 72%,#ecd9b8 100%);
+  overflow:hidden;
+}
+.bouquet-awning{
+  position:absolute;top:0;left:0;right:0;height:16px;display:flex;
+}
+.bouquet-awning span{
+  flex:1;height:100%;
+  background:linear-gradient(180deg,var(--pink-hot),var(--red));
+  clip-path:polygon(0 0,100% 0,90% 100%,10% 100%);
+}
+.bouquet-awning span:nth-child(even){background:linear-gradient(180deg,#fff,#ffe6f1)}
+
+.bouquet-wrap-shape{
+  position:relative;width:min(100%,260px);height:216px;margin:14px auto 0;
+  clip-path:polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  background:
+    /* the grain of the paper stock, same trick as the page background */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E"),
+    linear-gradient(100deg,rgba(255,255,255,.35) 0%,transparent 18%,transparent 82%,rgba(0,0,0,.06) 100%),
+    linear-gradient(165deg,#f6ecd4 0%,#e9d09e 48%,#cfa869 100%);
+  background-blend-mode:multiply,normal,normal;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 16px 22px -10px rgba(90,60,20,.4);
   overflow:visible;touch-action:none;
 }
+/* a single fold crease down the middle, like real wrapping paper actually
+   creased around the stems rather than a flat printed cone */
+.bouquet-crease{
+  position:absolute;top:0;bottom:0;left:50%;width:2px;translate:-50% 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(90,60,20,.18));
+  mix-blend-mode:overlay;
+}
+.bouquet-shadow{
+  width:70%;height:16px;margin:-8px auto 0;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(60,30,20,.28),transparent 75%);
+}
 .bouquet-ribbon{
-  position:absolute;left:0;right:0;bottom:26%;height:30px;
+  position:absolute;left:0;right:0;bottom:26%;height:26px;
   background:linear-gradient(180deg,var(--pink-hot),var(--red));
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  box-shadow:0 2px 6px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);
 }
-.bouquet-ribbon span{font-size:1.1rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.bouquet-ribbon span{font-size:1.05rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
 .bouquet-vase-hint{
-  position:absolute;top:14px;left:0;right:0;text-align:center;margin:0;
-  font-size:.78rem;font-weight:700;color:rgba(80,50,20,.5);pointer-events:none;
+  position:absolute;top:16px;left:0;right:0;text-align:center;margin:0;
+  font-size:.76rem;font-weight:700;color:rgba(80,50,20,.55);pointer-events:none;
   transition:opacity .25s;
 }
 .bouquet-wrap-shape.has-items .bouquet-vase-hint{opacity:0}
