@@ -455,7 +455,7 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
   position:fixed;z-index:45;left:50%;translate:-50% 0;
   bottom:calc(11px + env(safe-area-inset-bottom));
   width:min(calc(100% - 26px),486px);
-  display:grid;grid-template-columns:repeat(5,1fr);align-items:end;gap:2px;
+  display:grid;grid-template-columns:repeat(4,1fr);align-items:end;gap:2px;
   padding:9px 9px 10px;border-radius:30px;
   background:linear-gradient(165deg,#fff,var(--lav-50));
   border:2px solid var(--edge);box-shadow:var(--sh-lg);
@@ -1352,4 +1352,71 @@ body[data-world="vault"] .poo-companion{display:none}
 @media (prefers-reduced-motion:reduce){
   .game-pick:nth-child(1),.game-pick:nth-child(3){rotate:none}
   .game-stage.open{animation:none}
+}
+
+/* ==========================================================================
+   Watchlist. Two taps per film and nothing else: a heart to save it, a tick
+   to say it is already watched. The card stays quiet so a long scroll of
+   them does not shout, and a watched card visibly settles down.
+   ========================================================================== */
+.wl-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:2px 0 13px}
+.wl-tab{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  min-height:var(--tap);padding:9px 6px;border-radius:var(--r);cursor:pointer;
+  border:2px solid var(--edge);background:rgba(255,255,255,.8);color:var(--ink-soft);
+  font-family:"Baloo",sans-serif;font-size:.85rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:background .2s,color .2s,transform .18s;
+}
+.wl-tab:active{transform:scale(.97)}
+.wl-tab.active{background:linear-gradient(150deg,var(--pink),var(--lav-300));color:#fff}
+.wl-badge{
+  display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;
+  border-radius:10px;background:rgba(120,80,170,.16);color:inherit;
+  font-size:.66rem;font-weight:800;
+}
+.wl-tab.active .wl-badge{background:rgba(255,255,255,.34)}
+
+.wl-genres{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.wl-genre{
+  padding:8px 13px;border-radius:999px;cursor:pointer;
+  border:2px solid var(--edge);background:rgba(255,255,255,.78);color:var(--lav-700);
+  font-family:"Quicksand",sans-serif;font-size:.78rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:background .2s,color .2s,transform .18s;
+}
+.wl-genre:active{transform:scale(.95)}
+.wl-genre.active{background:linear-gradient(150deg,var(--lav-400),var(--lav-500));color:#fff}
+
+.wl-list{display:flex;flex-direction:column;gap:10px}
+.wl-card{
+  display:flex;align-items:center;gap:11px;padding:13px 14px;
+  border-radius:var(--r);border:2px solid var(--edge);
+  background:linear-gradient(165deg,#fffdff,var(--lav-50));
+  box-shadow:var(--sh-sm);transition:opacity .25s,background .25s;
+}
+.wl-card.is-seen{opacity:.62;background:linear-gradient(165deg,#f7f4fc,#efe9f8)}
+.wl-card.is-seen h3{text-decoration:line-through;text-decoration-color:rgba(120,80,170,.45)}
+.wl-card-main{flex:1;min-width:0}
+.wl-card h3{
+  margin:0 0 4px;font-family:"Baloo",sans-serif;font-size:.99rem;font-weight:700;
+  color:var(--lav-700);line-height:1.2;
+}
+.wl-year{font-size:.78rem;font-weight:600;color:var(--ink-faint)}
+.wl-why{margin:0 0 6px;font-size:.79rem;line-height:1.42;color:var(--ink-soft)}
+.wl-meta{display:flex;gap:11px;margin:0;font-size:.7rem;font-weight:700;color:var(--ink-faint)}
+
+.wl-card-actions{display:flex;flex-direction:column;gap:7px;flex:none}
+.wl-act{
+  width:var(--tap);height:38px;display:grid;place-items:center;cursor:pointer;
+  border-radius:13px;border:2px solid var(--edge);background:#fff;
+  font-size:1.05rem;line-height:1;color:var(--ink-faint);
+  transition:transform .18s cubic-bezier(.2,.9,.3,1.4),background .2s,color .2s;
+}
+.wl-act:active{transform:scale(.9)}
+.wl-save.on{background:linear-gradient(150deg,var(--pink-hot),var(--red));color:#fff;border-color:var(--edge)}
+.wl-seen.on{background:linear-gradient(150deg,var(--mint,#9fe0c6),var(--lav-300));color:#fff;border-color:var(--edge)}
+
+.wl-empty{
+  padding:22px 18px;margin:0 0 12px;border-radius:var(--r);text-align:center;
+  font-weight:700;color:var(--ink-soft);line-height:1.5;
+  background:rgba(255,255,255,.7);border:2px dashed rgba(168,130,224,.4);
 }

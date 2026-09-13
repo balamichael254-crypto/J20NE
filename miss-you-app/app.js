@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {} };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -609,6 +609,7 @@ function ensureScreenRendered(name) {
     birthday: renderBirthday,
     care: renderCare,
     games: renderGames,
+    watchlist: renderWatchlist,
     doodles: () => { renderWidgets(); setupCanvas(); },
     us: initHearthOnce
   };
@@ -704,6 +705,120 @@ function initGamePicker() {
   });
 }
 
+/* ============================================================================
+   Watchlist. Browse by genre, then two taps that matter: save it for later,
+   or mark it already seen. Both lists are just arrays of film ids in state,
+   so they sync with everything else and survive the catalogue growing.
+
+   A film can be in exactly one list at a time. Marking something seen pulls
+   it off the watchlist, because that is what finishing a film means, and
+   leaving it in both would make the counts lie.
+   ========================================================================= */
+let wlView = "browse";
+let wlGenre = "all";
+
+const wlCatalogue = () => (window.MOONPIE_MOVIES || { genres: [], films: [] });
+
+function wlRuntime(mins) {
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+function wlToggle(listKey, id) {
+  const other = listKey === "watchSaved" ? "watchSeen" : "watchSaved";
+  const list = state[listKey] || (state[listKey] = []);
+  const at = list.indexOf(id);
+  if (at >= 0) list.splice(at, 1);
+  else {
+    list.push(id);
+    // a film lives in one list at a time, so adding here removes it there
+    const otherList = state[other] || (state[other] = []);
+    const otherAt = otherList.indexOf(id);
+    if (otherAt >= 0) otherList.splice(otherAt, 1);
+  }
+  saveState();
+  renderWatchlist();
+}
+
+function wlFilmCardHtml(film) {
+  const saved = (state.watchSaved || []).includes(film.id);
+  const seen = (state.watchSeen || []).includes(film.id);
+  const genre = wlCatalogue().genres.find(g => g.id === film.g);
+  return `
+    <article class="wl-card${seen ? " is-seen" : ""}">
+      <div class="wl-card-main">
+        <h3>${film.title} <span class="wl-year">${film.year}</span></h3>
+        <p class="wl-why">${film.why}</p>
+        <p class="wl-meta"><span>${genre ? genre.icon + " " + genre.label : ""}</span><span>${wlRuntime(film.mins)}</span></p>
+      </div>
+      <div class="wl-card-actions">
+        <button class="wl-act wl-save${saved ? " on" : ""}" data-wl-save="${film.id}" type="button"
+          aria-pressed="${saved}" aria-label="${saved ? "remove from" : "add to"} watchlist">&#9825;</button>
+        <button class="wl-act wl-seen${seen ? " on" : ""}" data-wl-seen="${film.id}" type="button"
+          aria-pressed="${seen}" aria-label="${seen ? "unmark" : "mark"} as already watched">&#10003;</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderWatchlist() {
+  const { genres, films } = wlCatalogue();
+  const listEl = $("#wl-list");
+  if (!listEl) return;
+
+  $("#wl-count-saved").textContent = (state.watchSaved || []).length;
+  $("#wl-count-seen").textContent = (state.watchSeen || []).length;
+  $$(".wl-tab").forEach(t => {
+    const on = t.dataset.wlView === wlView;
+    t.classList.toggle("active", on);
+    t.setAttribute("aria-selected", String(on));
+  });
+
+  // genre chips only make sense while browsing; the saved lists are short
+  const genreBar = $("#wl-genres");
+  genreBar.classList.toggle("hidden", wlView !== "browse");
+  if (wlView === "browse") {
+    genreBar.innerHTML = [{ id: "all", label: "Everything", icon: "✨" }, ...genres]
+      .map(g => `<button class="wl-genre${wlGenre === g.id ? " active" : ""}" data-wl-genre="${g.id}" type="button">${g.icon} ${g.label}</button>`)
+      .join("");
+  }
+
+  let shown;
+  if (wlView === "saved") shown = (state.watchSaved || []).map(id => films.find(f => f.id === id)).filter(Boolean);
+  else if (wlView === "seen") shown = (state.watchSeen || []).map(id => films.find(f => f.id === id)).filter(Boolean);
+  else shown = wlGenre === "all" ? films : films.filter(f => f.g === wlGenre);
+
+  const empty = $("#wl-empty");
+  if (!shown.length) {
+    empty.textContent = wlView === "saved"
+      ? "Nothing saved yet. Go and heart a few, then come back when you cannot decide."
+      : wlView === "seen"
+        ? "Nothing ticked off yet. Tick the ones you have already seen so I stop suggesting them."
+        : "Nothing in here yet.";
+    empty.classList.remove("hidden");
+  } else {
+    empty.classList.add("hidden");
+  }
+  listEl.innerHTML = shown.map(wlFilmCardHtml).join("");
+}
+
+function initWatchlist() {
+  const screen = $("#screen-watchlist");
+  if (!screen) return;
+  // one delegated listener: the list is re-rendered constantly, so per-button
+  // listeners would leak on every toggle
+  screen.addEventListener("click", event => {
+    const save = event.target.closest("[data-wl-save]");
+    if (save) return wlToggle("watchSaved", save.dataset.wlSave);
+    const seen = event.target.closest("[data-wl-seen]");
+    if (seen) return wlToggle("watchSeen", seen.dataset.wlSeen);
+    const genre = event.target.closest("[data-wl-genre]");
+    if (genre) { wlGenre = genre.dataset.wlGenre; return renderWatchlist(); }
+    const tab = event.target.closest("[data-wl-view]");
+    if (tab) { wlView = tab.dataset.wlView; return renderWatchlist(); }
+  });
+}
+
 function goBack() {
   if ($("#letter-modal")?.open) return $("#letter-modal").close();
   if ($("#world-modal")?.open) return $("#world-modal").close();
@@ -787,15 +902,37 @@ function worldTileHtml(world, i) {
   `;
 }
 
+// The four rooms the quick tiles on Home already link to. Home must not
+// print them a third time.
+const HOME_QUICK_IDS = ["letters", "places", "care", "birthday"];
+
+/* Home used to list every room, which meant the first screen was Atlas and
+   Us reprinted end to end. It now shows three rooms chosen from the date, so
+   Home is a suggestion rather than a catalogue, and it is different tomorrow.
+   Deterministic from the day, so it does not reshuffle on every render. */
+function roomsForToday(count = 3) {
+  const pool = worlds.filter(w => !HOME_QUICK_IDS.includes(w.id));
+  const now = new Date();
+  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  const picks = [];
+  for (let n = 0; picks.length < Math.min(count, pool.length); n++) {
+    // 7 is coprime with most pool sizes, so consecutive days walk the pool
+    // instead of landing on the same few rooms.
+    const world = pool[(day * 7 + n) % pool.length];
+    if (!picks.includes(world)) picks.push(world);
+  }
+  return picks;
+}
+
 function renderAtlas() {
-  // Home gets a preview of every room regardless of which hub it lives in;
-  // Atlas and Us each only show their own section - that split is the whole
-  // point of having two hubs instead of one long list.
-  $("#home-worlds").innerHTML = worlds.map(worldTileHtml).join("");
+  // Three hubs, three different jobs: Home suggests, Atlas holds things to
+  // do, Us holds what the two of them keep. No room appears in more than one.
+  $("#home-worlds").innerHTML = roomsForToday().map(worldTileHtml).join("");
   $("#atlas-grid").innerHTML = worlds.filter(w => w.section === "atlas").map(worldTileHtml).join("");
   const usGrid = $("#us-grid");
   if (usGrid) usGrid.innerHTML = worlds.filter(w => w.section === "us").map(worldTileHtml).join("");
 }
+
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -2475,6 +2612,7 @@ function init() {
   setupEvents();
   setupSmartNav();
   initGamePicker();
+  initWatchlist();
   setupInstall();
   setupOpeningRitual();
   if (state.hasEnteredUniverse) setupWidgetSync();
