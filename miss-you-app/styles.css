@@ -845,7 +845,15 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 .world-portal-copy{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:12px}
 .world-portal-copy h3{color:#fff;font-size:1.02rem}
 .world-portal-copy p{color:rgba(255,255,255,.84);font-size:.72rem;margin-top:2px}
-.portal-number{position:absolute;top:10px;left:10px;z-index:1;width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--lav-700);font-size:.71rem;font-weight:700;box-shadow:var(--sh-sm)}
+/* A pill, not a 27px circle: this holds words ("tonight's pick"), not a
+   number, and it sits against the tile rather than inside .world-portal-copy,
+   whose own absolute positioning was dropping it straight onto the title. */
+.portal-number{
+  position:absolute;top:10px;left:10px;z-index:2;
+  padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.94);
+  color:var(--lav-700);font-size:.64rem;font-weight:800;white-space:nowrap;
+  box-shadow:var(--sh-sm);
+}
 
 .memory-polaroid{position:relative;background:#fff;padding:10px 10px 42px;border-radius:8px;box-shadow:var(--sh);rotate:-1.6deg}
 .memory-polaroid:nth-child(even){rotate:1.9deg}
@@ -1004,10 +1012,102 @@ dialog::backdrop{background:rgba(75,45,122,.44);backdrop-filter:blur(5px)}
 #modal-body{font-size:.97rem;line-height:1.76;color:var(--ink);font-family:"Lora",Georgia,serif}
 #modal-body p+p{margin-top:13px}
 .modal-close{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:50%;cursor:pointer;background:#fff;border:2px solid var(--lav-200);color:var(--lav-700);font-size:1.2rem}
-.world-hero{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:var(--r);margin-bottom:13px;border:3px solid #fff}
+/* The hero carries the place's own photograph, which can be anything from a
+   bright Santorini noon to a near-black Paris midnight - so the title sits on
+   a real gradient scrim and is always white, rather than dark ink hoping the
+   photo underneath happens to be pale. */
+.world-hero{
+  position:relative;display:flex;align-items:flex-end;width:100%;aspect-ratio:16/10;
+  background-size:cover;background-position:center;
+  border-radius:var(--r);margin-bottom:13px;border:3px solid #fff;overflow:hidden;
+}
+.world-hero>div{
+  position:relative;z-index:1;width:100%;padding:16px 15px 14px;
+  background:linear-gradient(180deg,transparent,rgba(16,8,26,.55) 42%,rgba(16,8,26,.9) 100%);
+}
+.world-hero .card-label{color:rgba(255,255,255,.82)}
+.world-hero h2{margin:2px 0 4px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.world-hero p{margin:0;color:rgba(255,255,255,.86);font-size:.84rem}
 .world-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:13px 0}
 .world-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--r);border:3px solid #fff}
 .world-intro{font-size:.95rem;margin-bottom:13px}
+/* ==========================================================================
+   Our Worlds: a day you walk down, not a stack of paragraphs. A rail runs
+   the length of the itinerary with a node at every stop, the place's own
+   photograph is set into the middle of the day rather than pinned at the
+   top, and each stop can be claimed.
+   ========================================================================== */
+.world-day{position:relative;display:flex;flex-direction:column;gap:0;margin-top:6px}
+/* the rail itself - fades out at both ends so the day starts and stops
+   softly instead of being clipped by the first and last node */
+.world-day::before{
+  content:"";position:absolute;left:57px;top:10px;bottom:10px;width:2px;
+  background:linear-gradient(180deg,transparent,var(--lav-200) 12%,var(--lav-200) 88%,transparent);
+}
+.world-step{position:relative;display:grid;grid-template-columns:64px 1fr;gap:10px;padding:12px 0}
+.world-step-time{
+  position:relative;padding-top:3px;text-align:right;padding-right:16px;
+  font-size:.66rem;font-weight:800;line-height:1.3;color:var(--ink-faint);
+  text-transform:lowercase;letter-spacing:.01em;
+}
+/* the node on the rail */
+.world-step-time::after{
+  content:"";position:absolute;right:-6px;top:7px;width:11px;height:11px;border-radius:50%;
+  background:#fff;border:2.5px solid var(--lav-300);transition:background .2s,border-color .2s,scale .2s;
+}
+.world-step.is-picked .world-step-time::after{background:var(--pink-hot);border-color:var(--pink-hot);scale:1.15}
+.world-step.is-picked .world-step-time{color:var(--pink-hot)}
+.world-step-body{
+  padding:13px 14px;border-radius:var(--r);background:#fff;
+  border:2px solid var(--lav-100);box-shadow:var(--sh-sm);transition:border-color .2s,background .2s;
+}
+.world-step.is-picked .world-step-body{border-color:var(--pink);background:linear-gradient(168deg,#fff,#fff2f7)}
+.world-step-body h3{margin:0 0 5px;font-family:"Baloo",sans-serif;font-size:.98rem;color:var(--lav-700)}
+.world-step-body p{margin:0;font-size:.84rem;line-height:1.5;color:var(--ink-soft)}
+.world-step-photo{
+  width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:var(--r);
+  margin:11px 0 2px;border:3px solid #fff;box-shadow:var(--sh-sm);
+}
+.world-pick{
+  display:inline-flex;align-items:center;gap:6px;margin-top:11px;
+  min-height:38px;padding:0 14px;border-radius:999px;cursor:pointer;
+  border:2px solid var(--lav-200);background:#fff;color:var(--lav-600);
+  font-family:"Quicksand",sans-serif;font-size:.76rem;font-weight:700;
+  transition:transform .16s,background .2s,color .2s,border-color .2s;
+}
+.world-pick span{font-size:.92rem;line-height:1}
+.world-pick:active{transform:scale(.95)}
+.world-step.is-picked .world-pick{
+  background:linear-gradient(150deg,var(--pink-hot),var(--red));color:#fff;border-color:var(--edge);
+}
+.world-pick-summary{
+  margin:14px 0 4px;padding:11px 14px;border-radius:var(--r);
+  background:rgba(255,255,255,.7);border:2px dashed rgba(168,130,224,.35);
+  font-size:.8rem;font-weight:700;color:var(--ink-soft);text-align:center;
+}
+.world-next-btn{margin-top:18px}
+.world-next-btn.is-on{background:linear-gradient(135deg,#4fcf9a,var(--lav-500))}
+
+/* the pinned world, promoted to the top of the Worlds screen */
+.place-next:empty{display:none}
+.world-next-card{
+  position:relative;display:block;margin-bottom:16px;border-radius:var(--r-lg);
+  overflow:hidden;background-size:cover;background-position:center;
+  border:2px solid var(--edge);box-shadow:var(--sh);
+}
+.world-next-inner{
+  padding:16px;background:linear-gradient(180deg,rgba(24,10,38,.35) 0%,rgba(24,10,38,.86) 62%);
+}
+.world-next-inner .card-label{color:rgba(255,255,255,.8)}
+.world-next-card h3{margin:2px 0 8px;font-family:"Baloo",sans-serif;font-size:1.2rem;color:#fff}
+.world-next-picks{margin:0 0 12px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.world-next-picks li{
+  padding:5px 11px;border-radius:999px;font-size:.72rem;font-weight:700;
+  background:rgba(255,255,255,.16);color:#fff;backdrop-filter:blur(2px);
+}
+.world-next-empty{margin:0 0 12px;font-size:.8rem;color:rgba(255,255,255,.82)}
+.world-next-open{border-color:rgba(255,255,255,.55);color:#fff}
+
 .world-moments{display:flex;flex-direction:column;gap:9px}
 
 /* ----------------------------------------------------------------- toast */
