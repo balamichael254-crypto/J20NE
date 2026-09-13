@@ -762,109 +762,317 @@ function initGamePicker() {
    it off the watchlist, because that is what finishing a film means, and
    leaving it in both would make the counts lie.
    ========================================================================= */
+// Real posters, real trailers, and the whole TMDB catalogue instead of a
+// list we wrote by hand and would have had to keep extending. api/movies.js
+// proxies TMDB so the key never reaches the client. If that endpoint is not
+// configured yet (no TMDB_API_KEY set on Vercel) or the network is down, we
+// fall back to a small curated offline list from movies.js so the screen
+// never just breaks.
 let wlView = "browse";
 let wlGenre = "all";
+let wlQuery = "";
+let wlPage = 1;
+let wlTotalPages = 1;
+let wlResults = [];
+let wlLoading = false;
+let wlGenresCache = null;
+let wlOffline = false;
+let wlSearchTimer = null;
+let wlRequestToken = 0;
 
-const wlCatalogue = () => (window.MOONPIE_MOVIES || { genres: [], films: [] });
+// A few curated genres up front (the ones she will actually reach for), the
+// rest of TMDB's real list after. Icons are cosmetic guesses by name; a
+// genre with no guess just gets a plain film icon rather than nothing.
+const WL_GENRE_ICONS = {
+  Romance: "\u{1F495}", Comedy: "\u{1F602}", Thriller: "\u{1F52A}", Horror: "\u{1F47B}",
+  Animation: "\u{1F338}", Action: "\u{1F4A5}", "Science Fiction": "\u{1F30C}", Drama: "\u{1F3AD}",
+  Family: "\u{1F9F8}", Adventure: "\u{1F9ED}", Fantasy: "\u{1F9DA}", Mystery: "\u{1F575}\u{FE0F}",
+  Crime: "\u{1F575}\u{FE0F}", Documentary: "\u{1F3A5}", Music: "\u{1F3B5}", War: "\u{2694}\u{FE0F}",
+  History: "\u{1F4DC}", Western: "\u{1F920}", "TV Movie": "\u{1F4FA}"
+};
+const WL_CURATED_GENRES = [
+  { id: "all", name: "Everything", icon: "✨" },
+  { id: "comfort", name: "Comfort", icon: "\u{1F9F8}" },
+  { id: "korean", name: "Korean & Asian", icon: "\u{1F3EE}" }
+];
+
+async function wlApi(params) {
+  const query = new URLSearchParams(params).toString();
+  const result = await fetch(`../api/movies?${query}`);
+  if (!result.ok) throw new Error(`movies api ${result.status}`);
+  return result.json();
+}
 
 function wlRuntime(mins) {
+  if (!mins) return "";
   const h = Math.floor(mins / 60), m = mins % 60;
   return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
 }
 
-function wlToggle(listKey, id) {
+// A film lives in one list at a time - marking something seen pulls it off
+// the watchlist, because that is what finishing a film means, and leaving it
+// in both would make the counts lie. Stores a small snapshot object (not
+// just an id) so the Watchlist/Seen tabs work fully offline.
+function wlToggle(listKey, movie) {
   const other = listKey === "watchSaved" ? "watchSeen" : "watchSaved";
-  const list = state[listKey] || (state[listKey] = []);
-  const at = list.indexOf(id);
+  const list = Array.isArray(state[listKey]) ? state[listKey] : (state[listKey] = []);
+  const at = list.findIndex(m => m.id === movie.id);
   if (at >= 0) list.splice(at, 1);
   else {
-    list.push(id);
-    // a film lives in one list at a time, so adding here removes it there
-    const otherList = state[other] || (state[other] = []);
-    const otherAt = otherList.indexOf(id);
+    list.push({ id: movie.id, title: movie.title, year: movie.year, poster: movie.poster, rating: movie.rating });
+    const otherList = Array.isArray(state[other]) ? state[other] : (state[other] = []);
+    const otherAt = otherList.findIndex(m => m.id === movie.id);
     if (otherAt >= 0) otherList.splice(otherAt, 1);
   }
   saveState();
-  renderWatchlist();
+  wlRenderCounts();
+  wlRenderGrid();
 }
 
-function wlFilmCardHtml(film) {
-  const saved = (state.watchSaved || []).includes(film.id);
-  const seen = (state.watchSeen || []).includes(film.id);
-  const genre = wlCatalogue().genres.find(g => g.id === film.g);
+// Every id that comes off a data-* attribute arrives as a string, but TMDB
+// ids are numbers - normalize once here rather than re-deriving this rule
+// at every comparison site.
+function wlParseId(raw) {
+  if (typeof raw !== "string") return raw;
+  return raw.startsWith("local-") ? raw : Number(raw);
+}
+function wlIsSaved(id) { const key = wlParseId(id); return (state.watchSaved || []).some(m => m.id === key); }
+function wlIsSeen(id) { const key = wlParseId(id); return (state.watchSeen || []).some(m => m.id === key); }
+
+function wlCardHtml(movie) {
+  const saved = wlIsSaved(movie.id);
+  const seen = wlIsSeen(movie.id);
+  const poster = movie.poster
+    ? `<img src="${escapeHtml(movie.poster)}" alt="" loading="lazy" decoding="async">`
+    : `<div class="wl-poster-fallback" aria-hidden="true">\u{1F3AC}</div>`;
   return `
-    <article class="wl-card${seen ? " is-seen" : ""}">
+    <article class="wl-card${seen ? " is-seen" : ""}" data-wl-open="${movie.id}">
+      <div class="wl-poster">${poster}${movie.rating ? `<span class="wl-rating">★ ${movie.rating}</span>` : ""}</div>
       <div class="wl-card-main">
-        <h3>${film.title} <span class="wl-year">${film.year}</span></h3>
-        <p class="wl-why">${film.why}</p>
-        <p class="wl-meta"><span>${genre ? genre.icon + " " + genre.label : ""}</span><span>${wlRuntime(film.mins)}</span></p>
+        <h3>${escapeHtml(movie.title)}${movie.year ? ` <span class="wl-year">${escapeHtml(movie.year)}</span>` : ""}</h3>
+        ${movie.overview ? `<p class="wl-why">${escapeHtml(movie.overview)}</p>` : ""}
       </div>
       <div class="wl-card-actions">
-        <button class="wl-act wl-save${saved ? " on" : ""}" data-wl-save="${film.id}" type="button"
+        <button class="wl-act wl-save${saved ? " on" : ""}" data-wl-save="${movie.id}" type="button"
           aria-pressed="${saved}" aria-label="${saved ? "remove from" : "add to"} watchlist">&#9825;</button>
-        <button class="wl-act wl-seen${seen ? " on" : ""}" data-wl-seen="${film.id}" type="button"
+        <button class="wl-act wl-seen${seen ? " on" : ""}" data-wl-seen="${movie.id}" type="button"
           aria-pressed="${seen}" aria-label="${seen ? "unmark" : "mark"} as already watched">&#10003;</button>
       </div>
     </article>
   `;
 }
 
-function renderWatchlist() {
-  const { genres, films } = wlCatalogue();
-  const listEl = $("#wl-list");
-  if (!listEl) return;
+function wlFindShown(id) {
+  const key = wlParseId(id);
+  return wlResults.find(m => m.id === key) || (state.watchSaved || []).find(m => m.id === key) || (state.watchSeen || []).find(m => m.id === key);
+}
 
+function wlRenderCounts() {
   $("#wl-count-saved").textContent = (state.watchSaved || []).length;
   $("#wl-count-seen").textContent = (state.watchSeen || []).length;
-  $$(".wl-tab").forEach(t => {
-    const on = t.dataset.wlView === wlView;
-    t.classList.toggle("active", on);
-    t.setAttribute("aria-selected", String(on));
-  });
+}
 
-  // genre chips only make sense while browsing; the saved lists are short
-  const genreBar = $("#wl-genres");
-  genreBar.classList.toggle("hidden", wlView !== "browse");
-  if (wlView === "browse") {
-    genreBar.innerHTML = [{ id: "all", label: "Everything", icon: "✨" }, ...genres]
-      .map(g => `<button class="wl-genre${wlGenre === g.id ? " active" : ""}" data-wl-genre="${g.id}" type="button">${g.icon} ${g.label}</button>`)
-      .join("");
-  }
-
+function wlRenderGrid() {
+  const listEl = $("#wl-list");
+  if (!listEl) return;
   let shown;
-  if (wlView === "saved") shown = (state.watchSaved || []).map(id => films.find(f => f.id === id)).filter(Boolean);
-  else if (wlView === "seen") shown = (state.watchSeen || []).map(id => films.find(f => f.id === id)).filter(Boolean);
-  else shown = wlGenre === "all" ? films : films.filter(f => f.g === wlGenre);
+  if (wlView === "saved") shown = state.watchSaved || [];
+  else if (wlView === "seen") shown = state.watchSeen || [];
+  else shown = wlResults;
 
   const empty = $("#wl-empty");
-  if (!shown.length) {
+  if (!shown.length && !wlLoading) {
     empty.textContent = wlView === "saved"
       ? "Nothing saved yet. Go and heart a few, then come back when you cannot decide."
       : wlView === "seen"
         ? "Nothing ticked off yet. Tick the ones you have already seen so I stop suggesting them."
-        : "Nothing in here yet.";
+        : wlQuery
+          ? `Nothing found for "${wlQuery}". Try a different spelling?`
+          : "Nothing in here yet.";
     empty.classList.remove("hidden");
   } else {
     empty.classList.add("hidden");
   }
-  listEl.innerHTML = shown.map(wlFilmCardHtml).join("");
+  listEl.innerHTML = shown.map(wlCardHtml).join("");
+
+  const more = $("#wl-load-more");
+  if (more) more.classList.toggle("hidden", wlView !== "browse" || wlPage >= wlTotalPages || !shown.length);
+}
+
+function wlRenderGenres() {
+  const bar = $("#wl-genres");
+  if (!bar) return;
+  bar.classList.toggle("hidden", wlView !== "browse");
+  if (wlView !== "browse") return;
+  const real = (wlGenresCache || []).map(g => ({ id: String(g.id), name: g.name, icon: WL_GENRE_ICONS[g.name] || "\u{1F3AC}" }));
+  const all = [...WL_CURATED_GENRES, ...real];
+  bar.innerHTML = all.map(g =>
+    `<button class="wl-genre${wlGenre === g.id ? " active" : ""}" data-wl-genre="${g.id}" type="button">${g.icon} ${escapeHtml(g.name)}</button>`
+  ).join("");
+}
+
+async function wlLoadPage(reset) {
+  if (wlLoading) return;
+  wlLoading = true;
+  const myToken = ++wlRequestToken;
+  const status = $("#wl-status");
+  if (status) { status.textContent = "finding more..."; status.classList.remove("hidden"); }
+  try {
+    const data = wlQuery
+      ? await wlApi({ op: "search", q: wlQuery, page: wlPage })
+      : await wlApi({ op: "discover", genre: wlGenre, page: wlPage });
+    if (myToken !== wlRequestToken) return; // a newer request already landed
+    wlOffline = false;
+    wlTotalPages = data.totalPages || 1;
+    wlResults = reset ? data.results : [...wlResults, ...data.results];
+    wlRenderGrid();
+  } catch (error) {
+    if (myToken !== wlRequestToken) return;
+    console.warn("watchlist fetch", error);
+    if (reset && !wlResults.length) wlLoadOfflineFallback();
+  } finally {
+    if (myToken === wlRequestToken) {
+      wlLoading = false;
+      if (status) status.classList.add("hidden");
+    }
+  }
+}
+
+// Only used if api/movies is not configured yet or the network is down, so
+// the screen still shows something instead of an empty page.
+// Maps the handful of real TMDB genre ids the curated chips can produce back
+// to the offline list's own slugs, so a genre tap still does something
+// sensible while the live catalogue is unreachable.
+const WL_OFFLINE_GENRE_MAP = { 10749: "romance", 35: "comedy", 53: "thriller", 27: "horror", 16: "animation", 28: "action", 878: "scifi", 18: "drama" };
+
+function wlLoadOfflineFallback() {
+  wlOffline = true;
+  const catalogue = window.MOONPIE_MOVIES || { films: [] };
+  let films = catalogue.films;
+  if (wlGenre !== "all") {
+    const slug = WL_OFFLINE_GENRE_MAP[wlGenre] || wlGenre; // "comfort"/"korean" pass through as-is
+    films = films.filter(f => f.g === slug);
+  }
+  if (wlQuery) {
+    const q = wlQuery.toLowerCase();
+    films = films.filter(f => f.title.toLowerCase().includes(q));
+  }
+  wlResults = films.map(f => ({
+    id: `local-${f.id}`, title: f.title, year: String(f.year), overview: f.why,
+    poster: null, rating: null, mins: f.mins
+  }));
+  wlTotalPages = 1;
+  wlRenderGrid();
+  const empty = $("#wl-empty");
+  if (empty && wlResults.length) {
+    empty.textContent = "Could not reach the live catalogue right now - showing our built-in picks instead.";
+    empty.classList.remove("hidden");
+  }
+}
+
+function wlResetAndLoad() {
+  wlPage = 1;
+  wlResults = [];
+  wlLoadPage(true);
+}
+
+async function wlOpenDetail(id) {
+  const modal = $("#wl-modal");
+  const body = $("#wl-modal-body");
+  if (!modal || !body) return;
+  const known = wlFindShown(id);
+  body.innerHTML = `<p class="wl-modal-loading">loading...</p>`;
+  modal.showModal();
+
+  if (String(id).startsWith("local-") || wlOffline) {
+    const saved = wlIsSaved(id), seen = wlIsSeen(id);
+    body.innerHTML = `
+      <h2>${escapeHtml(known?.title || "")}</h2>
+      <p class="wl-modal-meta">${escapeHtml(known?.year || "")}${known?.mins ? ` &middot; ${wlRuntime(known.mins)}` : ""}</p>
+      <p>${escapeHtml(known?.overview || "")}</p>
+      <p class="wl-modal-note">Trailers need the live catalogue to be connected. This one is from our built-in list.</p>
+      <div class="wl-modal-actions">
+        <button class="secondary-btn wl-modal-save${saved ? " on" : ""}" type="button" data-wl-save="${id}">${saved ? "remove from watchlist" : "add to watchlist"}</button>
+        <button class="secondary-btn wl-modal-seen${seen ? " on" : ""}" type="button" data-wl-seen="${id}">${seen ? "unmark as watched" : "mark as watched"}</button>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const detail = await wlApi({ op: "detail", id });
+    const saved = wlIsSaved(detail.id), seen = wlIsSeen(detail.id);
+    body.innerHTML = `
+      ${detail.backdrop ? `<img class="wl-modal-backdrop" src="${escapeHtml(detail.backdrop)}" alt="" loading="lazy">` : ""}
+      <h2>${escapeHtml(detail.title)}${detail.year ? ` <span class="wl-year">${escapeHtml(detail.year)}</span>` : ""}</h2>
+      <p class="wl-modal-meta">${detail.runtime ? wlRuntime(detail.runtime) + " &middot; " : ""}${escapeHtml((detail.genres || []).join(", "))}${detail.rating ? ` &middot; ★ ${detail.rating}` : ""}</p>
+      <p>${escapeHtml(detail.overview || "")}</p>
+      ${detail.trailerKey
+        ? `<div class="wl-trailer"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(detail.trailerKey)}" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+        : `<p class="wl-modal-note">No trailer found for this one.</p>`}
+      <div class="wl-modal-actions">
+        <button class="secondary-btn wl-modal-save${saved ? " on" : ""}" type="button" data-wl-save="${detail.id}">${saved ? "remove from watchlist" : "add to watchlist"}</button>
+        <button class="secondary-btn wl-modal-seen${seen ? " on" : ""}" type="button" data-wl-seen="${detail.id}">${seen ? "unmark as watched" : "mark as watched"}</button>
+      </div>
+    `;
+    // keep the freshest snapshot (poster/rating can differ from the grid card)
+    if (!wlResults.some(m => m.id === detail.id)) wlResults.push(detail);
+  } catch (error) {
+    console.warn("watchlist detail", error);
+    body.innerHTML = `<p class="wl-modal-note">Could not load details right now.</p>`;
+  }
+}
+
+function renderWatchlist() {
+  wlRenderCounts();
+  wlRenderGenres();
+  if (!wlGenresCache) {
+    wlApi({ op: "genres" }).then(data => { wlGenresCache = data.genres || []; wlRenderGenres(); }).catch(() => {});
+  }
+  wlResetAndLoad();
 }
 
 function initWatchlist() {
   const screen = $("#screen-watchlist");
   if (!screen) return;
-  // one delegated listener: the list is re-rendered constantly, so per-button
+  // one delegated listener: the grid re-renders constantly, so per-button
   // listeners would leak on every toggle
   screen.addEventListener("click", event => {
     const save = event.target.closest("[data-wl-save]");
-    if (save) return wlToggle("watchSaved", save.dataset.wlSave);
+    if (save) { event.stopPropagation(); const m = wlFindShown(save.dataset.wlSave); if (m) wlToggle("watchSaved", m); return refreshWlModalButtons(save.dataset.wlSave); }
     const seen = event.target.closest("[data-wl-seen]");
-    if (seen) return wlToggle("watchSeen", seen.dataset.wlSeen);
+    if (seen) { event.stopPropagation(); const m = wlFindShown(seen.dataset.wlSeen); if (m) wlToggle("watchSeen", m); return refreshWlModalButtons(seen.dataset.wlSeen); }
     const genre = event.target.closest("[data-wl-genre]");
-    if (genre) { wlGenre = genre.dataset.wlGenre; return renderWatchlist(); }
+    if (genre) { wlGenre = genre.dataset.wlGenre; wlQuery = ""; const search = $("#wl-search"); if (search) search.value = ""; wlRenderGenres(); wlResetAndLoad(); return; }
     const tab = event.target.closest("[data-wl-view]");
-    if (tab) { wlView = tab.dataset.wlView; return renderWatchlist(); }
+    if (tab) { wlView = tab.dataset.wlView; $$(".wl-tab").forEach(t => { const on = t.dataset.wlView === wlView; t.classList.toggle("active", on); t.setAttribute("aria-selected", String(on)); }); wlRenderGenres(); wlRenderGrid(); return; }
+    const more = event.target.closest("#wl-load-more");
+    if (more) { wlPage += 1; return wlLoadPage(false); }
+    const open = event.target.closest("[data-wl-open]");
+    if (open) return wlOpenDetail(open.dataset.wlOpen);
   });
+
+  const search = $("#wl-search");
+  search?.addEventListener("input", () => {
+    clearTimeout(wlSearchTimer);
+    wlSearchTimer = setTimeout(() => {
+      wlQuery = search.value.trim();
+      wlResetAndLoad();
+    }, 380);
+  });
+
+  $("#wl-modal-close")?.addEventListener("click", () => $("#wl-modal")?.close());
+}
+
+// After toggling save/seen from inside the open detail modal, update its own
+// buttons in place rather than closing it.
+function refreshWlModalButtons(id) {
+  const modal = $("#wl-modal");
+  if (!modal?.open) return;
+  const saveBtn = modal.querySelector(`[data-wl-save="${id}"]`);
+  const seenBtn = modal.querySelector(`[data-wl-seen="${id}"]`);
+  if (saveBtn) { const on = wlIsSaved(id); saveBtn.classList.toggle("on", on); saveBtn.textContent = on ? "remove from watchlist" : "add to watchlist"; }
+  if (seenBtn) { const on = wlIsSeen(id); seenBtn.classList.toggle("on", on); seenBtn.textContent = on ? "unmark as watched" : "mark as watched"; }
 }
 
 function goBack() {

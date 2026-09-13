@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=98">
+  <link rel="stylesheet" href="./styles.css?v=99">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -355,9 +355,15 @@
           <button class="wl-tab" data-wl-view="seen" type="button" role="tab" aria-selected="false">Seen <span class="wl-badge" id="wl-count-seen">0</span></button>
         </div>
 
+        <div class="wl-search-row">
+          <input class="wl-search" id="wl-search" type="search" inputmode="search" placeholder="search any movie, any title" aria-label="search movies">
+        </div>
+
         <div class="wl-genres" id="wl-genres" role="group" aria-label="genres"></div>
         <p class="wl-empty hidden" id="wl-empty"></p>
         <div class="wl-list" id="wl-list"></div>
+        <p class="wl-status hidden" id="wl-status">finding more...</p>
+        <button class="secondary-btn wide wl-load-more hidden" id="wl-load-more" type="button">show me more</button>
       </section>
 
       <section class="screen world-screen" id="screen-games" aria-label="games">
@@ -721,6 +727,11 @@
     </nav>
   </div>
 
+  <dialog class="wl-modal" id="wl-modal" aria-label="movie details">
+    <button class="wl-modal-close" id="wl-modal-close" type="button" aria-label="close">&larr; back</button>
+    <div class="wl-modal-body" id="wl-modal-body"></div>
+  </dialog>
+
   <dialog id="letter-modal">
     <button class="modal-close" id="close-letter" type="button" aria-label="close letter">×</button>
     <p class="eyebrow">letter</p>
@@ -737,7 +748,7 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=57"></script>
+  <script src="./app.js?v=59"></script>
   <script src="./bloom.js?v=3"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>
