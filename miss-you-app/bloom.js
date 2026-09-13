@@ -34,7 +34,7 @@
                "./assets/flowers/lily-5.webp", "./assets/flowers/lily-6.webp"];
 
   const AMBIENT = 11;
-  const AMBIENT_COUNT = { garden: 16, space: AMBIENT, ocean: AMBIENT }; // garden carries 4 kinds now, so it earns more
+  const AMBIENT_COUNT = { garden: AMBIENT, space: AMBIENT, ocean: AMBIENT }; // same headcount everywhere - this is background texture, not the main event
   const calm = matchMedia("(prefers-reduced-motion: reduce)");
 
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -70,10 +70,10 @@
   // lollipops mixed through - "etc." left room to add more kinds later by
   // just adding another entry here.
   const GARDEN_KINDS = [
-    { sub: "lily", weight: 4 },
-    { sub: "heartRed", weight: 2 },
-    { sub: "heartPink", weight: 2 },
-    { sub: "lollipop", weight: 2 },
+    { sub: "lily", weight: 7 },
+    { sub: "heartRed", weight: 1 },
+    { sub: "heartPink", weight: 1 },
+    { sub: "lollipop", weight: 1 },
   ];
   const GARDEN_TOTAL_WEIGHT = GARDEN_KINDS.reduce((sum, k) => sum + k.weight, 0);
   function pickGardenKind() {
@@ -99,7 +99,11 @@
   // as fluid, not mechanical.
   function gardenFloat(seeded, forceSub) {
     const sub = forceSub || pickGardenKind();
-    const s = sub === "lily" ? rnd(0.05, 0.115) : rnd(0.55, 1.05);
+    // This is background texture behind real text and real buttons, not a
+    // reward burst - hearts/lollipops were originally sized and lit like
+    // confetti (up to 1.05 scale, 85% alpha, a glow) and ended up loud enough
+    // to fight the copy sitting near them. Kept small and quiet on purpose.
+    const s = sub === "lily" ? rnd(0.045, 0.1) : rnd(0.16, 0.3);
     const p = {
       kind: "float", sub,
       img: sub === "lily" ? pick(art) : null,
@@ -109,7 +113,7 @@
       ampY: rnd(10, 26), freqY: rnd(0.1, 0.26), phaseY: rnd(0, Math.PI * 2),
       bobAmp: rnd(6, 14), bobFreq: rnd(0.2, 0.4), bobPhase: rnd(0, Math.PI * 2),
       s, rot: rnd(0, Math.PI * 2), spin: rnd(-0.3, 0.3),
-      alpha: sub === "lily" ? rnd(0.5, 0.88) : rnd(0.55, 0.85),
+      alpha: sub === "lily" ? rnd(0.34, 0.6) : rnd(0.28, 0.46),
       hue: sub === "heartRed" ? pick(HEART_RED_HUES)
          : sub === "heartPink" ? pick(HEART_PINK_HUES)
          : sub === "lollipop" ? pick(LOLLIPOP_HUES)
@@ -217,7 +221,11 @@
     ctx.globalAlpha = alpha;
     ctx.translate(x, y); ctx.rotate(rot); ctx.scale(size, size);
     ctx.fillStyle = hue;
-    ctx.shadowColor = hue; ctx.shadowBlur = 8;
+    // shadowBlur is specified in device pixels, not scaled with the shape -
+    // at the small size these are now drawn (see gardenFloat), an 8px glow
+    // would be bigger than the heart itself and haze into whatever text sits
+    // nearby, which is exactly the "hard to read" complaint. Kept small.
+    ctx.shadowColor = hue; ctx.shadowBlur = 2.5;
     ctx.beginPath();
     ctx.moveTo(0, 5);
     ctx.bezierCurveTo(-11, -5, -11, -13, 0, -8);
@@ -249,20 +257,24 @@
   // which is cheap to draw and still reads unmistakably as a lollipop at the
   // small sizes these float at.
   function drawLollipop(ctx, x, y, size, rot, alpha, hue) {
-    const r = size * 10;
+    // this multiplier was tuned back when garden lollipops spawned at
+    // 0.55-1.05 scale; now that gardenFloat draws them at 0.16-0.3 (see the
+    // comment there on why), the old *10 left a 2-3px speck with no visible
+    // candy. Rescaled so it still reads as a lollipop at the smaller size.
+    const r = size * 46;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(x, y);
     ctx.rotate(rot);
     // the stick, behind the candy
     ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.fillRect(-size * 0.9, r * 0.2, size * 1.8, r * 1.7);
+    ctx.fillRect(-size * 4, r * 0.2, size * 8, r * 1.7);
     // the candy disc
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = hue.base;
     ctx.shadowColor = hue.base;
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 2.5;
     ctx.fill();
     ctx.shadowBlur = 0;
     // alternating wedges on top, clipped to the disc, for the swirl

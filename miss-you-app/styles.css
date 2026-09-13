@@ -1404,18 +1404,21 @@ body[data-world="vault"] .poo-companion{display:none}
 .wl-search::placeholder{color:var(--ink-faint)}
 .wl-search:focus-visible{outline:2px solid var(--lav-400);outline-offset:2px}
 
-/* poster grid instead of a stacked list: two columns of real posters is the
-   whole point of moving off a hand-written text list */
+/* Poster grid, streaming-app style: the poster IS the card, not a thumbnail
+   sitting above a text block. Title, year and rating live on a scrim burned
+   into the bottom of the art; save/seen are small glass buttons floating on
+   the poster itself. This is also the fix for the text being hard to read -
+   white text on a deliberate dark gradient has guaranteed contrast no matter
+   how bright or busy the poster underneath is. */
 .wl-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .wl-card{
-  display:flex;flex-direction:column;cursor:pointer;overflow:hidden;
+  position:relative;cursor:pointer;overflow:hidden;
   border-radius:var(--r);border:2px solid var(--edge);
-  background:linear-gradient(165deg,#fffdff,var(--lav-50));
-  box-shadow:var(--sh-sm);transition:opacity .25s,transform .18s;
+  background:var(--lav-100);
+  box-shadow:var(--sh-sm);transition:opacity .25s,transform .18s,filter .25s;
 }
 .wl-card:active{transform:scale(.98)}
-.wl-card.is-seen{opacity:.6}
-.wl-card.is-seen h3{text-decoration:line-through;text-decoration-color:rgba(120,80,170,.45)}
+.wl-card.is-seen{filter:saturate(.55) brightness(.92)}
 
 .wl-poster{position:relative;width:100%;aspect-ratio:2/3;background:var(--lav-100)}
 .wl-poster img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1423,33 +1426,40 @@ body[data-world="vault"] .poo-companion{display:none}
   width:100%;height:100%;display:grid;place-items:center;font-size:2.4rem;
   background:linear-gradient(160deg,var(--lav-100),var(--lav-200));
 }
-.wl-rating{
-  position:absolute;top:7px;right:7px;padding:3px 7px;border-radius:999px;
-  background:rgba(20,10,30,.62);color:#ffd98e;font-size:.68rem;font-weight:800;
-  backdrop-filter:blur(2px);
+
+.wl-seen-ribbon{
+  position:absolute;top:10px;left:-30px;z-index:2;padding:3px 32px;
+  background:linear-gradient(150deg,var(--lav-500),var(--lav-700));color:#fff;
+  font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  rotate:-40deg;box-shadow:0 2px 6px rgba(0,0,0,.25);
 }
 
-.wl-card-main{flex:1;min-width:0;padding:9px 10px 4px}
-.wl-card h3{
-  margin:0 0 4px;font-family:"Baloo",sans-serif;font-size:.86rem;font-weight:700;
-  color:var(--lav-700);line-height:1.2;
+.wl-icon-col{position:absolute;top:8px;right:8px;z-index:2;display:flex;flex-direction:column;gap:6px}
+.wl-icon-btn{
+  width:32px;height:32px;display:grid;place-items:center;cursor:pointer;
+  border-radius:50%;border:1.5px solid rgba(255,255,255,.5);
+  background:rgba(20,10,30,.5);backdrop-filter:blur(3px);
+  font-size:.92rem;line-height:1;color:#fff;
+  transition:transform .18s cubic-bezier(.2,.9,.3,1.4),background .2s;
 }
-.wl-year{font-size:.72rem;font-weight:600;color:var(--ink-faint)}
-.wl-why{
-  margin:0;font-size:.72rem;line-height:1.4;color:var(--ink-soft);
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
-}
+.wl-icon-btn:active{transform:scale(.86)}
+.wl-icon-btn.wl-save.on{background:linear-gradient(150deg,var(--pink-hot),var(--red));border-color:#fff}
+.wl-icon-btn.wl-seen.on{background:linear-gradient(150deg,#4fcf9a,var(--lav-400));border-color:#fff}
 
-.wl-card-actions{display:flex;gap:7px;padding:8px 10px 10px}
-.wl-act{
-  flex:1;min-height:38px;display:grid;place-items:center;cursor:pointer;
-  border-radius:11px;border:2px solid var(--edge);background:#fff;
-  font-size:.98rem;line-height:1;color:var(--ink-faint);
-  transition:transform .18s cubic-bezier(.2,.9,.3,1.4),background .2s,color .2s;
+/* the scrim: a real gradient to guaranteed-dark, not a translucent tint -
+   readability here cannot depend on how light or dark the poster is */
+.wl-scrim{
+  position:absolute;inset:auto 0 0 0;z-index:1;padding:22px 10px 9px;
+  background:linear-gradient(180deg,transparent 0%,rgba(12,6,20,.55) 45%,rgba(12,6,20,.92) 100%);
 }
-.wl-act:active{transform:scale(.9)}
-.wl-save.on{background:linear-gradient(150deg,var(--pink-hot),var(--red));color:#fff;border-color:var(--edge)}
-.wl-seen.on{background:linear-gradient(150deg,var(--mint,#9fe0c6),var(--lav-300));color:#fff;border-color:var(--edge)}
+.wl-scrim h3{
+  margin:0 0 2px;font-family:"Baloo",sans-serif;font-size:.84rem;font-weight:700;
+  color:#fff;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+.wl-scrim-meta{margin:0;font-size:.68rem;font-weight:700;color:rgba(255,255,255,.85)}
+.wl-card.is-seen .wl-scrim h3{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.55)}
 
 .wl-empty{
   grid-column:1/-1;padding:22px 18px;margin:0 0 12px;border-radius:var(--r);text-align:center;
@@ -1476,6 +1486,7 @@ body[data-world="vault"] .poo-companion{display:none}
 }
 .wl-modal-backdrop{width:calc(100% + 40px);margin:-22px -20px 14px;aspect-ratio:16/9;object-fit:cover;display:block}
 .wl-modal-body h2{margin:6px 0 4px;font-size:1.3rem;color:var(--lav-700)}
+.wl-year{font-size:.78rem;font-weight:600;color:var(--ink-faint)}
 .wl-modal-meta{font-size:.78rem;font-weight:700;color:var(--ink-faint);margin:0 0 10px}
 .wl-modal-loading,.wl-modal-note{color:var(--ink-soft);font-weight:600;text-align:center;padding:12px 0}
 .wl-trailer{
