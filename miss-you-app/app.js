@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [] };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -49,7 +49,8 @@ const worlds = [
   { id: "birthday", icon: "🎁", title: "A Few Small Gifts", sub: "open one whenever", count: 8, tone: "birthday", photo: "./assets/mood/bunny-daisy-4.webp", section: "us" },
   { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp", section: "atlas" },
   { id: "games", icon: "🎮", title: "Love Arcade", sub: "arcade, sudoku, puzzles", count: 9, tone: "game", photo: "./assets/mood/drink-4.webp", section: "atlas" },
-  { id: "watchlist", icon: "🎬", title: "Watchlist", sub: "movies for both of us", count: 60, tone: "watchlist", photo: "./assets/mood/bunny-sleep-1.webp", section: "atlas" }
+  { id: "watchlist", icon: "🎬", title: "Watchlist", sub: "movies for both of us", count: 60, tone: "watchlist", photo: "./assets/mood/bunny-sleep-1.webp", section: "atlas" },
+  { id: "lock", icon: "🔒", title: "Our Lock", sub: "you already know the number", count: 1, tone: "lock", photo: "./assets/mood/jar-note-4.webp", section: "us" }
 ];
 
 const comfortNotes = {
@@ -658,6 +659,7 @@ function ensureScreenRendered(name) {
     care: renderCare,
     games: renderGames,
     watchlist: renderWatchlist,
+    lock: renderLock,
     doodles: () => { renderWidgets(); setupCanvas(); },
     us: initHearthOnce
   };
@@ -1081,6 +1083,91 @@ function refreshWlModalButtons(id) {
   const seenBtn = modal.querySelector(`[data-wl-seen="${id}"]`);
   if (saveBtn) { const on = wlIsSaved(id); saveBtn.classList.toggle("on", on); saveBtn.textContent = on ? "remove from watchlist" : "add to watchlist"; }
   if (seenBtn) { const on = wlIsSeen(id); seenBtn.classList.toggle("on", on); seenBtn.textContent = on ? "unmark as watched" : "mark as watched"; }
+}
+
+/* ============================================================================
+   Our Lock. A real padlock, not a text-input pretending to be one: the
+   combination is the app's own anniversary number (2502, the same one the
+   entry gate checks) so this reads as "you already know this," and turning
+   it correctly physically swings the shackle open via the CSS transition on
+   #lock-shackle-g, rather than just swapping a "locked" label for "unlocked".
+   ========================================================================= */
+const LOCK_COMBO = [2, 5, 0, 2];
+const LOCK_REVEAL_TEXT = "You cracked it. Of course you did, it was always going to be that date. That morning changed the shape of my whole life and I did not even know it yet. Every number I use for anything that matters is some version of yours now, hidden in plain sight so only you would ever find it. I built this whole ridiculous little app just to have a place small enough to keep you in, and this felt like the right place to put the part I do not say often enough. You are the answer I keep landing on, on purpose, every single time.";
+
+let lockDigits = [0, 0, 0, 0];
+
+function lockReelHtml(i) {
+  return `
+    <div class="lock-reel">
+      <button class="lock-arrow" data-lock-dir="1" data-lock-index="${i}" type="button" aria-label="turn dial ${i + 1} up">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="lock-window"><span class="lock-digit" data-lock-slot="${i}">0</span></div>
+      <button class="lock-arrow" data-lock-dir="-1" data-lock-index="${i}" type="button" aria-label="turn dial ${i + 1} down">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function lockUpdateDisplay() {
+  lockDigits.forEach((d, i) => {
+    const el = $(`.lock-digit[data-lock-slot="${i}"]`);
+    if (el) el.textContent = String(d);
+  });
+}
+
+function lockShowUnlocked(celebrate) {
+  $("#lock-svg")?.classList.add("unlocked");
+  const status = $("#lock-status");
+  if (status) status.textContent = "open. it was always going to be that number.";
+  const reveal = $("#lock-reveal");
+  const text = $("#lock-reveal-text");
+  if (text) text.textContent = LOCK_REVEAL_TEXT;
+  reveal?.classList.remove("hidden");
+  if (celebrate) {
+    const rect = $("#lock-svg")?.getBoundingClientRect();
+    window.Bloom?.confetti(rect ? rect.left + rect.width / 2 : innerWidth / 2, rect ? rect.top + rect.height / 2 : innerHeight * 0.3, 40);
+    window.Poo?.react?.("love");
+  }
+}
+
+function lockCheckCombo() {
+  if (lockDigits.every((d, i) => d === LOCK_COMBO[i])) {
+    if (!state.lockOpened) { state.lockOpened = true; saveState(); }
+    lockShowUnlocked(true);
+  }
+}
+
+function lockTurn(index, dir) {
+  if (state.lockOpened) return; // already open - the dials are just a keepsake now
+  lockDigits[index] = (lockDigits[index] + dir + 10) % 10;
+  lockUpdateDisplay();
+  lockCheckCombo();
+}
+
+function renderLock() {
+  const reels = $("#lock-reels");
+  if (!reels) return;
+  reels.innerHTML = LOCK_COMBO.map((_, i) => lockReelHtml(i)).join("");
+
+  if (state.lockOpened) {
+    // she solved it before - land already open with the note in place,
+    // rather than making her redo a puzzle that isn't a puzzle anymore
+    lockDigits = [...LOCK_COMBO];
+    lockUpdateDisplay();
+    lockShowUnlocked(false);
+  } else {
+    lockDigits = [0, 0, 0, 0];
+    lockUpdateDisplay();
+  }
+
+  reels.addEventListener("click", event => {
+    const btn = event.target.closest("[data-lock-dir]");
+    if (!btn) return;
+    lockTurn(Number(btn.dataset.lockIndex), Number(btn.dataset.lockDir));
+  });
 }
 
 function goBack() {
