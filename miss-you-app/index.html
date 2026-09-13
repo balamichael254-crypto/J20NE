@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=100">
+  <link rel="stylesheet" href="./styles.css?v=102">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -364,6 +364,65 @@
         <div class="wl-list" id="wl-list"></div>
         <p class="wl-status hidden" id="wl-status">finding more...</p>
         <button class="secondary-btn wide wl-load-more hidden" id="wl-load-more" type="button">show me more</button>
+      </section>
+
+      <!-- A real skeuomorphic padlock, not a row of plain number inputs -
+           an inline SVG body+shackle that visibly swings open on the correct
+           combination, sitting on a heart-filled backdrop. The four digits
+           are the same anniversary number the entry gate already uses
+           (2502), so this reads as "you already know this," not a new
+           puzzle to solve from nothing. -->
+      <section class="screen world-screen screen-lock" id="screen-lock" aria-label="our lock">
+        <div class="section-head">
+          <p class="eyebrow">a little puzzle, just for us</p>
+          <h2>Our Lock</h2>
+          <p>You already know this number. You have known it since the day it became ours.</p>
+          <img class="head-charm" src="./assets/mood/jar-note-4.webp" alt="">
+        </div>
+
+        <div class="lock-stage" id="lock-stage">
+          <div class="lock-hearts" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <svg class="lock-svg" id="lock-svg" viewBox="0 0 220 230" aria-hidden="true">
+            <defs>
+              <linearGradient id="lockShackleGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffe1ee"/>
+                <stop offset="1" stop-color="#f56da8"/>
+              </linearGradient>
+              <linearGradient id="lockBodyGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff9dc7"/>
+                <stop offset="1" stop-color="#b0509a"/>
+              </linearGradient>
+              <radialGradient id="lockGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#fff3c4" stop-opacity=".95"/>
+                <stop offset="1" stop-color="#fff3c4" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <g id="lock-shackle-g" class="lock-shackle-g">
+              <path d="M70 92 V64 a40 40 0 0 1 80 0 V92" fill="none" stroke="url(#lockShackleGrad)" stroke-width="20" stroke-linecap="round"/>
+            </g>
+            <circle id="lock-glow" cx="110" cy="150" r="46" fill="url(#lockGlow)" opacity="0"/>
+            <rect x="38" y="86" width="144" height="122" rx="28" fill="url(#lockBodyGrad)" stroke="#fff" stroke-width="3"/>
+            <path d="M50 98 q60 -16 120 0 q5 20 -2 34 q-58 -16 -116 0 q-7 -14 -2 -34 Z" fill="rgba(255,255,255,.2)"/>
+            <g id="lock-keyhole">
+              <circle cx="110" cy="142" r="11" fill="rgba(30,10,25,.4)"/>
+              <path d="M104.5 150 L115.5 150 L119 172 L101 172 Z" fill="rgba(30,10,25,.4)"/>
+            </g>
+          </svg>
+
+          <div class="lock-reels" id="lock-reels" role="group" aria-label="combination dials"></div>
+
+          <p class="lock-status" id="lock-status">turn the dials to the number that opens us</p>
+
+          <div class="lock-reveal hidden" id="lock-reveal">
+            <p class="card-label">what was locked inside</p>
+            <h3>For whenever you find this.</h3>
+            <p id="lock-reveal-text"></p>
+          </div>
+        </div>
       </section>
 
       <section class="screen world-screen" id="screen-games" aria-label="games">
@@ -748,7 +807,7 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=60"></script>
+  <script src="./app.js?v=61"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>

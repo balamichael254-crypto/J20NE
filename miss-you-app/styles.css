@@ -1472,6 +1472,100 @@ body[data-world="vault"] .poo-companion{display:none}
 }
 .wl-load-more{margin-top:14px}
 
+/* ==========================================================================
+   Our Lock. A real padlock (an inline SVG body + shackle, not a row of
+   plain number inputs) sitting on a magenta backdrop scattered with small
+   drawn hearts. Three things carry the craft here: the shackle physically
+   swings open on the right combination, the digit windows are recessed like
+   an actual dial rather than flat text, and the reveal card slides out from
+   underneath the lock instead of just appearing.
+   ========================================================================== */
+.lock-stage{
+  position:relative;overflow:hidden;padding:34px 20px 26px;text-align:center;
+  border-radius:var(--r-xl);border:3px solid var(--edge);box-shadow:var(--sh-lg);
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.22), transparent 60%),
+    linear-gradient(165deg,#6a2a63 0%,#a3387f 46%,#e0559a 100%);
+}
+/* small drawn hearts scattered across the backdrop, at rest - this is a
+   still decoration, not the ambient particle canvas, so it can't add to the
+   "too many things floating" problem elsewhere in the app */
+.lock-hearts{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.lock-hearts span{
+  position:absolute;width:14px;height:14px;background:rgba(255,255,255,.5);
+  transform:rotate(45deg);border-radius:3px 50% 50% 50%;
+}
+.lock-hearts span::before,.lock-hearts span::after{
+  content:"";position:absolute;width:14px;height:14px;background:inherit;border-radius:50%;
+}
+.lock-hearts span::before{left:-7px}
+.lock-hearts span::after{top:-7px}
+.lock-hearts span:nth-child(1){top:6%;left:10%;scale:.7}
+.lock-hearts span:nth-child(2){top:14%;left:82%;scale:.5}
+.lock-hearts span:nth-child(3){top:32%;left:4%;scale:.4}
+.lock-hearts span:nth-child(4){top:24%;left:60%;scale:.85}
+.lock-hearts span:nth-child(5){top:48%;left:90%;scale:.6}
+.lock-hearts span:nth-child(6){top:60%;left:14%;scale:.55}
+.lock-hearts span:nth-child(7){top:74%;left:76%;scale:.7}
+.lock-hearts span:nth-child(8){top:86%;left:34%;scale:.45}
+.lock-hearts span:nth-child(9){top:92%;left:6%;scale:.6}
+.lock-hearts span:nth-child(10){top:8%;left:44%;scale:.5}
+
+.lock-svg{position:relative;width:150px;height:auto;filter:drop-shadow(0 12px 22px rgba(60,10,50,.4))}
+.lock-shackle-g{
+  transform-box:fill-box;transform-origin:100% 100%;
+  transition:transform .6s cubic-bezier(.2,.9,.3,1.25);
+}
+#lock-glow{transition:opacity .5s ease}
+/* pivots up and out of its right-hand socket, the way a real padlock's
+   shackle releases on one side - rotating around a corner of the arc
+   (rather than lifting the whole piece off center) is what keeps this
+   reading as a hinge instead of the shape just floating up */
+#lock-svg.unlocked .lock-shackle-g{transform:rotate(58deg) translate(4px,-6px)}
+#lock-svg.unlocked #lock-glow{opacity:1}
+#lock-svg.unlocked #lock-keyhole{filter:drop-shadow(0 0 6px #fff3c4)}
+
+.lock-reels{display:flex;justify-content:center;gap:9px;margin:22px 0 6px;position:relative}
+.lock-reel{display:flex;flex-direction:column;align-items:center;gap:7px}
+.lock-arrow{
+  width:34px;height:28px;display:grid;place-items:center;cursor:pointer;
+  border-radius:10px;border:0;background:rgba(255,255,255,.22);color:#fff;
+  transition:background .18s,transform .18s;
+}
+.lock-arrow svg{width:16px;height:16px}
+.lock-arrow:active{transform:scale(.86);background:rgba(255,255,255,.4)}
+.lock-window{
+  width:44px;height:56px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(20,6,18,.55),rgba(20,6,18,.72));
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.45),inset 0 -1px 0 rgba(255,255,255,.12);
+}
+.lock-digit{
+  font-family:"Baloo",sans-serif;font-size:1.7rem;font-weight:700;color:#ffe9b8;
+  text-shadow:0 0 10px rgba(255,233,184,.55);
+}
+
+.lock-status{
+  margin:16px 0 0;font-size:.85rem;font-weight:700;color:rgba(255,255,255,.92);
+  text-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.lock-status.wrong{animation:lockShake .4s}
+@keyframes lockShake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.lock-reveal{
+  margin-top:20px;padding:18px 16px;border-radius:var(--r-lg);text-align:left;
+  background:linear-gradient(168deg,#fffaf3,#fff0e0);border:2px solid #fff;
+  box-shadow:0 14px 28px rgba(40,10,35,.28);
+  animation:lockReveal .55s cubic-bezier(.2,.9,.3,1.2);
+}
+.lock-reveal .card-label{color:#a3387f}
+.lock-reveal h3{margin:2px 0 8px;font-family:"Dancing Script",cursive;font-size:1.5rem;color:var(--lav-700)}
+.lock-reveal p{margin:0;font-size:.9rem;line-height:1.55;color:var(--ink)}
+@keyframes lockReveal{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  .lock-status.wrong{animation:none}
+}
+
 /* the detail / trailer dialog, sharing the app's shared dialog reset */
 .wl-modal{padding:0;overflow:visible}
 .wl-modal-body{
