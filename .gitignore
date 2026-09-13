@@ -10,3 +10,5 @@ playwright-report/
 .env.*.local
 !.env.example
 .claude/worktrees/
+__pycache__/
+*.pyc
