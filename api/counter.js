@@ -16,7 +16,7 @@ const readBody = request => {
 // Only ever these two counters exist right now - a fixed allowlist so this
 // endpoint can't become a free-form key/value store for anything a client
 // decides to send.
-const ALLOWED_KEYS = ["thinking-of-you"];
+const ALLOWED_KEYS = ["thinking-of-you", "distance-signal"];
 
 module.exports = async function handler(request, response) {
   const supabaseUrl = String(process.env.SUPABASE_URL || "").replace(/\/$/, "");

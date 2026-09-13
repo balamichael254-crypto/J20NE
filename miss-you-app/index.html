@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=105">
+  <link rel="stylesheet" href="./styles.css?v=107">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -271,9 +271,14 @@
           <p>Drag as many lilies as you want into the wrap, tap one to take it back out. I will keep it exactly how you leave it.</p>
 
           <div class="bouquet-builder" id="bouquet-builder">
-            <div class="bouquet-wrap-shape" id="bouquet-vase" aria-label="drop lilies here to build your bouquet">
-              <div class="bouquet-ribbon" aria-hidden="true"><span>&#127872;</span></div>
-              <p class="bouquet-vase-hint" id="bouquet-vase-hint">drag lilies here</p>
+            <div class="bouquet-stage">
+              <div class="bouquet-awning" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="bouquet-wrap-shape" id="bouquet-vase" aria-label="drop lilies here to build your bouquet">
+                <div class="bouquet-crease" aria-hidden="true"></div>
+                <div class="bouquet-ribbon" aria-hidden="true"><span>&#127872;</span></div>
+                <p class="bouquet-vase-hint" id="bouquet-vase-hint">drag lilies here</p>
+              </div>
+              <div class="bouquet-shadow" aria-hidden="true"></div>
             </div>
             <div class="bouquet-tray" id="bouquet-tray" role="group" aria-label="flowers to drag into the wrap">
             <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily">
@@ -583,7 +588,20 @@
 
       <section class="screen world-screen" id="screen-distance" aria-label="distance">
         <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>Little beacons for when the distance starts acting too powerful.</p></div>
-        <div class="distance-globe premium-card"><div class="orbit-dot one"></div><div class="orbit-dot two"></div><div class="orbit-line"></div><p>Far is a measurement. Us is a decision.</p></div>
+
+        <!-- A real thread you can actually pull, not just a decoration - one
+             tap sends a pulse across it that lands on the other phone. -->
+        <article class="signal-card premium-card">
+          <div class="signal-thread" id="signal-thread" aria-hidden="true">
+            <span class="signal-dot signal-dot-you">you</span>
+            <span class="signal-dot signal-dot-me">me</span>
+            <span class="signal-pulse" id="signal-pulse"></span>
+          </div>
+          <p class="signal-caption">Far is a measurement. Us is a decision.</p>
+          <button class="primary-btn wide" id="send-signal" type="button">send a signal across the distance</button>
+          <p class="signal-count" id="signal-count">be the first to send one today</p>
+        </article>
+
         <div class="distance-list" id="distance-list"></div>
       </section>
 
@@ -606,7 +624,7 @@
         <div class="section-head"><p class="eyebrow">no occasion at all</p><h2>A Few Small Gifts</h2><p>Tap one open. There's no wrong order.</p><img class="head-charm" src="./assets/mood/bunny-daisy-4.webp" alt=""></div>
         <article class="premium-card gift-grid-card card-rose">
           <div class="gift-grid" id="gift-grid">
-            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">&#128156;</span><small>a compliment</small></button>
+            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">&#128156;</span><small>in my voice</small></button>
             <button class="gift-box" data-gift="song" type="button"><span class="gift-emoji">&#127911;</span><small>a song</small></button>
             <button class="gift-box" data-gift="promise" type="button"><span class="gift-emoji">&#129309;</span><small>a promise</small></button>
             <button class="gift-box" data-gift="dare" type="button"><span class="gift-emoji">&#127919;</span><small>a tiny dare</small></button>
@@ -864,11 +882,11 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=64"></script>
+  <script src="./app.js?v=66"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=2"></script>
-  <script src="./poo.js?v=16"></script>
+  <script src="./poo.js?v=17"></script>
   <script src="./games/sudoku.js?v=2"></script>
   <script src="./games/memory.js?v=2"></script>
   <script src="./games/jigsaw.js?v=2"></script>

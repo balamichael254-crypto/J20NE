@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [] };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {} };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -19,6 +19,7 @@ let gardenTreeCtx = null;
 let gardenPetals = [];
 let gardenProgress = 0.16;
 let gardenAnimationFrame = null;
+let gardenIdleFrame = null;
 let gardenCelebrationTimer = null;
 const GARDEN_BLOOM_DURATION = 9200;
 let navIdleTimer = null;
@@ -338,8 +339,10 @@ const distanceBeacons = [
   ["If you opened this at night", "I am probably missing you too. The dark just makes it easier to hear."],
   ["If you are waiting for my reply", "My silence is not absence. Sometimes I am just living the day that leads me back to you."],
   ["If you want my hand", "Put your palm on the screen. I know it is silly. Do it anyway."],
-  ["If you feel far away", "Far is a measurement. Us is a decision."],
-  ["If goodbye hurt", "Goodbyes are proof that our next hello still matters."]
+  ["If goodbye hurt", "Goodbyes are proof that our next hello still matters."],
+  ["If the time zones feel unfair", "One of us is always awake thinking about the other. That's not nothing."],
+  ["If you counted the days without meaning to", "So did I. I just didn't tell you which number I was on."],
+  ["If today felt like it dragged", "Every dragging day is one fewer between now and the one where you don't have to miss me."]
 ];
 
 const memories = [
@@ -657,7 +660,7 @@ function ensureScreenRendered(name) {
     places: renderPlaces,
     songs: renderSongs,
     promises: renderPromises,
-    distance: renderDistance,
+    distance: () => { renderDistance(); initSignalThread(); },
     reasons: renderReasons,
     memory: renderMemory,
     birthday: renderBirthday,
@@ -687,7 +690,8 @@ function openScreen(name, options = {}) {
   $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.open === name));
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
-  if (name === "garden") requestAnimationFrame(resizeGardenTree);
+  if (name === "garden") requestAnimationFrame(() => { resizeGardenTree(); startGardenIdleSway(); });
+  else stopGardenIdleSway();
   if (name === "games") fetchBubbleScores();
   // Leaving the arcade tears the chosen game down. Sudoku holds a timer,
   // jigsaw holds object URLs and a drag listener on document; neither should
@@ -1642,6 +1646,58 @@ function renderDistance() {
   `).join("");
 }
 
+// While Apart used to be five static cards and two motionless dots - nothing
+// on the screen actually did anything. This is the fix: a real thread with a
+// button that sends an actual signal to the other phone, with a shared count
+// so it accumulates into something instead of disappearing the moment you
+// tap it.
+const SIGNAL_API = "../api/counter?room=moonpie-counters-2504";
+
+function playSignalPulse() {
+  const pulse = $("#signal-pulse");
+  if (!pulse) return;
+  pulse.classList.remove("firing");
+  void pulse.offsetWidth;
+  pulse.classList.add("firing");
+}
+
+async function initSignalThread() {
+  const button = $("#send-signal");
+  const countEl = $("#signal-count");
+  if (!button) return;
+
+  try {
+    const res = await fetch(`${SIGNAL_API}&key=distance-signal`, { cache: "no-store" });
+    if (res.ok) {
+      const { value } = await res.json();
+      if (countEl) countEl.textContent = value > 0 ? `${value} signals sent across the distance so far` : "be the first to send one today";
+    }
+  } catch { /* leave the default copy - the button still works locally either way */ }
+
+  button.addEventListener("click", async () => {
+    playSignalPulse();
+    if (window.Poo) window.Poo.react("love");
+    burstAt(window.innerWidth / 2, $("#signal-thread")?.getBoundingClientRect().bottom || window.innerHeight * 0.3, 6);
+
+    try {
+      const res = await fetch(SIGNAL_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "distance-signal" }),
+      });
+      if (res.ok) {
+        const { value } = await res.json();
+        if (countEl) countEl.textContent = `${value} signals sent across the distance so far`;
+      }
+    } catch { /* the pulse still played - the count just won't have moved this time */ }
+
+    if (window.MoonpiePush) {
+      const me = window.MoonpiePush.myProfile();
+      window.MoonpiePush.send(`a signal from ${nickOf(me)}`, "just sent something across the distance to you");
+    }
+  });
+}
+
 function renderReasons() {
   nextReason();
   $("#reason-stack").innerHTML = reasons.map((r, i) => `<div class="reason-chip">${i + 1}. ${r}</div>`).join("");
@@ -1680,7 +1736,12 @@ function seededGardenRandom(seed = 1347) {
 
 function buildGardenPetals() {
   const rand = seededGardenRandom();
-  const colors = ["#c9142f", "#e51d43", "#ff355d", "#ff5b7e", "#ff799a", "#f6a7bb", "#ffc3cf", "#d92d68"];
+  // split into a back layer and a front layer rather than one flat pile of
+  // colour - the deep reds sit behind and smaller, the bright pinks in front
+  // and larger, which is what turns a scatter of hearts into a canopy with
+  // actual volume to it
+  const backColors = ["#8d0d21", "#a91029", "#c9142f", "#b81338"];
+  const frontColors = ["#ff355d", "#ff5b7e", "#ff799a", "#f6a7bb", "#ffc3cf", "#d92d68"];
   const petals = [];
   let guard = 0;
 
@@ -1692,16 +1753,21 @@ function buildGardenPetals() {
     if (heart > 0) continue;
 
     const edgeBias = Math.pow(rand(), .72);
+    const depth = rand();                       // 0 = deepest in the canopy, 1 = nearest the eye
+    const back = depth < .42;
     petals.push({
+      depth,
       x: 160 + x * (104 - edgeBias * 7) + (rand() - .5) * 12,
       y: 152 - y * (92 - edgeBias * 5) + (rand() - .5) * 10,
       fromX: 156 + (rand() - .5) * 38,
       fromY: 318 - rand() * 78,
-      size: 4.2 + rand() * 7.8,
+      size: (back ? 3.4 + rand() * 5.2 : 5 + rand() * 7.8),
       rot: (rand() - .5) * 1.8,
-      color: colors[Math.floor(rand() * colors.length)],
+      color: back
+        ? backColors[Math.floor(rand() * backColors.length)]
+        : frontColors[Math.floor(rand() * frontColors.length)],
       delay: rand() * .52,
-      shine: rand() > .78
+      shine: !back && rand() > .78
     });
   }
 
@@ -1710,22 +1776,27 @@ function buildGardenPetals() {
     [114, 98], [126, 129], [207, 70], [198, 105], [146, 64], [180, 54],
     [95, 232], [118, 250], [244, 212], [222, 233]
   ];
+  // branch-tip clusters sit nearest the eye, so they take the front palette
   branchCanopy.forEach(([anchorX, anchorY], branchIndex) => {
     for (let i = 0; i < 8; i += 1) {
       petals.push({
+        depth: .72 + rand() * .28,
         x: anchorX + (rand() - .5) * 34,
         y: anchorY + (rand() - .5) * 30,
         fromX: 158 + (rand() - .5) * 24,
         fromY: 320 - rand() * 58,
         size: 5.2 + rand() * 7.2,
         rot: (rand() - .5) * 1.9,
-        color: colors[(branchIndex + i) % colors.length],
+        color: frontColors[(branchIndex + i) % frontColors.length],
         delay: .12 + rand() * .44,
         shine: rand() > .58
       });
     }
   });
 
+  // paint back to front, so the deep reds are genuinely behind the bright
+  // pinks instead of interleaved at random
+  petals.sort((a, b) => a.depth - b.depth);
   return petals;
 }
 
@@ -1806,7 +1877,13 @@ function drawGardenTree(progress = 0.16) {
   const scale = Math.min(w / 320, h / 390);
   const ox = (w - 320 * scale) / 2;
   const oy = (h - 390 * scale) / 2;
-  const wind = Math.sin(performance.now() / 900) * 2.2;
+  // Two winds: a slow one that moves the whole canopy together, and a faster
+  // one that breaks it up per petal. The old single wind was multiplied down
+  // to ~0.4 canvas units of travel, which is sub-pixel once the canvas is
+  // scaled - technically animating, visibly frozen.
+  const t = performance.now();
+  const gust = Math.sin(t / 2600) * 0.55 + Math.sin(t / 1100) * 0.45;   // -1..1, never quite repeating
+  const wind = gust * 6.5;
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
@@ -1823,9 +1900,32 @@ function drawGardenTree(progress = 0.16) {
   ctx.ellipse(166, 164, 170, 145, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const trunkProgress = easeOutCubic(progress / .42);
+  // Ground first, so the tree is standing ON something instead of floating.
+  // The shadow widens as the canopy fills out - a tree with more above it
+  // casts more below it, and that link is most of what sells the depth.
+  const rooted = easeOutCubic(progress / .42);
+  if (rooted > 0) {
+    const shadowW = (52 + 34 * clamp01((progress - .46) / .54)) * rooted;
+    const soil = ctx.createRadialGradient(159, 368, 2, 159, 368, shadowW);
+    soil.addColorStop(0, "rgba(74,44,20,.34)");
+    soil.addColorStop(1, "rgba(74,44,20,0)");
+    ctx.fillStyle = soil;
+    ctx.beginPath();
+    ctx.ellipse(159, 368, shadowW, 11 * rooted, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(96,62,32,.5)";
+    ctx.beginPath();
+    ctx.ellipse(159, 366, 27 * rooted, 6.5 * rooted, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const trunkProgress = rooted;
+  // three passes on the trunk: a dark side, the body, then a lit edge, so it
+  // reads as a round trunk rather than a flat brown stroke
+  drawCurve(ctx, [[154, 365], [150, 296], [147, 207], [161, 48]], trunkProgress, 21, "#5d3415");
   drawCurve(ctx, [[158, 365], [154, 296], [151, 207], [164, 48]], trunkProgress, 19, "#7a471f");
-  drawCurve(ctx, [[164, 363], [160, 294], [158, 204], [169, 58]], trunkProgress, 8, "rgba(122,73,36,.48)");
+  drawCurve(ctx, [[164, 363], [160, 294], [158, 204], [169, 58]], trunkProgress, 8, "rgba(198,144,88,.5)");
 
   [
     { c: [[160, 267], [122, 236], [92, 200], [73, 150]], w: 8, start: .24 },
@@ -1843,9 +1943,15 @@ function drawGardenTree(progress = 0.16) {
     gardenPetals.forEach((petal, index) => {
       const appear = easeOutCubic((bloom - petal.delay) / .62);
       if (appear <= 0) return;
-      const x = petal.fromX + (petal.x - petal.fromX) * appear + Math.sin(performance.now() / 650 + index) * wind * appear * .18;
-      const y = petal.fromY + (petal.y - petal.fromY) * appear - Math.sin(appear * Math.PI) * 22;
-      drawHeartPetal(ctx, x, y, petal.size, petal.rot + wind * .016, petal.color, .1 + appear * .9, .28 + appear * .8, petal.shine);
+      // petals higher in the canopy catch more of the gust than ones down by
+      // the trunk, which is what makes it read as wind rather than a jitter
+      const catchWind = (1 - clamp01((petal.y - 40) / 300)) * (0.45 + petal.depth * 0.75);
+      const x = petal.fromX + (petal.x - petal.fromX) * appear
+        + (wind * catchWind + Math.sin(t / 700 + index * 0.7) * 1.6 * catchWind) * appear;
+      const y = petal.fromY + (petal.y - petal.fromY) * appear
+        - Math.sin(appear * Math.PI) * 22
+        + Math.sin(t / 900 + index) * 0.9 * catchWind * appear;
+      drawHeartPetal(ctx, x, y, petal.size, petal.rot + wind * .03 * catchWind, petal.color, .1 + appear * .9, .28 + appear * .8, petal.shine);
       if (petal.shine && appear > .82) {
         drawHeartPetal(ctx, x - 1.5, y - 1.8, petal.size * .38, petal.rot, "#fff0f4", (appear - .82) * 1.2, .75);
       }
@@ -1864,14 +1970,47 @@ function setupGardenTree() {
   gardenPetals = buildGardenPetals();
   resizeGardenTree();
   window.addEventListener("resize", resizeGardenTree);
+  // don't keep repainting a canvas nobody is looking at
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      if (document.body.dataset.world === "garden") startGardenIdleSway();
+    } else {
+      stopGardenIdleSway();
+    }
+  });
   // Already bloomed on a previous visit: skip the sprout state and the tap
   // prompt, and paint the full tree immediately.
   if (state.gardenBloomed) {
     $("#garden-stage")?.classList.add("bloomed");
     $(".home-garden")?.classList.add("bloomed");
     gardenProgress = 1;
-    requestAnimationFrame(() => drawGardenTree(1));
+    requestAnimationFrame(() => { drawGardenTree(1); startGardenIdleSway(); });
   }
+}
+
+/* Once the bloom animation finished, the tree used to freeze into a single
+   painted frame and never move again - drawGardenTree() computes its wind
+   sway from performance.now(), so the sway only ever existed while something
+   was repainting. This keeps a slow repaint going while the garden is on
+   screen, so the canopy actually breathes instead of being a still image of
+   a tree. Stopped the moment she leaves the screen (see openScreen). */
+function startGardenIdleSway() {
+  if (gardenIdleFrame || !gardenTreeCanvas) return;
+  if (gardenProgress < 1) return;                       // still sprouting; the bloom loop owns the canvas
+  if (document.hidden) return;                          // nothing to repaint for; visibilitychange restarts it
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { drawGardenTree(1); return; }
+  let lastPaint = -Infinity;
+  const tick = now => {
+    if (now - lastPaint >= 40) { drawGardenTree(1); lastPaint = now; }   // ~25fps is plenty for a slow sway
+    gardenIdleFrame = requestAnimationFrame(tick);
+  };
+  gardenIdleFrame = requestAnimationFrame(tick);
+}
+
+function stopGardenIdleSway() {
+  if (!gardenIdleFrame) return;
+  cancelAnimationFrame(gardenIdleFrame);
+  gardenIdleFrame = null;
 }
 
 function animateGardenTree() {
@@ -1894,6 +2033,7 @@ function animateGardenTree() {
       gardenProgress = 1;
       drawGardenTree(1);
       gardenAnimationFrame = null;
+      startGardenIdleSway();   // hand the canvas over to the slow ambient sway
     }
   }
 
@@ -1937,33 +2077,31 @@ function gardenAgeLine() {
   return line;
 }
 
-const bouquetLines = [
-  "Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.",
-  "I keep picking the same flowers because they are the ones that made me think of you the first time.",
-  "One day I get to actually hand you this bouquet instead of a photo of it. That day is on the calendar in my head."
-];
 const roseLines = [
-  "The deep red kind, the ones that look almost too velvet to be real.",
-  "Roses are supposed to be the obvious choice. I am not embarrassed about being obvious for you.",
-  "This one is for the version of romance that does not need to be original to be true."
+  "Deep red, almost too velvet to be real.",
+  "The obvious choice. I'm not embarrassed about that.",
+  "This is the one I'd actually hand you first."
 ];
 function renderGardenCaptions() {
-  const bouquetCopy = $("#bouquet-copy");
   const roseCopy = $("#rose-copy");
-  if (bouquetCopy) bouquetCopy.textContent = pickFresh(bouquetLines, "lastBouquetLine");
   if (roseCopy) roseCopy.textContent = pickFresh(roseLines, "lastRoseLine");
   const age = $("#garden-age-line");
   if (age) age.textContent = gardenAgeLine();
 }
 
+// Actual compliments about her, not vibes about a day or a room - something
+// a person could read and know exactly what quality of hers earned it.
 const girlfriendDayCompliments = [
-  "You make ordinary Tuesdays feel like an event.",
-  "You are the softest, funniest, most stubbornly loving person I know.",
-  "You argue like you mean it and love like you mean it more.",
-  "You are worth every time zone and every bad connection call.",
-  "You have never once made me feel silly for how much I adore you.",
-  "You are the calmest chaos I have ever loved.",
-  "Whatever room you are in becomes the good one.",
+  "You're the most beautiful person I have ever looked at, and I've had a lot of practice looking.",
+  "You're smarter than almost everyone in every room you walk into, and you never once make anyone feel small for it.",
+  "Your laugh is my favorite sound, full stop, no close second.",
+  "You are so much stronger than you give yourself credit for. I've watched you carry things that would flatten most people.",
+  "You're funnier than you think you are. Some of the hardest I've laughed this year was at something you said without even trying.",
+  "You love people so completely it should be studied. I've never met anyone as generous with their heart as you.",
+  "You are, without exaggeration, the most beautiful girl I have ever seen. That has not changed once since the day I met you.",
+  "Your mind works in a way I find endlessly interesting. I could listen to how you think about things forever.",
+  "You are brave in a quiet way most people never notice. I notice.",
+  "You have the kind of warmth that makes people feel safe around you. I felt it before I even knew what it was.",
 ];
 
 const girlfriendDayDares = [
@@ -1987,7 +2125,7 @@ const girlfriendDayFutures = [
 ];
 
 const giftKinds = {
-  compliment: { label: "a compliment", list: girlfriendDayCompliments },
+  compliment: { label: "in my voice", list: girlfriendDayCompliments },
   song: { label: "a song for today", list: songs },
   promise: { label: "a promise", list: promises },
   dare: { label: "a tiny dare", list: girlfriendDayDares },
@@ -2102,6 +2240,52 @@ const COUNTER_API = "../api/counter?room=moonpie-counters-2504";
 const DAILY_API = "../api/daily-question?room=moonpie-daily-2504";
 const ANNIVERSARY = new Date("2025-02-25T00:00:00");
 
+// Same UTC-day-number question rotation as api/daily-question.js, so that if
+// the server round trip fails for any reason - unconfigured Supabase, a cold
+// network, or just this device being offline for a minute - she still gets
+// an actual question today instead of a dead "couldn't reach it" toast. The
+// only thing lost offline is seeing the other phone's answer; her own answer
+// still saves locally and she still gets to sit with the question.
+const LOCAL_DAILY_QUESTIONS = [
+  "What's a tiny thing I did recently that you haven't told me made you happy?",
+  "If we had the whole day with no plans, what would you actually want to do?",
+  "What's a memory of us you've been thinking about lately?",
+  "What's something you're proud of yourself for this week?",
+  "What's one thing about me you'd tell a stranger if they asked why you love me?",
+  "What's a small comfort you wish you had right now?",
+  "If you could teleport somewhere with me for one hour, where?",
+  "What's something you've never told me because it felt too small to mention?",
+  "What made you laugh today, even a little?",
+  "What's a song that's been stuck in your head, and does it remind you of anything?",
+  "What's one thing you're looking forward to, however far off?",
+  "What's a habit of mine you secretly find endearing?",
+  "If today had a color, what would it be and why?",
+  "What's something you want to get better at, together or alone?",
+  "What's the last thing that made you feel completely at ease?",
+  "What's a food you're craving right now that you'd want to share with me?",
+  "What's one thing from your childhood you want me to understand better?",
+  "What's something small I could do this week that would mean a lot?",
+  "What's a place that felt like home, even briefly?",
+  "What's a fear you don't talk about much?",
+  "What's your current favourite way to waste time?",
+  "What's a compliment you received that you still think about?",
+  "If we designed our future kitchen right now, what's the one thing it has to have?",
+  "What's something you learned about yourself this year?",
+  "What's a moment today you'd want to press pause on and stay in?",
+  "What's a question you wish I'd ask you more often?",
+  "What's something that's been on your mind you haven't said out loud yet?",
+  "What's a smell or sound that instantly calms you down?",
+  "What's the most 'us' thing that's happened recently?",
+  "What's one thing you want to promise yourself this month?"
+];
+function localDailyQuestion() {
+  const dayNumber = Math.floor(Date.now() / 86400000);
+  const day = new Date(dayNumber * 86400000).toISOString().slice(0, 10);
+  const question = LOCAL_DAILY_QUESTIONS[dayNumber % LOCAL_DAILY_QUESTIONS.length];
+  const savedAnswer = (state.localDailyAnswers || {})[day] || null;
+  return { day, question, myAnswer: savedAnswer, otherAnswer: null, otherAnswered: false, offline: true };
+}
+
 function daysTogether() {
   return Math.max(0, Math.floor((Date.now() - ANNIVERSARY.getTime()) / 86400000));
 }
@@ -2195,14 +2379,19 @@ async function refreshHearth() {
     state.dailyQuestion = data;
     if (lantern) lantern.dataset.state = data.otherAnswer ? "revealed" : data.myAnswer ? "answered" : "closed";
   } catch {
-    state.dailyQuestion = null;
+    state.dailyQuestion = localDailyQuestion();
+    if (lantern) lantern.dataset.state = state.dailyQuestion.myAnswer ? "answered" : "closed";
   }
 }
 
 function openLanternSheet() {
   const sheet = $("#lantern-sheet");
-  const data = state.dailyQuestion;
-  if (!sheet || !data) { toast("couldn't reach today's question"); return; }
+  // state.dailyQuestion is only ever null before the first refreshHearth()
+  // call has had a chance to run - refreshHearth always fills it, from the
+  // server or from localDailyQuestion() as a fallback, so a real question is
+  // shown even when the server round trip fails.
+  const data = state.dailyQuestion || localDailyQuestion();
+  if (!sheet) return;
 
   $("#lantern-question").textContent = data.question;
   $("#lantern-day-label").textContent = "today's question";
@@ -2257,7 +2446,19 @@ async function submitLanternAnswer() {
     burstAt(window.innerWidth / 2, window.innerHeight * 0.7, 10);
     openLanternSheet();
   } catch {
-    toast("couldn't seal that answer - try again in a moment");
+    // The server couldn't take it - still let her seal the answer locally
+    // rather than losing it. She just won't see the other side's answer
+    // until the connection actually works.
+    const day = state.dailyQuestion?.day || localDailyQuestion().day;
+    if (!state.localDailyAnswers || typeof state.localDailyAnswers !== "object") state.localDailyAnswers = {};
+    state.localDailyAnswers[day] = answer;
+    saveState();
+    state.dailyQuestion = localDailyQuestion();
+    $("#lantern").dataset.state = "answered";
+    $("#lantern-answer").value = "";
+    burstAt(window.innerWidth / 2, window.innerHeight * 0.7, 10);
+    openLanternSheet();
+    toast("saved on this phone - it'll sync once the connection is back");
   }
 }
 

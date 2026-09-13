@@ -129,7 +129,27 @@
     catch: ["Got it! Look - I caught you a butterfly.", "It tickled a little. Worth it.",
       "Chased that thing across the whole screen for you."],
     dance: ["Okay, hold my hand, we're doing this.", "This is the part where you laugh at my moves.",
-      "No music? Doesn't matter. I brought my own rhythm."],
+      "No music? Doesn't matter. I brought my own rhythm.",
+      "I've been practising. Be nice.", "One more song. Just one. Okay two."],
+    sing: ["La la - okay I don't know the words, I just know the feeling.",
+      "I only know one song and it's about you.", "Hum with me. Nobody's listening but me.",
+      "I'm not a good singer. I'm an enthusiastic one.",
+      "This is the song that plays in my head when you show up."],
+    peekaboo: ["Boo! ...did I get you?", "You looked for me. That's the whole game, you know.",
+      "I was gone for two seconds and you noticed. I love that.",
+      "Still here! I'm always still here."],
+    spin: ["Look look look - full rotation!", "I meant to do that.",
+      "Dizzy. Worth it. Do you want another one?", "Ta-da. I've got range."],
+    // Poo's own observations - the point of this one is the thought, not the
+    // wiggle, so these run longer and say something she'd actually notice.
+    think: ["I was just thinking - he talks about you like you're weather. Like you happen to him.",
+      "Can I tell you something? You get this little pause before you smile. I watch for it.",
+      "I think you're braver than you know. I've watched you open this app on your worst days.",
+      "Sometimes he opens this thing just to reread what you wrote. I see everything.",
+      "I don't think you realise how much of this whole place is just him missing you loudly.",
+      "You come back here a lot. I hope you know that means something good about you, not something sad.",
+      "He built me so you'd have company. I think he was really saying: don't be lonely, please.",
+      "You're allowed to take up space here. It was all made for you on purpose."],
   };
 
   const GREETINGS = {
@@ -263,6 +283,10 @@
           <button type="button" data-act="pet">pet her</button>
           <button type="button" data-act="tickle">tickle</button>
           <button type="button" data-act="dance">dance</button>
+          <button type="button" data-act="sing">sing to me</button>
+          <button type="button" data-act="spin">spin</button>
+          <button type="button" data-act="peekaboo">peekaboo</button>
+          <button type="button" data-act="think">tell me something</button>
           <button type="button" data-act="lily">give a lily</button>
           <button type="button" data-act="sleepy">wind down</button>
           <button type="button" data-act="love" class="is-primary">I love you</button>
@@ -420,7 +444,8 @@
       }
     }
 
-    const GAIN = { pet: .6, tickle: 1, love: 1.8, boop: .4, shy: .8, catch: 1.2, dance: 1.4, lily: 1.1 };
+    const GAIN = { pet: .6, tickle: 1, love: 1.8, boop: .4, shy: .8, catch: 1.2, dance: 1.4, lily: 1.1,
+                   sing: 1.2, peekaboo: .9, spin: .9, think: .7 };
 
     function react(kind) {
       addBond(GAIN[kind] || 0.3);
@@ -486,6 +511,61 @@
           [3.10, () => { setPose("content", 0.4); }],
         ]);
         say("dance");
+
+      } else if (kind === "sing") {
+        // a slow four-beat bob with a little sway on the off-beats, so it
+        // reads as keeping time rather than just wobbling
+        bump(0.6, 0.5);
+        const beat = up => () => { S.hop.vel += HOP_IMPULSE * (up ? 0.5 : 0.34); S.earL.vel += 14; S.earR.vel += 14; };
+        play([
+          [0,    () => { setPose("happy", 0.14, 3.4); S.blush.target = 0.5; }],
+          [0.10, beat(true)], [0.30, () => emit("spark", 3, 0.6)],
+          [0.70, beat(false)], [0.90, () => emit("spark", 3, 0.6)],
+          [1.30, beat(true)], [1.50, () => { emit("heart", 3, 0.7); S.lean.vel += 20; }],
+          [1.90, beat(false)], [2.10, () => { emit("spark", 4, 0.6); S.lean.vel -= 20; }],
+          [2.60, () => { setPose("content", 0.3, 1.2); emit("heart", 4); }],
+        ]);
+        say("sing");
+
+      } else if (kind === "peekaboo") {
+        // drop out of frame, hold the beat of absence, then spring back
+        bump(0.5, 0.8);
+        play([
+          [0,    () => { setPose("curious", 0.08, 0.5); S.squash.value = 0.82; S.squash.vel -= 3; }],
+          [0.16, () => { S.hop.vel -= HOP_IMPULSE * 1.5; }],
+          [0.75, () => { S.hop.vel += HOP_IMPULSE * 2.1; S.squash.vel += 5; setPose("surprised", 0.06, 0.9); emit("spark", 8, 1.1); }],
+          [1.05, () => { S.earL.vel += 34; S.earR.vel -= 34; emit("heart", 5); }],
+          [1.50, () => { setPose("happy", 0.2, 1.0); S.blush.target = 0.7; }],
+          [2.30, () => { setPose("content", 0.35); }],
+        ]);
+        say("peekaboo");
+
+      } else if (kind === "spin") {
+        bump(0.55, 0.7);
+        // one full lean sweep each way reads as a twirl without the rig ever
+        // leaving its bounded lean range
+        play([
+          [0,    () => { setPose("excited", 0.1, 2.4); S.hop.vel += HOP_IMPULSE * 0.7; }],
+          [0.08, () => { S.lean.vel += 60; }],
+          [0.42, () => { S.lean.vel -= 90; emit("spark", 5); }],
+          [0.80, () => { S.lean.vel += 90; emit("petal", 5, 0.8); }],
+          [1.16, () => { S.lean.vel -= 55; }],
+          [1.50, () => { setPose("happy", 0.2, 1.0); emit("heart", 5); S.blush.target = 0.6; }],
+          [2.30, () => { setPose("content", 0.35); }],
+        ]);
+        say("spin");
+
+      } else if (kind === "think") {
+        // she leans back, considers, then delivers an actual thought - the
+        // only action whose point is the line rather than the movement
+        bump(0.3, 0.25);
+        play([
+          [0,    () => { setPose("curious", 0.16, 1.6); S.lean.vel += 16; }],
+          [0.50, () => { S.earL.vel += 12; S.earR.vel -= 12; S.lean.vel -= 26; }],
+          [1.10, () => { setPose("lookup", 0.24, 1.4); emit("spark", 3, 0.5); }],
+          [2.00, () => { setPose("content", 0.3, 1.0); S.blush.target = 0.35; }],
+        ]);
+        say("think");
 
       } else if (kind === "lily") {
         bump(0.8, 0.4);
