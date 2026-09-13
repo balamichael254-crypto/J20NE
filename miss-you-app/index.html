@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=94">
+  <link rel="stylesheet" href="./styles.css?v=98">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -240,11 +240,16 @@
           <img class="head-charm" src="./assets/mood/flower-jar-1.webp" alt="">
         </div>
         <article class="garden-stage premium-card" id="garden-stage">
-          <div class="garden-copy">
+          <div class="garden-copy garden-copy-new">
             <p class="script-kicker">I planted one small thing here for you.</p>
             <h3>Tap the heart. Let it bloom.</h3>
             <p>The tree grows into a heart because subtlety left the room the moment I started loving you.</p>
             <button class="primary-btn" id="bloom-garden" type="button">bloom the heart tree</button>
+          </div>
+          <div class="garden-copy garden-copy-grown">
+            <p class="script-kicker">still growing, right where you left it</p>
+            <h3 id="garden-age-line">This tree does not wilt.</h3>
+            <p>Tap it whenever you want to watch it happen again.</p>
           </div>
           <div class="heart-tree big-tree" aria-label="heart tree that grows into bloom">
             <canvas class="love-tree-canvas" id="garden-tree-canvas" aria-label="animated heart tree"></canvas>
@@ -257,7 +262,7 @@
           <div>
             <p class="card-label">real flowers</p>
             <h3>For you, Moonpie.</h3>
-            <p>Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
+            <p id="bouquet-copy">Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.</p>
           </div>
         </article>
 
@@ -266,7 +271,7 @@
           <div>
             <p class="card-label">not only lilies</p>
             <h3>And this one, too.</h3>
-            <p>The deep red kind, the ones that look almost too velvet to be real.</p>
+            <p id="rose-copy">The deep red kind, the ones that look almost too velvet to be real.</p>
           </div>
         </article>
       </section>
@@ -438,11 +443,14 @@
 
       <section class="screen world-screen" id="screen-places" aria-label="places">
         <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Tap a place and step inside. Every world holds its own gallery, atmosphere, and little life waiting for us.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
+        <p class="places-progress" id="places-progress"></p>
         <div class="place-rail" id="place-rail"></div>
       </section>
 
       <section class="screen world-screen" id="screen-songs" aria-label="songs">
         <div class="section-head"><p class="eyebrow">press play and stay awhile</p><h2>Songs That Are You</h2><p>Real Spotify players, with the reason each song keeps finding its way back to you.</p><img class="head-charm" src="./assets/mood/vinyl-2.webp" alt=""></div>
+        <div class="song-featured" id="song-featured"></div>
+        <p class="card-label song-list-label">the rest of the playlist</p>
         <div class="song-list" id="song-list"></div>
       </section>
 
@@ -476,14 +484,14 @@
         <div class="section-head"><p class="eyebrow">no occasion at all</p><h2>A Few Small Gifts</h2><p>Tap one open. There's no wrong order.</p><img class="head-charm" src="./assets/mood/bunny-daisy-4.webp" alt=""></div>
         <article class="premium-card gift-grid-card card-rose">
           <div class="gift-grid" id="gift-grid">
-            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">🎁</span><small>a compliment</small></button>
-            <button class="gift-box" data-gift="song" type="button"><span class="gift-emoji">🎁</span><small>a song</small></button>
-            <button class="gift-box" data-gift="promise" type="button"><span class="gift-emoji">🎁</span><small>a promise</small></button>
-            <button class="gift-box" data-gift="dare" type="button"><span class="gift-emoji">🎁</span><small>a tiny dare</small></button>
-            <button class="gift-box" data-gift="future" type="button"><span class="gift-emoji">🎁</span><small>a future we're owed</small></button>
-            <button class="gift-box" data-gift="moonwish" type="button"><span class="gift-emoji">🎁</span><small>a wish on the moon</small></button>
-            <button class="gift-box" data-gift="dance" type="button"><span class="gift-emoji">🎁</span><small>a slow dance</small></button>
-            <button class="gift-box" data-gift="hug" type="button"><span class="gift-emoji">🎁</span><small>a hug from Poo</small></button>
+            <button class="gift-box" data-gift="compliment" type="button"><span class="gift-emoji">&#128156;</span><small>a compliment</small></button>
+            <button class="gift-box" data-gift="song" type="button"><span class="gift-emoji">&#127911;</span><small>a song</small></button>
+            <button class="gift-box" data-gift="promise" type="button"><span class="gift-emoji">&#129309;</span><small>a promise</small></button>
+            <button class="gift-box" data-gift="dare" type="button"><span class="gift-emoji">&#127919;</span><small>a tiny dare</small></button>
+            <button class="gift-box" data-gift="future" type="button"><span class="gift-emoji">&#128302;</span><small>a future we're owed</small></button>
+            <button class="gift-box" data-gift="moonwish" type="button"><span class="gift-emoji">&#127772;</span><small>a wish on the moon</small></button>
+            <button class="gift-box" data-gift="dance" type="button"><span class="gift-emoji">&#128131;</span><small>a slow dance</small></button>
+            <button class="gift-box" data-gift="hug" type="button"><span class="gift-emoji">&#129391;</span><small>a hug from Poo</small></button>
           </div>
           <div class="gift-reveal hidden" id="gift-reveal"></div>
         </article>
@@ -669,7 +677,16 @@
           <button class="secondary-btn" id="new-poo-line" type="button">what does Poo say</button>
         </article>
 
-        <div class="care-list" id="care-list"></div>
+        <!-- Replaces the old fixed 1-through-8 checklist, which said the exact
+             same eight things in the exact same order on every single visit.
+             One suggestion at a time, never the same one twice running. -->
+        <article class="premium-card card-mint one-thing-card">
+          <p class="card-label">if you only do one thing</p>
+          <h3 id="one-thing-title">Come closer</h3>
+          <p id="one-thing-note">Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours.</p>
+          <button class="secondary-btn" id="new-one-thing" type="button">give me another way in</button>
+        </article>
+
         <article class="promise-card premium-card">
           <p class="card-label">promise</p>
           <h3>I am not gone.</h3>
@@ -720,7 +737,7 @@
   <script src="./content.js?v=43"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=54"></script>
+  <script src="./app.js?v=57"></script>
   <script src="./bloom.js?v=3"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>

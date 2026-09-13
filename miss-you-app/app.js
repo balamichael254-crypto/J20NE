@@ -291,15 +291,34 @@ const places = [
   ["Our Tiny Kitchen", "./assets/worlds/kitchen-1.webp", "Coffee, sleepy hair, stealing bites, arguing lovingly about the last piece."]
 ];
 
-const songs = [
-  ["Sleep Well", "d4vd", "For the soft nights when missing each other gets too loud."],
-  ["Best Part", "Daniel Caesar ft. H.E.R.", "Because you are exactly that: the part my day keeps waiting for."],
-  ["Those Eyes", "New West", "A song for tiny things, private jokes, and the ordinary ways love proves itself."],
-  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct way."],
-  ["Melting", "Kali Uchis", "For the moments where all I can do is be dramatically in love with you."],
-  ["Japanese Denim", "Daniel Caesar", "For late calls, warm silence, and wanting more time."],
-  ["Glue Song", "beabadoobee", "Because you stuck, Moonpie. Beautifully, inconveniently, permanently."]
+// Base list plus whatever content.js knows (that one carries real Spotify
+// track ids). Merged and deduped by title so nothing written twice gets
+// dropped, and songs.js only has to be extended in one of the two places.
+const baseSongs = [
+  ["Sleep Well", "d4vd", "For the soft nights when missing each other gets too loud.", null, "soft"],
+  ["Those Eyes", "New West", "A song for tiny things, private jokes, and the ordinary ways love proves itself.", null, "soft"],
+  ["Until I Found You", "Stephen Sanchez", "Ridiculous-romantic in the correct way.", null, "big"],
+  ["Melting", "Kali Uchis", "For the moments where all I can do is be dramatically in love with you.", null, "big"],
+  ["Japanese Denim", "Daniel Caesar", "For late calls, warm silence, and wanting more time.", null, "soft"],
+  ["Glue Song", "beabadoobee", "Because you stuck, Moonpie. Beautifully, inconveniently, permanently.", null, "fun"],
+  ["Just the Two of Us", "Bill Withers", "Older than both of us and still exactly right.", null, "soft"],
+  ["Sunday Best", "Surfaces", "A whole song about being someone's good mood. That's you, to me.", null, "fun"],
+  ["I Wanna Be Yours", "Arctic Monkeys", "Weird, devoted, and somehow the most romantic sentence I know.", null, "big"],
+  ["Adore You", "Harry Styles", "For when 'I like you' is not nearly enough volume.", null, "fun"],
+  ["Golden Hour", "JVKE", "The kind of song that makes an ordinary evening feel cinematic.", null, "soft"],
+  ["Die For You", "The Weeknd", "Dramatic on purpose. Some feelings deserve the drama."],
 ];
+const songs = (() => {
+  const byTitle = new Map(baseSongs.map(entry => [entry[0].toLowerCase(), entry]));
+  (expansion.songs || []).forEach(([title, artist, note, spotifyId]) => {
+    const key = title.toLowerCase();
+    const existing = byTitle.get(key);
+    // content.js carries the real Spotify ids; keep our note if we already
+    // had one for this title, but always take the id if we were missing it
+    byTitle.set(key, existing ? [existing[0], existing[1], existing[2], spotifyId || existing[3], existing[4]] : [title, artist, note, spotifyId]);
+  });
+  return [...byTitle.values()];
+})();
 
 const promises = [
   "I will keep choosing you when it is easy and when distance makes it annoying.",
@@ -382,23 +401,51 @@ const reasons = [
   "You. Just you. Always, only, entirely you."
 ];
 
+// One suggestion shown at a time via #new-one-thing, cycled through
+// pickFresh so the full set gets seen before anything repeats, rather than
+// all eight sitting on the page as a numbered list every single visit.
 const careSteps = [
-  ["01", "Come closer", "Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours."],
-  ["02", "Tell me the true thing", "You never have to package your feelings neatly for me. Send: 'Babyy, I need you close today.' That is already enough."],
-  ["03", "Let your body feel safer", "Drink some water, loosen your shoulders, unclench your jaw, and find the softest thing within reach."],
-  ["04", "Borrow my voice", "Open Every Night With You or Your Voice and read it slowly. Every sentence is me sitting beside you for a minute."],
-  ["05", "Make the room gentler", "Lower one bright light, play one of our songs, and let this lilac little universe stay open beside you."],
-  ["06", "Give the ache somewhere to go", "Write one tiny widget, draw a heart, or leave me the exact sentence you wish I could hear right now."],
-  ["07", "Choose one future", "Open Our Worlds and pick where we are going tonight. Imagine the first ten minutes there together."],
-  ["08", "Rest without proving anything", "If it is late, let yourself sleep. You never have to stay awake to prove you miss me. I will still love you in the morning."]
+  ["Come closer", "Put one hand on your chest and one on your stomach. Take four gentle breaths while imagining my hand resting over yours."],
+  ["Tell me the true thing", "You never have to package your feelings neatly for me. Send: 'Babyy, I need you close today.' That is already enough."],
+  ["Let your body feel safer", "Drink some water, loosen your shoulders, unclench your jaw, and find the softest thing within reach."],
+  ["Borrow my voice", "Open Every Night With You or Your Voice and read it slowly. Every sentence is me sitting beside you for a minute."],
+  ["Make the room gentler", "Lower one bright light, play one of our songs, and let this lilac little universe stay open beside you."],
+  ["Give the ache somewhere to go", "Write one tiny widget, draw a heart, or leave me the exact sentence you wish I could hear right now."],
+  ["Choose one future", "Open Our Worlds and pick where we are going tonight. Imagine the first ten minutes there together."],
+  ["Rest without proving anything", "If it is late, let yourself sleep. You never have to stay awake to prove you miss me. I will still love you in the morning."]
 ];
+function nextOneThing() { return pickFresh(careSteps, "lastOneThingIndex"); }
 
+// Three takes per feeling instead of one fixed script, so tapping "I miss you
+// badly" for the fortieth time does not read back the exact words it read on
+// the first. Picked with the same never-twice-in-a-row rule as everything
+// else on this screen (see pickFresh).
 const careResponses = {
-  missing: ["💗", "I miss you too, babyy.", "Do not fight the feeling. Come sit with me here. Picture my arms around you, my cheek against your hair, and the first long airport hug waiting for us. Send me one tiny note if you want me to know this moment found you."],
-  reassurance: ["🌸", "You are still my girl.", "Nothing about a quiet hour, a delayed reply, or a difficult mood changes how beautiful and important you are to me. You do not need to earn the answer again. I love you, I choose you, and you will always be my little babyy."],
-  overwhelmed: ["🪷", "Only the next tiny thing.", "You do not have to solve the whole day right now. Put both feet down. Name three things you can see, two things you can feel, and one sound near you. Then drink a little water. I am proud of you for making this minute gentler."],
-  sleep: ["💕", "Let the night hold you softly.", "You are allowed to stop for today. Put the phone close, lower the light, and imagine me whispering goodnight until your breathing becomes slow. I am not disappearing while you sleep. I will still be yours in the morning."]
+  missing: [
+    ["💗", "I miss you too, babyy.", "Do not fight the feeling. Come sit with me here. Picture my arms around you, my cheek against your hair, and the first long airport hug waiting for us. Send me one tiny note if you want me to know this moment found you."],
+    ["💗", "Good. I want you to miss me.", "It means some part of you is still reaching for me across all this distance. That is not a weakness, that is loyalty with nowhere to go yet. Let it be loud for a minute. I am reaching back."],
+    ["💗", "This is the hard part, not the whole story.", "Missing me this much is the cost of loving someone worth the wait. It will not always feel this sharp. Tell me one thing you wish I was there to see right now."]
+  ],
+  reassurance: [
+    ["🌸", "You are still my girl.", "Nothing about a quiet hour, a delayed reply, or a difficult mood changes how beautiful and important you are to me. You do not need to earn the answer again. I love you, I choose you, and you will always be my little babyy."],
+    ["🌸", "Say it again, I will hear it again.", "You are not too much for needing to hear this more than once. I would tell you a thousand times and mean it a thousand times. You are safe with me, exactly as often as you need to check."],
+    ["🌸", "Nothing has changed. Not one thing.", "Whatever spiral got you here, it is lying to you. My side has not moved. I am not one bad day, one slow reply, or one hard week away from anywhere but here, choosing you."]
+  ],
+  overwhelmed: [
+    ["🪷", "Only the next tiny thing.", "You do not have to solve the whole day right now. Put both feet down. Name three things you can see, two things you can feel, and one sound near you. Then drink a little water. I am proud of you for making this minute gentler."],
+    ["🪷", "You do not have to hold all of it at once.", "Set down whatever you are carrying that is not actually due today. One task, one breath, one minute. That is the whole assignment right now."],
+    ["🪷", "It is allowed to just be a lot.", "You do not need a reason big enough to justify feeling this way. It is a lot because it is a lot. Let this minute be smaller than the rest of the day, even if nothing else shrinks yet."]
+  ],
+  sleep: [
+    ["💕", "Let the night hold you softly.", "You are allowed to stop for today. Put the phone close, lower the light, and imagine me whispering goodnight until your breathing becomes slow. I am not disappearing while you sleep. I will still be yours in the morning."],
+    ["💕", "Your brain is just doing its job badly.", "Restless nights are not a sign something is wrong, they are just your mind refusing to clock out on time. Give it something boring to hold instead: count my texts, replay one memory slowly, from the start."],
+    ["💕", "I am not going anywhere while you sleep.", "You do not have to stay up to make sure I am real. I will still be exactly this yours when you open your eyes. Let yourself go first tonight."]
+  ]
 };
+function nextCareResponse(mode) {
+  const list = careResponses[mode];
+  return list ? pickFresh(list, `lastCareResponse:${mode}`) : null;
+}
 
 const challenges = [
   ["Voice-note dare", "Send one voice note where you say exactly what you miss, no making it neat."],
@@ -425,7 +472,8 @@ if (expansion.poems?.length) poems.splice(0, poems.length, ...expansion.poems);
 if (expansion.notices?.length) notices.splice(0, notices.length, ...expansion.notices);
 if (expansion.reasons?.length) reasons.splice(0, reasons.length, ...expansion.reasons);
 if (expansion.memories?.length) memories.splice(0, memories.length, ...expansion.memories);
-if (expansion.songs?.length) songs.splice(0, songs.length, ...expansion.songs);
+// songs is merged with expansion.songs above, at declaration - not spliced
+// here, or this would throw the merge away and leave only content.js's list.
 const placesWorld = worlds.find(world => world.id === "places");
 if (placesWorld) placesWorld.count = futureWorlds.length || places.length;
 const poemsWorld = worlds.find(world => world.id === "poems");
@@ -987,24 +1035,63 @@ function renderDay() {
   `).join("");
 }
 
+// Places she has actually stepped into, by name (stable across a reorder or
+// addition to the list, unlike an index would be).
+function visitedWorldNames() {
+  return Array.isArray(state.worldsVisited) ? state.worldsVisited : [];
+}
+function markWorldVisited(name) {
+  const visited = visitedWorldNames();
+  if (!visited.includes(name)) {
+    visited.push(name);
+    state.worldsVisited = visited;
+    saveState();
+  }
+}
+
 function renderPlaces() {
   const list = futureWorlds.length ? futureWorlds : places.map(([name, image, intro]) => ({ name, intro, eyebrow: "future coordinate", photos: [image], moments: [] }));
-  $("#place-rail").innerHTML = list.map((place, index) => `
-    <button class="world-portal" type="button" data-world-portal="${index}">
+  const visited = visitedWorldNames();
+
+  // A progress line, so this screen is a place she is getting through
+  // together rather than a static gallery that looks identical forever.
+  const progress = $("#places-progress");
+  if (progress) {
+    const seen = list.filter(place => visited.includes(place.name)).length;
+    progress.textContent = seen === 0
+      ? `${list.length} worlds waiting. Pick the first one.`
+      : seen === list.length
+        ? `You have opened every world. I am already building more.`
+        : `${seen} of ${list.length} worlds opened together.`;
+  }
+
+  // A different one leads the rail each day, so the first thing she sees
+  // here does not stay frozen on visit one forever.
+  const day = Math.floor(Date.now() / 86400000);
+  const featuredIndex = list.length ? day % list.length : 0;
+
+  $("#place-rail").innerHTML = list.map((place, index) => {
+    const seen = visited.includes(place.name);
+    return `
+    <button class="world-portal${seen ? " is-visited" : ""}${index === featuredIndex ? " is-featured" : ""}" type="button" data-world-portal="${index}">
       <img src="${escapeHtml(place.photos[0])}" alt="${escapeHtml(place.name)}" loading="${index < 2 ? "eager" : "lazy"}" fetchpriority="${index < 2 ? "high" : "low"}" decoding="async" width="960" height="720" onerror="this.closest('.world-portal').classList.add('image-unavailable');this.remove()">
       <span class="world-portal-copy">
-        <span class="portal-number">world ${String(index + 1).padStart(2, "0")}</span>
+        <span class="portal-number">${index === featuredIndex ? "tonight&rsquo;s pick" : "world " + String(index + 1).padStart(2, "0")}</span>
         <h3>${escapeHtml(place.name)}</h3>
         <p>${escapeHtml(place.eyebrow)}</p>
-        <small>enter this world · ${place.photos.length} scenes · ${place.moments.length} moments</small>
+        <small>${seen ? "visited &middot; " : ""}${place.photos.length} scenes &middot; ${place.moments.length} moments</small>
       </span>
+      ${seen ? '<span class="world-portal-check" aria-hidden="true">&#10003;</span>' : ""}
     </button>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function openFutureWorld(index) {
   const place = futureWorlds[index];
   if (!place) return;
+  markWorldVisited(place.name);
+  renderPlaces();
   const modal = $("#world-modal");
   $("#world-modal-body").innerHTML = `
     <section class="world-hero" style="background-image:url('${escapeHtml(place.photos[0])}')">
@@ -1019,8 +1106,8 @@ function openFutureWorld(index) {
   flowerPageTransition();
 }
 
-function renderSongs() {
-  $("#song-list").innerHTML = songs.map(([name, artist, note, spotifyId], i) => `
+function songCardHtml([name, artist, note, spotifyId], i) {
+  return `
     <article class="song-card spotify-card premium-card">
       <div class="song-note">
         <p class="card-label">track ${String(i + 1).padStart(2, "0")}</p>
@@ -1030,7 +1117,22 @@ function renderSongs() {
       </div>
       ${spotifyId ? `<iframe title="Play ${escapeHtml(name)} on Spotify" data-src="https://open.spotify.com/embed/track/${encodeURIComponent(spotifyId)}?utm_source=generator&theme=0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
     </article>
-  `).join("");
+  `;
+}
+
+function renderSongs() {
+  // A featured pick up top, stable for the whole day and different tomorrow -
+  // so opening this screen twice in an hour doesn't reshuffle it, but coming
+  // back next week finds something new leading the list.
+  const day = Math.floor(Date.now() / 86400000);
+  const featuredIndex = day % songs.length;
+  const featured = songs[featuredIndex];
+  const rest = songs.filter((_, i) => i !== featuredIndex);
+  $("#song-featured").innerHTML = `
+    <p class="card-label">playing for you tonight</p>
+    ${songCardHtml(featured, featuredIndex).replace('class="song-card spotify-card premium-card"', 'class="song-card spotify-card premium-card song-featured-card"')}
+  `;
+  $("#song-list").innerHTML = rest.map(songCardHtml).join("");
 }
 
 function renderPromises() {
@@ -1266,6 +1368,7 @@ function drawGardenTree(progress = 0.16) {
 }
 
 function setupGardenTree() {
+  renderGardenCaptions();
   if (gardenTreeCanvas) return;
   gardenTreeCanvas = $("#garden-tree-canvas");
   if (!gardenTreeCanvas) return;
@@ -1273,6 +1376,14 @@ function setupGardenTree() {
   gardenPetals = buildGardenPetals();
   resizeGardenTree();
   window.addEventListener("resize", resizeGardenTree);
+  // Already bloomed on a previous visit: skip the sprout state and the tap
+  // prompt, and paint the full tree immediately.
+  if (state.gardenBloomed) {
+    $("#garden-stage")?.classList.add("bloomed");
+    $(".home-garden")?.classList.add("bloomed");
+    gardenProgress = 1;
+    requestAnimationFrame(() => drawGardenTree(1));
+  }
 }
 
 function animateGardenTree() {
@@ -1314,6 +1425,47 @@ function bloomGarden() {
     toast("look, Moonpie. Your garden is blooming");
     if (window.Poo) window.Poo.react("love");
   }, GARDEN_BLOOM_DURATION - 1200);
+  // The whole point of a garden is that it does not need re-planting every
+  // time you walk past it. Once bloomed, it stays bloomed.
+  state.gardenBloomed = true;
+  saveState();
+}
+
+// Captions under the tree that acknowledge how long it has actually been
+// growing, instead of saying the same "tap the heart" sentence on visit 40
+// that it said on visit 1.
+const gardenAges = [
+  { min: 0,   line: "Still a seed. One tap and it starts growing." },
+  { min: 1,   line: "It bloomed once, and it is staying that way. This tree does not wilt." },
+  { min: 30,  line: "A month of this tree standing here for you. It has not moved, and it is not going to." },
+  { min: 90,  line: "Three months in and the roots are the whole point now, not the bloom." },
+  { min: 180, line: "Half a year of this exact tree, in this exact spot, still full of hearts." },
+  { min: 365, line: "A year of a tree that only ever grew one way: toward you." }
+];
+function gardenAgeLine() {
+  const days = daysTogether();
+  let line = gardenAges[0].line;
+  for (const stage of gardenAges) if (days >= stage.min) line = stage.line;
+  return line;
+}
+
+const bouquetLines = [
+  "Pink lilies, roses, soft ribbon, and the closest I can get to placing flowers in your hands from here.",
+  "I keep picking the same flowers because they are the ones that made me think of you the first time.",
+  "One day I get to actually hand you this bouquet instead of a photo of it. That day is on the calendar in my head."
+];
+const roseLines = [
+  "The deep red kind, the ones that look almost too velvet to be real.",
+  "Roses are supposed to be the obvious choice. I am not embarrassed about being obvious for you.",
+  "This one is for the version of romance that does not need to be original to be true."
+];
+function renderGardenCaptions() {
+  const bouquetCopy = $("#bouquet-copy");
+  const roseCopy = $("#rose-copy");
+  if (bouquetCopy) bouquetCopy.textContent = pickFresh(bouquetLines, "lastBouquetLine");
+  if (roseCopy) roseCopy.textContent = pickFresh(roseLines, "lastRoseLine");
+  const age = $("#garden-age-line");
+  if (age) age.textContent = gardenAgeLine();
 }
 
 const girlfriendDayCompliments = [
@@ -1404,6 +1556,28 @@ function revealGift(kind, box) {
   flowerConfetti(30);
 }
 
+// Three letters instead of one, cycled the same never-twice-running way as
+// everything else, so sealing a wish for the tenth time hands back different
+// words instead of the same paragraph she has already memorized.
+const birthdayLetters = [
+  [
+    "You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.",
+    "My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.",
+    "Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it."
+  ],
+  [
+    "I built this whole thing because a text felt too small for what I am trying to say to you, and it turns out even this is not quite big enough.",
+    "You are the reason I check my phone hoping, not anxious. That is a small difference that changed my whole day, every day, since you.",
+    "Keep wishing. I am collecting every one of them, quietly, for the version of us that gets to hand them all back at once."
+  ],
+  [
+    "Somewhere in the time it took you to make that wish, I was probably thinking about you too. That is just what happens now.",
+    "I do not need the occasion to mean this. Any Tuesday works. This one just happened to be the Tuesday you opened the app.",
+    "Whatever you wished for tonight, put it next to the others. We are building a very long list of things I intend to make happen."
+  ]
+];
+function nextBirthdayLetter() { return pickFresh(birthdayLetters, "lastBirthdayLetter"); }
+
 function renderBirthday() {
   $("#birthday-wish").innerHTML = `
     <div class="birthday-stage" data-birthday-stage="wish">
@@ -1419,18 +1593,16 @@ function renderBirthday() {
       <p class="card-label">wish sealed</p>
       <div class="birthday-envelope">💌</div>
       <h2>This one's for you, Moonpie.</h2>
-      <p class="birthday-letter">You deserve more than a page. You deserve a little universe that stays on your phone, waits quietly, and opens whenever missing me gets loud.</p>
-      <p class="birthday-letter">My Moonpie. My Princess. My babyy. I love you in every screen, every letter, every future place, every silly widget, and every ordinary day we have not reached yet.</p>
-      <p class="birthday-letter">Whatever you wished for, I hope life is gentle enough to bring it close. And if your wish has anything to do with us, I am already walking toward it.</p>
+      <div id="birthday-letter-body"></div>
       <button class="secondary-btn wide" id="replay-birthday" type="button">make another wish</button>
     </div>
   `;
 }
 
 function renderCare() {
-  $("#care-list").innerHTML = careSteps.map(([n, title, text]) => `
-    <article class="care-step"><span>${n}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div></article>
-  `).join("");
+  const [title, text] = nextOneThing();
+  $("#one-thing-title").textContent = title;
+  $("#one-thing-note").textContent = text;
 }
 
 /* ============================================================================
@@ -1612,7 +1784,7 @@ const careNudges = {
 };
 
 function showCareResponse(mode) {
-  const response = careResponses[mode];
+  const response = nextCareResponse(mode);
   if (!response) return;
   $$("[data-care-mode]").forEach(button => button.classList.toggle("active", button.dataset.careMode === mode));
   $("#care-response").innerHTML = `<span>${response[0]}</span><h3>${escapeHtml(response[1])}</h3><p>${escapeHtml(response[2])}</p>`;
@@ -1999,6 +2171,8 @@ function setupOpeningRitual() {
 
 function sealBirthdayWish() {
   const wish = $("#birthday-wish-text")?.value.trim();
+  const body = $("#birthday-letter-body");
+  if (body) body.innerHTML = nextBirthdayLetter().map(p => `<p class="birthday-letter">${escapeHtml(p)}</p>`).join("");
   showBirthdayStage("letter");
   flowerConfetti(72);
   burstAt(window.innerWidth / 2, window.innerHeight / 2, 20);
@@ -2453,6 +2627,13 @@ function setupEvents() {
     $("#poo-says-note").textContent = nextPooLine();
     saveState();
     window.Poo?.react?.("curious");
+  });
+  $("#new-one-thing")?.addEventListener("click", () => {
+    const [title, text] = nextOneThing();
+    $("#one-thing-title").textContent = title;
+    $("#one-thing-note").textContent = text;
+    saveState();
+    burstAt(window.innerWidth / 2, window.innerHeight * 0.5, 6);
   });
   $("#new-reason").addEventListener("click", nextReason);
   $("#save-text-widget").addEventListener("click", saveTextWidget);

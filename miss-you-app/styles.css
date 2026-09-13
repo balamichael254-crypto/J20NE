@@ -1106,11 +1106,17 @@ body[data-world="vault"] .poo-companion{display:none}
    directly in the scene: a heart you tap, a lantern you open, numbers that
    sit in the grass like fireflies. No premium-card anywhere on this screen.
    ========================================================================== */
+/* NOTE the .active: this rule sits after `.screen{display:none}` and has the
+   same specificity, so an unqualified `display:flex` here wins on every
+   screen and leaves the immersive screens permanently painted underneath
+   whatever else is open. It must only lay itself out when it is the open
+   screen. */
 .screen-immersive{
   margin:0 -15px;padding:0;
   min-height:calc(100dvh - 168px);
-  display:flex;flex-direction:column;
+  flex-direction:column;
 }
+.screen-immersive.active{display:flex}
 .hearth{
   position:relative;flex:1;min-height:560px;
   display:flex;flex-direction:column;align-items:center;
@@ -1420,3 +1426,34 @@ body[data-world="vault"] .poo-companion{display:none}
   font-weight:700;color:var(--ink-soft);line-height:1.5;
   background:rgba(255,255,255,.7);border:2px dashed rgba(168,130,224,.4);
 }
+
+/* ==========================================================================
+   Garden richness: the tree stays bloomed across visits (app.js persists
+   state.gardenBloomed and skips straight to the grown copy), and the caption
+   changes with how long it has actually been growing. Two copy blocks live
+   in the same card and only one shows at a time.
+   ========================================================================== */
+.garden-copy-grown{display:none}
+.garden-stage.bloomed .garden-copy-new{display:none}
+.garden-stage.bloomed .garden-copy-grown{display:block}
+
+/* Care page additions -------------------------------------------------- */
+.card-mint{background:linear-gradient(168deg,#f0fbf6 0%,#dcf3e8 100%)!important}
+.one-thing-card h3{margin-bottom:6px}
+
+/* the world-portal rail: a visited badge, and a subtle lift for the one
+   featured today so the rail is not visually identical every time it opens */
+.world-portal-check{
+  position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;background:linear-gradient(150deg,var(--pink-hot),var(--red));
+  color:#fff;font-size:.85rem;box-shadow:0 3px 8px rgba(0,0,0,.25);
+}
+.world-portal.is-featured{box-shadow:0 0 0 3px var(--gold),var(--sh)}
+.places-progress{
+  font-size:.78rem;font-weight:700;color:var(--ink-soft);margin:-6px 0 4px;
+}
+
+/* Songs: the featured card gets a warmer border so it reads as "chosen for
+   tonight" rather than just being first in a list. */
+.song-list-label{margin:16px 0 8px;color:var(--ink-faint)}
+.song-featured-card{border-color:var(--pink-hot)!important;box-shadow:var(--sh-lg)!important}
