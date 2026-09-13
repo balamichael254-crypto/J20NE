@@ -50,7 +50,8 @@ const worlds = [
   { id: "doodles", icon: "✍️", title: "Widget Studio", sub: "write, draw, send comfort", count: 2, tone: "create", photo: "./assets/mood/lav-jar-2.webp", section: "atlas" },
   { id: "games", icon: "🎮", title: "Love Arcade", sub: "arcade, sudoku, puzzles", count: 9, tone: "game", photo: "./assets/mood/drink-4.webp", section: "atlas" },
   { id: "watchlist", icon: "🎬", title: "Watchlist", sub: "movies for both of us", count: 60, tone: "watchlist", photo: "./assets/mood/bunny-sleep-1.webp", section: "atlas" },
-  { id: "lock", icon: "🔒", title: "Our Lock", sub: "you already know the number", count: 1, tone: "lock", photo: "./assets/mood/jar-note-4.webp", section: "us" }
+  { id: "lock", icon: "🔒", title: "Our Lock", sub: "you already know the number", count: 1, tone: "lock", photo: "./assets/mood/jar-note-4.webp", section: "us" },
+  { id: "galaxy", icon: "🌌", title: "Our Galaxy", sub: "make a wish and watch it land", count: 1, tone: "galaxy", photo: "./assets/mood/moon-sky-2.webp", section: "us" }
 ];
 
 const comfortNotes = {
@@ -660,6 +661,7 @@ function ensureScreenRendered(name) {
     games: renderGames,
     watchlist: renderWatchlist,
     lock: renderLock,
+    galaxy: renderGalaxy,
     doodles: () => { renderWidgets(); setupCanvas(); },
     us: initHearthOnce
   };
@@ -687,6 +689,13 @@ function openScreen(name, options = {}) {
   // jigsaw holds object URLs and a drag listener on document; neither should
   // outlive the screen they belong to.
   if (name !== "games") unmountGame();
+  // The galaxy canvas runs its own continuous rAF loop - that has to stop
+  // the instant she leaves the screen (not just when she navigates away
+  // from the app entirely), or it keeps drawing at full rate behind whatever
+  // she opens next. Mounting fresh on entry rather than once ever also means
+  // it always fits the container's current size instead of a stale one.
+  if (name === "galaxy") window.MoonpieGalaxy?.mount($("#galaxy-stage"));
+  else window.MoonpieGalaxy?.unmount();
   if (name === "us") refreshHearth();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
@@ -1167,6 +1176,31 @@ function renderLock() {
     const btn = event.target.closest("[data-lock-dir]");
     if (!btn) return;
     lockTurn(Number(btn.dataset.lockIndex), Number(btn.dataset.lockDir));
+  });
+}
+
+/* ============================================================================
+   Our Galaxy screen wiring. The particle system itself lives entirely in
+   galaxy.js (mounted/unmounted by openScreen, see the note there) - this is
+   just the one button on top of it, wired once like every other renderer.
+   ========================================================================= */
+function renderGalaxy() {
+  $("#galaxy-wish")?.addEventListener("click", () => {
+    const button = $("#galaxy-wish");
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    button.textContent = "watching it land...";
+    window.MoonpieGalaxy?.makeAWish(() => {
+      const rect = $("#galaxy-stage")?.getBoundingClientRect();
+      window.Bloom?.confetti(
+        rect ? rect.left + rect.width / 2 : innerWidth / 2,
+        rect ? rect.top + rect.height / 2 : innerHeight * 0.3,
+        30
+      );
+      window.Poo?.react?.("love");
+      button.textContent = "make another wish";
+      button.disabled = false;
+    });
   });
 }
 

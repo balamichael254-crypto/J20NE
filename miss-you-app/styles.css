@@ -1622,3 +1622,19 @@ body[data-world="vault"] .poo-companion{display:none}
    tonight" rather than just being first in a list. */
 .song-list-label{margin:16px 0 8px;color:var(--ink-faint)}
 .song-featured-card{border-color:var(--pink-hot)!important;box-shadow:var(--sh-lg)!important}
+
+/* ==========================================================================
+   Our Galaxy. The canvas (galaxy.js) is the whole visual, so the CSS job is
+   just to give it a proper frame: a square dark stage with its own glow and
+   border so it reads as a window into somewhere, not a plain rectangle.
+   ========================================================================== */
+.galaxy-frame{display:flex;flex-direction:column;align-items:center;gap:14px}
+.galaxy-stage{
+  position:relative;width:100%;aspect-ratio:1/1;max-width:420px;
+  border-radius:var(--r-xl);overflow:hidden;
+  border:3px solid var(--edge);box-shadow:0 20px 44px rgba(40,10,60,.4),var(--sh-lg);
+  background:#0a0518;
+}
+.galaxy-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.galaxy-wish{max-width:320px}
+.galaxy-hint{margin:0;font-size:.78rem;font-weight:600;color:var(--ink-faint)}
