@@ -648,7 +648,7 @@
     actions.appendChild(newBtn);
     root.appendChild(actions);
 
-    var hint = el("div", "sdk-hint", "tap a square, then a number — notes mode pencils in maybes");
+    var hint = el("div", "sdk-hint", "tap a square, then a number. notes mode pencils in maybes");
     hint.setAttribute("aria-live", "polite");
     root.appendChild(hint);
 

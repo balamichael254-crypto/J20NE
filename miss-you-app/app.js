@@ -632,6 +632,10 @@ function openScreen(name, options = {}) {
   if (name === "doodles") requestAnimationFrame(resizeCanvas);
   if (name === "garden") requestAnimationFrame(resizeGardenTree);
   if (name === "games") fetchBubbleScores();
+  // Leaving the arcade tears the chosen game down. Sudoku holds a timer,
+  // jigsaw holds object URLs and a drag listener on document; neither should
+  // outlive the screen they belong to.
+  if (name !== "games") unmountGame();
   if (name === "us") refreshHearth();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
@@ -640,6 +644,64 @@ function openScreen(name, options = {}) {
   }
   if (changed) flowerPageTransition();
   revealNav(2600);
+}
+
+/* ============================================================================
+   The arcade games. Each module exposes { mount(el), unmount() } and paints
+   its own DOM into #game-stage, so only one is ever live and switching is a
+   real teardown rather than a hidden div. The chosen game is remembered so
+   she comes back to the one she was playing.
+   ========================================================================= */
+const GAME_MODULES = {
+  sudoku: () => window.MoonpieSudoku,
+  jigsaw: () => window.MoonpieJigsaw,
+  memory: () => window.MoonpieMemory,
+};
+let activeGame = null;
+
+function unmountGame() {
+  if (!activeGame) return;
+  try { GAME_MODULES[activeGame]?.()?.unmount?.(); } catch (error) { console.warn("game unmount", error); }
+  activeGame = null;
+  const stage = $("#game-stage");
+  if (stage) { stage.innerHTML = ""; stage.classList.remove("open"); }
+  $$(".game-pick").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+}
+
+function mountGame(id) {
+  const module = GAME_MODULES[id]?.();
+  const stage = $("#game-stage");
+  if (!stage) return;
+  // Tapping the game you are already playing closes it, so the picker is a
+  // toggle rather than a one-way door.
+  if (activeGame === id) { unmountGame(); state.lastGame = ""; saveState(); return; }
+  unmountGame();
+  if (!module?.mount) {
+    stage.innerHTML = '<p class="game-stage-missing">That one did not load. Pull the app down to refresh and try again.</p>';
+    stage.classList.add("open");
+    return;
+  }
+  activeGame = id;
+  state.lastGame = id;
+  saveState();
+  stage.classList.add("open");
+  try {
+    module.mount(stage);
+  } catch (error) {
+    console.warn("game mount", error);
+    activeGame = null;
+    stage.innerHTML = '<p class="game-stage-missing">That one did not want to open. Try another?</p>';
+    return;
+  }
+  const button = $(`.game-pick[data-game="${id}"]`);
+  if (button) { button.classList.add("active"); button.setAttribute("aria-selected", "true"); }
+  requestAnimationFrame(() => stage.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+function initGamePicker() {
+  $$(".game-pick").forEach(button => {
+    button.addEventListener("click", () => mountGame(button.dataset.game));
+  });
 }
 
 function goBack() {
@@ -2412,6 +2474,7 @@ function init() {
   setupHoldOrb();
   setupEvents();
   setupSmartNav();
+  initGamePicker();
   setupInstall();
   setupOpeningRitual();
   if (state.hasEnteredUniverse) setupWidgetSync();

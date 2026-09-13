@@ -9,8 +9,11 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=91">
+  <link rel="stylesheet" href="./styles.css?v=92">
   <link rel="stylesheet" href="./poo.css?v=6">
+  <link rel="stylesheet" href="./games/sudoku.css?v=1">
+  <link rel="stylesheet" href="./games/memory.css?v=1">
+  <link rel="stylesheet" href="./games/jigsaw.css?v=2">
 </head>
 <body class="app-locked">
   <section class="entry-gate" id="entry-gate" aria-label="private anniversary passkey">
@@ -335,6 +338,25 @@
 
       <section class="screen world-screen" id="screen-games" aria-label="games">
         <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>I made you a few tiny games for the moments you want something sweet to tap while you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
+        <!-- The three real games. Each module owns its own DOM inside
+             #game-stage and is mounted only while chosen, so none of them
+             runs a timer or a rAF loop while you are on another screen. -->
+        <div class="game-picker" id="game-picker" role="tablist" aria-label="pick a game">
+          <button class="game-pick" data-game="sudoku" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#129518;</span>
+            <b>Sudoku</b><small>60 puzzles, five levels</small>
+          </button>
+          <button class="game-pick" data-game="jigsaw" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#129513;</span>
+            <b>Jigsaw</b><small>our photos, any piece count</small>
+          </button>
+          <button class="game-pick" data-game="memory" type="button" role="tab" aria-selected="false">
+            <span class="game-pick-mark" aria-hidden="true">&#127800;</span>
+            <b>Memory</b><small>find every pair</small>
+          </button>
+        </div>
+        <div class="game-stage" id="game-stage" aria-live="polite"></div>
+
         <article class="game-card premium-card card-warm">
           <div class="game-topline">
             <div>
@@ -678,10 +700,13 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./content.js?v=43"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=51"></script>
+  <script src="./app.js?v=52"></script>
   <script src="./bloom.js?v=3"></script>
   <script src="./vault.js?v=2"></script>
   <script src="./poo.js?v=16"></script>
+  <script src="./games/sudoku.js?v=2"></script>
+  <script src="./games/memory.js?v=2"></script>
+  <script src="./games/jigsaw.js?v=2"></script>
   <script src="./presence.js?v=2"></script>
 </body>
 </html>

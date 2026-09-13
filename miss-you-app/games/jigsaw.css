@@ -108,7 +108,7 @@
 
 .jig-hud {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin: 14px 0 12px;
 }
@@ -137,6 +137,138 @@
   font-size: 1.15rem;
   font-variant-numeric: tabular-nums;
   color: var(--jig-lav-700);
+}
+
+/* ---------- upload: the headline feature ---------- */
+
+.jig-upload-row {
+  margin-bottom: 12px;
+}
+
+.jig-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 18px;
+  border-radius: var(--jig-r-lg);
+  background: linear-gradient(135deg, var(--jig-pink-hot) 0%, var(--jig-lav-500) 62%, var(--jig-lav-600) 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 0 -2px rgba(138, 95, 212, .34), 0 14px 26px rgba(245, 109, 168, .26);
+  transition: transform .16s cubic-bezier(.3, 1.6, .5, 1), box-shadow .2s ease;
+}
+
+.jig-upload-btn:active { transform: translateY(3px); box-shadow: 0 4px 0 -2px rgba(138, 95, 212, .34), 0 8px 16px rgba(245, 109, 168, .22); }
+
+.jig-upload-btn:focus-within {
+  outline: 3px solid var(--jig-lav-400);
+  outline-offset: 2px;
+}
+
+.jig-upload-icon {
+  flex: none;
+  font-size: 1.7rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .25));
+}
+
+.jig-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.jig-upload-text strong {
+  font-family: "Baloo", "Italiana", serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.jig-upload-text small {
+  font-size: .74rem;
+  color: rgba(255, 255, 255, .88);
+}
+
+.jig-upload-status {
+  display: block;
+  margin-top: 6px;
+  text-align: center;
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--jig-pink-hot);
+  min-height: 1em;
+}
+
+/* visually hidden, still focusable/tappable via its wrapping label */
+.jig-upload-input.jig-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.jig-picker-label {
+  margin: 0 0 6px;
+  text-align: center;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--jig-ink-faint);
+}
+
+/* ---------- piece count ---------- */
+
+.jig-pieces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .42);
+  border: 1px solid var(--jig-edge);
+}
+
+.jig-pieces-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.jig-pieces-input {
+  width: 72px;
+  min-height: var(--jig-tap);
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--jig-edge);
+  background: rgba(255, 255, 255, .75);
+  color: var(--jig-lav-700);
+  font: inherit;
+  font-weight: 700;
+  font-size: .8rem;
+  text-align: center;
+}
+
+.jig-pieces-input:focus-visible {
+  outline: 3px solid var(--jig-lav-400);
+  outline-offset: 2px;
+}
+
+.jig-pieces-go {
+  min-height: var(--jig-tap);
+  min-width: 44px;
+  padding: 0 14px;
 }
 
 /* ---------- control rows ---------- */
@@ -483,7 +615,15 @@
   .jig-shell { padding: 12px; }
   .jig-btn { padding: 0 12px; font-size: .78rem; }
   .jig-pick { width: 52px; height: 52px; }
-  .jig-hud-cell strong { font-size: 1.02rem; }
+  .jig-hud-cell strong { font-size: .96rem; }
+  .jig-hud-cell small { font-size: .56rem; }
+  .jig-upload-btn { padding: 10px 14px; gap: 9px; }
+  .jig-upload-text strong { font-size: .92rem; }
+  .jig-pieces-input { width: 60px; font-size: .76rem; }
+}
+
+@media (max-width: 340px) {
+  .jig-hud { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
