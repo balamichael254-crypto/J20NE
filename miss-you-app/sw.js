@@ -1,10 +1,10 @@
-const CACHE_NAME = "moonpie-miss-you-v115";
+const CACHE_NAME = "moonpie-miss-you-v116";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css?v=113",
   "./poo.css?v=6",
-  "./content.js?v=46",
+  "./content.js?v=47",
   "./movies.js?v=1",
   "./games/duel.js?v=2",
   "./games/sudoku.js?v=3",
