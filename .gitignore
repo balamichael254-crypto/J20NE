@@ -12,3 +12,4 @@ playwright-report/
 .claude/worktrees/
 __pycache__/
 *.pyc
+_bouquet_base.jpg
