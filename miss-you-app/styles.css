@@ -537,7 +537,23 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 }
 .opening-ritual-card .tape{top:-11px;left:50%;translate:-50% 0;rotate:-3deg}
 .bouquet-unwrap{position:relative;border:0;background:transparent;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;gap:10px}
-.bouquet-wrapped-img{width:min(68vw,224px);border-radius:var(--r);border:4px solid #fff;box-shadow:var(--sh-lg)}
+/* The arrival bouquet is the first thing she sees, so it is allowed to be
+   the biggest thing on the screen. It is a transparent cut-out, so no frame
+   or border - just the flowers, with a shadow so they sit on something. */
+.bouquet-wrapped-img{
+  width:min(86vw,330px);display:block;margin:0 auto;
+  filter:drop-shadow(0 18px 26px rgba(90,40,90,.34));
+}
+#revealed-bouquet{
+  width:min(94vw,380px);display:block;margin:0 auto 6px;
+  filter:drop-shadow(0 16px 24px rgba(90,40,90,.3));
+  animation:bouquetArrive .7s cubic-bezier(.2,.9,.3,1.2) both;
+}
+@keyframes bouquetArrive{
+  from{opacity:0;transform:translateY(16px) scale(.9)}
+  to{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion:reduce){ #revealed-bouquet{animation:none} }
 .bouquet-unwrap small{font-size:.8rem;color:var(--lav-600);font-weight:700}
 .ribbon-bow{position:absolute;top:42%;left:50%;translate:-50% 0;font-size:2.2rem;filter:drop-shadow(0 4px 8px rgba(111,72,176,.3));animation:bowSway 2.8s ease-in-out infinite}
 @keyframes bowSway{0%,100%{rotate:-6deg}50%{rotate:6deg}}
@@ -2097,4 +2113,111 @@ body[data-world="vault"] .poo-companion{display:none}
   margin-top:12px;padding:11px 14px;border-radius:var(--r);text-align:center;
   font-size:.82rem;font-weight:700;color:var(--ink-soft);
   background:rgba(255,255,255,.75);border:2px dashed rgba(168,130,224,.4);
+}
+
+/* ==========================================================================
+   Two locks, deliberately different objects.
+
+   There is already a combination padlock in Us ("Our Lock"), so neither of
+   these may be another padlock or the app just repeats itself.
+
+   The front door is a heart locket: you know the date, it clicks open, the
+   two halves swing apart. Our Eyes Only is a pressed seal you have to hold
+   your thumb on, which is a slower, more deliberate gesture, and the right
+   one for the thing behind it.
+   ========================================================================== */
+
+/* --- the locket, on the entry gate -------------------------------------- */
+.locket{
+  position:relative;width:132px;height:132px;margin:0 auto 4px;
+  perspective:760px;
+}
+.locket-chain{
+  position:absolute;left:50%;top:-30px;translate:-50% 0;width:2px;height:34px;
+  background:linear-gradient(180deg,transparent,#e6c98a 30%,#c9a24f);
+  border-radius:2px;
+}
+/* the bail the locket hangs from */
+.locket-bail{
+  position:absolute;left:50%;top:-6px;translate:-50% 0;z-index:3;
+  width:15px;height:15px;border-radius:50%;
+  border:3px solid #d3ab5c;background:transparent;
+  box-shadow:0 1px 2px rgba(60,40,10,.4);
+}
+
+/* each half is a clipped heart, hinged on its inner edge */
+.locket-half{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.32,.9,.3,1.05);
+  background:
+    radial-gradient(circle at 32% 26%,#ffe9a8,#e8c063 42%,#b8872f 78%,#8f6620 100%);
+  box-shadow:inset 0 2px 6px rgba(255,255,255,.5),inset 0 -6px 12px rgba(80,54,10,.4);
+}
+.locket-half.left{
+  clip-path:polygon(50% 100%,0 62%,0 22%,12% 6%,34% 6%,50% 22%);
+  transform-origin:right center;
+}
+.locket-half.right{
+  clip-path:polygon(50% 100%,100% 62%,100% 22%,88% 6%,66% 6%,50% 22%);
+  transform-origin:left center;
+}
+/* the engraving on the front */
+.locket-engraving{
+  position:absolute;left:50%;top:44%;translate:-50% -50%;z-index:2;
+  font-family:"Dancing Script",cursive;font-size:1.34rem;color:#7a5414;
+  text-shadow:0 1px 0 rgba(255,255,255,.45);
+  transition:opacity .3s ease;
+}
+/* what is kept inside, revealed once the halves swing */
+.locket-inside{
+  position:absolute;inset:14% 18% 22%;z-index:0;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 50% 40%,#fff6fb,#ffd9ea 70%);
+  box-shadow:inset 0 0 14px rgba(200,120,160,.4);
+  opacity:0;transition:opacity .4s ease .35s;
+  font-family:"Caveat",cursive;font-size:.92rem;color:#8a3f66;line-height:1.2;
+}
+.locket.is-open .locket-half.left{transform:rotateY(-148deg)}
+.locket.is-open .locket-half.right{transform:rotateY(148deg)}
+.locket.is-open .locket-engraving{opacity:0;transition-duration:.2s}
+.locket.is-open .locket-inside{opacity:1}
+/* a wrong date rattles it on its chain */
+.locket.is-wrong{animation:locketSwing .5s ease}
+@keyframes locketSwing{
+  0%,100%{transform:rotate(0)}
+  25%{transform:rotate(-7deg)}
+  60%{transform:rotate(5deg)}
+  85%{transform:rotate(-2deg)}
+}
+
+/* --- hold to open, on Our Eyes Only ------------------------------------- */
+.holdlock{
+  position:relative;width:132px;height:132px;margin:6px auto 14px;
+  display:grid;place-items:center;cursor:pointer;
+  border:0;background:transparent;touch-action:none;
+  -webkit-user-select:none;user-select:none;
+}
+.holdlock-ring{
+  position:absolute;inset:0;border-radius:50%;
+  /* the sweep fills as she holds; --hold is driven from JS 0 -> 1 */
+  background:conic-gradient(var(--pink-hot) calc(var(--hold,0) * 360deg), rgba(168,130,224,.22) 0);
+  transition:background .08s linear;
+}
+.holdlock-ring::after{
+  content:"";position:absolute;inset:7px;border-radius:50%;
+  background:linear-gradient(165deg,#fffdff,var(--lav-50));
+  box-shadow:inset 0 2px 8px rgba(120,80,170,.18);
+}
+.holdlock-face{
+  position:relative;z-index:1;display:grid;place-items:center;gap:3px;text-align:center;
+  font-family:"Quicksand",sans-serif;
+}
+.holdlock-face span{font-size:1.9rem;line-height:1;transition:scale .2s ease}
+.holdlock-face small{font-size:.68rem;font-weight:800;color:var(--ink-faint);letter-spacing:.02em}
+.holdlock.is-holding .holdlock-face span{scale:.88}
+.holdlock.is-open .holdlock-face span{scale:1.12}
+.holdlock:disabled{opacity:.5;cursor:not-allowed}
+@media (prefers-reduced-motion:reduce){
+  .locket-half{transition:none}
+  .locket.is-wrong{animation:none}
 }

@@ -3044,27 +3044,33 @@ function setupOpeningRitual() {
   $("#passkey-form")?.addEventListener("submit", event => {
     event.preventDefault();
     const input = $("#passkey-input");
+    const locket = $("#entry-locket");
     if (input.value !== "2502") {
       $("#passkey-error").textContent = "That date did not open it. Think of the day that became ours.";
       input.value = "";
       input.focus();
-      $(".gate-card")?.classList.remove("wrong-key");
-      requestAnimationFrame(() => $(".gate-card")?.classList.add("wrong-key"));
+      // the locket rattles on its chain rather than the whole card shaking
+      locket?.classList.remove("is-wrong");
+      requestAnimationFrame(() => locket?.classList.add("is-wrong"));
+      setTimeout(() => locket?.classList.remove("is-wrong"), 600);
       return;
     }
     state.profile = selectedProfile;
     saveState();
     $("#passkey-error").textContent = "";
-    $("#entry-gate")?.classList.add("leaving");
-    $("#birthday-opening")?.classList.remove("hidden");
-    setTimeout(() => $("#entry-gate")?.remove(), 650);
+    // let the locket actually open before the gate leaves, so the click is
+    // the reward for the right date rather than a screen swap
+    locket?.classList.add("is-open");
+    setTimeout(() => {
+      $("#entry-gate")?.classList.add("leaving");
+      $("#birthday-opening")?.classList.remove("hidden");
+      setTimeout(() => $("#entry-gate")?.remove(), 650);
+    }, 900);
   });
-  // a different bouquet each visit - she should never untie the same one twice
-  const wrapped = $("#wrapped-bouquet");
-  if (wrapped) {
-    const n = 1 + Math.floor(Math.random() * 6);
-    wrapped.src = `./assets/flowers/bouquet-${n}.webp`;
-  }
+  // The arrival bouquet is lilies, every time. It used to rotate through
+  // bouquet-1..6, which are mixed arrangements with roses in them - her
+  // flower is the stargazer lily, so the one that arrives is all lilies.
+  // (tools/build_lily_bouquet.py composes it from the lily cut-outs.)
   $("#unwrap-bouquet")?.addEventListener("click", completeBouquetUnwrap);
   $("#enter-universe")?.addEventListener("click", enterUniverse);
 }

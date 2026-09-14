@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=116">
+  <link rel="stylesheet" href="./styles.css?v=118">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -20,7 +20,14 @@
     <div class="gate-flower gate-lily-one" aria-hidden="true"></div>
     <div class="gate-flower gate-lily-two" aria-hidden="true"></div>
     <form class="gate-card" id="passkey-form">
-      <div class="gate-seal" aria-hidden="true">25<br><small>02</small></div>
+      <div class="locket" id="entry-locket" aria-hidden="true">
+        <span class="locket-chain"></span>
+        <span class="locket-bail"></span>
+        <span class="locket-inside">ours<br>25.02</span>
+        <span class="locket-half left"></span>
+        <span class="locket-half right"></span>
+        <span class="locket-engraving">25.02</span>
+      </div>
       <p class="eyebrow">one date opens our universe</p>
       <h2>Hi, my love.</h2>
       <p>I kept this little world behind the day that became ours.</p>
@@ -36,10 +43,10 @@
     </form>
   </section>
 
-  <!-- Evergreen arrival. This used to be hardcoded to Girlfriend Day; it is now
-       just "flowers came for you", which is true on any ordinary Tuesday. The
-       bouquet is picked at random each time so she never opens the same one
-       twice in a row. -->
+  <!-- Evergreen arrival. This used to be hardcoded to Girlfriend Day; it is
+       now just "flowers came for you", which is true on any ordinary Tuesday.
+       The bouquet is stargazer lilies every time, and big - it used to rotate
+       through mixed arrangements that had roses in them. -->
   <section class="day-opening hidden" id="birthday-opening" aria-label="a bouquet arrived for you">
     <div class="opening-petals" id="opening-petals" aria-hidden="true"></div>
     <article class="opening-ritual-card">
@@ -49,13 +56,13 @@
         <h2>Flowers arrived.</h2>
         <p>No occasion. I just wanted today to have something in it.</p>
         <button class="bouquet-unwrap" id="unwrap-bouquet" type="button" aria-label="untie the ribbon and open your flowers">
-          <img src="./assets/flowers/bouquet-1.webp" alt="A bouquet wrapped in paper, tied with ribbon" class="bouquet-wrapped-img" id="wrapped-bouquet">
+          <img src="./assets/flowers/bouquet-lilies-wrapped.webp" alt="A big bouquet of stargazer lilies wrapped in paper, tied with ribbon" class="bouquet-wrapped-img" id="wrapped-bouquet">
           <span class="ribbon-bow" aria-hidden="true">🎀</span>
           <small>tap to untie</small>
         </button>
       </div>
       <div class="opening-reveal hidden" id="opening-reveal">
-        <img src="./assets/flowers/bouquet-cutout.webp" alt="An open bouquet of pink lilies and roses" id="revealed-bouquet">
+        <img src="./assets/flowers/bouquet-lilies-open.webp" alt="An armful of stargazer lilies" id="revealed-bouquet">
         <p class="script-kicker">these are yours</p>
         <h2>Lilies. Your favourite.</h2>
         <p>Ribbon's untied, everything's open. Your little universe is through here.</p>
@@ -834,7 +841,13 @@
           <h3>Locked.</h3>
           <p class="tiny" id="vault-lock-note">Enter your PIN for this phone.</p>
           <input class="vault-input" id="vault-pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN">
-          <button class="primary-btn wide" type="submit">open</button>
+          <button class="holdlock" id="vault-holdlock" type="button" aria-label="press and hold to open">
+            <span class="holdlock-ring" aria-hidden="true"></span>
+            <span class="holdlock-face">
+              <span aria-hidden="true">&#128274;</span>
+              <small>press and hold</small>
+            </span>
+          </button>
         </form>
 
         <!-- unlocked -->
@@ -978,10 +991,10 @@
   <script src="./content.js?v=47"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=75"></script>
+  <script src="./app.js?v=77"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
-  <script src="./vault.js?v=2"></script>
+  <script src="./vault.js?v=3"></script>
   <script src="./poo.js?v=17"></script>
   <script src="./games/duel.js?v=2"></script>
   <script src="./games/sudoku.js?v=3"></script>
