@@ -1233,6 +1233,31 @@ function renderLock() {
    ========================================================================= */
 const BOUQUET_DRAG_THRESHOLD = 6; // px of movement before a touch counts as a drag, not a tap
 
+/* Every stem is tied at one point near the bottom of the wrap, the way a
+   real bouquet is. That single fact is what was missing: flowers dropped at
+   arbitrary angles with no stems read as stickers on paper, while the same
+   flowers with stems converging on a tie read as an armful of flowers. */
+const BOUQUET_TIE = { x: 50, y: 97 };
+
+function bouquetStemAngle(item) {
+  // point the bloom away from the tie, so heads fan outward off the stems
+  const angle = Math.atan2(item.y - BOUQUET_TIE.y, item.x - BOUQUET_TIE.x) * 180 / Math.PI;
+  return angle + 90;
+}
+
+function bouquetRenderStems() {
+  const svg = $("#bouquet-stems");
+  if (!svg) return;
+  const stems = (state.bouquetItems || []).filter(item => item.kind !== "bow");
+  svg.innerHTML = stems.map(item => {
+    // a slight bow outward, so a stem is a stem and not a drawn rod
+    const midX = (BOUQUET_TIE.x + item.x) / 2 + (item.x - BOUQUET_TIE.x) * 0.18;
+    const midY = (BOUQUET_TIE.y + item.y) / 2 + 5;
+    return `<path d="M ${BOUQUET_TIE.x} ${BOUQUET_TIE.y} Q ${midX} ${midY} ${item.x} ${item.y}"
+      fill="none" stroke="#4f7a44" stroke-width="1.05" stroke-linecap="round" opacity=".8"/>`;
+  }).join("");
+}
+
 function bouquetClamp(v) { return v < -8 ? -8 : v > 108 ? 108 : v; }
 
 function bouquetPlacedNode(item) {
@@ -1241,7 +1266,7 @@ function bouquetPlacedNode(item) {
   el.dataset.bouquetId = item.id;
   el.style.left = `${item.x}%`;
   el.style.top = `${item.y}%`;
-  el.style.transform = `rotate(${item.rot}deg)`;
+  el.style.transform = `rotate(${item.kind === "bow" ? item.rot : bouquetStemAngle(item) + item.rot * 0.25}deg)`;
   el.innerHTML = item.kind === "bow" ? "&#127872;" : `<img src="${escapeHtml(item.src)}" alt="">`;
   return el;
 }
@@ -1249,6 +1274,7 @@ function bouquetPlacedNode(item) {
 function bouquetSyncHint() {
   const wrap = $("#bouquet-vase");
   wrap?.classList.toggle("has-items", (state.bouquetItems || []).length > 0);
+  bouquetRenderStems();
 }
 
 function bouquetAddItem(kind, src, xPercent, yPercent) {
@@ -1304,8 +1330,19 @@ function bindBouquetPlacedDrag(node) {
       if (!moved && Math.hypot(dx, dy) > BOUQUET_DRAG_THRESHOLD) { moved = true; node.classList.add("dragging"); }
       if (!moved) return;
       const pos = bouquetPercentFromPoint(moveEvent.clientX, moveEvent.clientY);
-      node.style.left = `${bouquetClamp(pos.x)}%`;
-      node.style.top = `${bouquetClamp(pos.y)}%`;
+      const nx = bouquetClamp(pos.x), ny = bouquetClamp(pos.y);
+      node.style.left = `${nx}%`;
+      node.style.top = `${ny}%`;
+      // the stem follows the bloom while it is being moved, and the head
+      // keeps facing away from the tie
+      const item = (state.bouquetItems || []).find(i => i.id === id);
+      if (item) {
+        item.x = nx; item.y = ny;
+        if (item.kind !== "bow") {
+          node.style.transform = `rotate(${bouquetStemAngle(item) + item.rot * 0.25}deg)`;
+        }
+        bouquetRenderStems();
+      }
     };
     const onUp = upEvent => {
       node.removeEventListener("pointermove", onMove);

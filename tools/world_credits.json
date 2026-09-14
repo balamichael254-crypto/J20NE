@@ -349,6 +349,76 @@
   "title": "a river running through a lush green countryside",
   "world": "Kyoto Blossom Rain"
  },
+ "london/00": {
+  "creator": "Peter Herrmann",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-room-with-a-book-shelf-and-a-door-yqUBn_eMrYc",
+  "query": "old bookshop shelves interior",
+  "source": "unsplash",
+  "stop": "The note in the book",
+  "title": "A room full of knowledge...",
+  "world": "London Bookshop Rain"
+ },
+ "london/01": {
+  "creator": "Arstin Chen",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-bookshelf-filled-with-lots-of-books-next-to-a-doorway-jGPLCSf4H4E",
+  "query": "second hand bookshop stacks books",
+  "source": "unsplash",
+  "stop": "Second-hand stacks",
+  "title": "'新舊書屋', a second-hand bookstore in Taipei, Taiwan",
+  "world": "London Bookshop Rain"
+ },
+ "london/02": {
+  "creator": "Seungmin Yoon",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-triangle-scone-with-two-forks-on-a-plate-X_-skB-BsT8",
+  "query": "afternoon tea scones tiered stand",
+  "source": "unsplash",
+  "stop": "Afternoon tea",
+  "title": "A triangle scone with two forks on a plate",
+  "world": "London Bookshop Rain"
+ },
+ "london/03": {
+  "creator": "Rui Alves",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-man-and-woman-standing-in-a-room-with-a-wall-of-paintings-FdOqTIgy1_s",
+  "query": "museum gallery interior visitors",
+  "source": "unsplash",
+  "stop": "Museum wandering",
+  "title": "Art exhibit at the MUSAC in Léon.",
+  "world": "London Bookshop Rain"
+ },
+ "london/04": {
+  "creator": "Brad Starkey",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/man-in-blue-jacket-and-blue-denim-jeans-walking-on-sidewalk-during-daytime-PZWUGdMAU-c",
+  "query": "London street rain umbrellas",
+  "source": "unsplash",
+  "stop": "The rain gets serious",
+  "title": "man in blue jacket and blue denim jeans walking on sidewalk during daytime",
+  "world": "London Bookshop Rain"
+ },
+ "london/05": {
+  "creator": "Michael Cummins",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/black-and-brown-short-coated-dog-lying-on-red-and-black-area-rug-bIAL7-ZnlLg",
+  "query": "traditional English pub fireplace interior",
+  "source": "unsplash",
+  "stop": "A pub with a fire",
+  "title": "A black labrador sits quietly by the fire in an English pub in Somerset. Part of a commercial shoot for a pub group. Michael Cummins Photography - www.michaelcummins.co.uk",
+  "world": "London Bookshop Rain"
+ },
+ "london/06": {
+  "creator": "gogomoe",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/grayscale-photo-of-double-decker-bus-V8qfZMi2znA",
+  "query": "London double decker bus window rain night",
+  "source": "unsplash",
+  "stop": "Rainy bus window",
+  "title": "A photo I took in London England by the London bridge.",
+  "world": "London Bookshop Rain"
+ },
  "maldives/00": {
   "creator": "Mike Swigunski",
   "license": "Unsplash Licence",
@@ -567,6 +637,66 @@
   "source": "unsplash",
   "stop": "The hidden path",
   "title": "A river running through a lush green forest",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/01": {
+  "creator": "Christian Cacciamani",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/large-rocks-on-the-island-jPmurJKSL_0",
+  "query": "Seychelles granite boulders beach Anse Source",
+  "source": "unsplash",
+  "stop": "The granite boulders",
+  "title": "la digue, seychelles",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/02": {
+  "creator": "Le Petale Studio",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-table-topped-with-glasses-of-juice-and-lemons-HYWB1ohyFFo",
+  "query": "beach picnic blanket tropical",
+  "source": "unsplash",
+  "stop": "A private picnic",
+  "title": "a table topped with glasses of juice and lemons",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/03": {
+  "creator": "Kayahan Ulus",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/people-in-clear-shallow-beach-water-GoCzAe2T-D8",
+  "query": "clear turquoise shallow water beach",
+  "source": "unsplash",
+  "stop": "Water like glass",
+  "title": "Two people standing in the shallow, crystal-clear turquoise waters of a pebble beach in Thasos, Greece, photographed from above with plenty of open sea and copy space.",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/04": {
+  "creator": "Daphne Fecheyr",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-person-laying-in-a-hammock-in-a-forest-0rlAl9VZdWY",
+  "query": "reading book hammock beach shade",
+  "source": "unsplash",
+  "stop": "Reading beside you",
+  "title": "a person laying in a hammock in a forest",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/05": {
+  "creator": "NEOM",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-person-swimming-in-the-ocean-at-sunset-gKfSdzieIJc",
+  "query": "tropical beach golden hour swim",
+  "source": "unsplash",
+  "stop": "Last swim",
+  "title": "The vibrant waters of NEOM, are home to some of the most picturesque and pristine islands in the Red Sea | Islands of NEOM – NEOM, Saudi Arabia.",
+  "world": "Seychelles Secret Cove"
+ },
+ "seychelles/06": {
+  "creator": "Sagnik Acharya",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-dark-street-with-a-light-at-the-end-of-it-5HPOy2aB600",
+  "query": "tropical path night torch",
+  "source": "unsplash",
+  "stop": "The walk back in the dark",
+  "title": "a dark street with a light at the end of it",
   "world": "Seychelles Secret Cove"
  },
  "switzerland/00": {

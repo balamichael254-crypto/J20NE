@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=118">
+  <link rel="stylesheet" href="./styles.css?v=120">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -282,6 +282,10 @@
               <div class="bouquet-awning" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
               <div class="bouquet-wrap-shape" id="bouquet-vase" aria-label="drop lilies here to build your bouquet">
                 <div class="bouquet-crease" aria-hidden="true"></div>
+                <!-- stems are drawn behind the blooms, all converging on one
+                     tie near the bottom of the wrap -->
+                <svg class="bouquet-stems" id="bouquet-stems" viewBox="0 0 100 100"
+                     preserveAspectRatio="none" aria-hidden="true"></svg>
                 <div class="bouquet-ribbon" aria-hidden="true"><span>&#127872;</span></div>
                 <p class="bouquet-vase-hint" id="bouquet-vase-hint">drag lilies here</p>
               </div>
@@ -294,20 +298,17 @@
             <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily">
               <img src="./assets/flowers/lily-5.webp" alt="">
             </button>
-            <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/rose-icon.svg" type="button" aria-label="add a rose">
-              <img src="./assets/flowers/rose-icon.svg" alt="">
+            <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose.webp" type="button" aria-label="add a rose">
+              <img src="./assets/flowers/cut-rose.webp" alt="">
             </button>
-            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/tulip-icon.svg" type="button" aria-label="add a tulip">
-              <img src="./assets/flowers/tulip-icon.svg" alt="">
+            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip.webp" type="button" aria-label="add a red tulip">
+              <img src="./assets/flowers/cut-tulip.webp" alt="">
             </button>
-            <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/sunflower-icon.svg" type="button" aria-label="add a sunflower">
-              <img src="./assets/flowers/sunflower-icon.svg" alt="">
+            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip-pink.webp" type="button" aria-label="add a pink tulip">
+              <img src="./assets/flowers/cut-tulip-pink.webp" alt="">
             </button>
-            <button class="bouquet-pick" data-bouquet-kind="orchid" data-bouquet-src="./assets/flowers/orchid-icon.svg" type="button" aria-label="add an orchid">
-              <img src="./assets/flowers/orchid-icon.svg" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="blossom" data-bouquet-src="./assets/flowers/cherry-blossom-icon.svg" type="button" aria-label="add a cherry blossom">
-              <img src="./assets/flowers/cherry-blossom-icon.svg" alt="">
+            <button class="bouquet-pick" data-bouquet-kind="daisy" data-bouquet-src="./assets/flowers/cut-daisy.webp" type="button" aria-label="add a daisy">
+              <img src="./assets/flowers/cut-daisy.webp" alt="">
             </button>
               <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow">
                 <span>&#127872;</span>
@@ -988,10 +989,10 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./content.js?v=47"></script>
+  <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=77"></script>
+  <script src="./app.js?v=78"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>
