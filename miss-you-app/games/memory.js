@@ -71,6 +71,10 @@
   /* ------------------------------ runtime ------------------------------ */
 
   var state = null;      /* game state (also the shape we persist) */
+  var duel = null;       /* the shared just-me / together layer */
+
+  /* Seeded and shared while playing together, ordinary random alone. */
+  function rnd() { return (duel && duel.mode === "together") ? duel.random() : Math.random(); }
   var host = null;       /* container element passed to mount() */
   var el = null;         /* cached DOM refs */
   var listeners = [];    /* [target, type, handler] — all removed on unmount */
@@ -156,7 +160,7 @@
 
   function shuffle(list) {
     for (var i = list.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
+      var j = Math.floor(rnd() * (i + 1));
       var tmp = list[i];
       list[i] = list[j];
       list[j] = tmp;
@@ -476,6 +480,7 @@
   }
 
   function newGame(sizeKey) {
+    if (duel) duel.resetRandom();   // restart the shared stream so both decks match
     clearFlipTimer();
     stopClock();
     locked = false;
@@ -583,6 +588,7 @@
     var line = "all pairs found in " + state.moves + " moves · " + fmtTime(state.elapsed);
     setStatus(isBest ? ("new best on " + SIZES[state.size].label + ". " + line) : line, true);
     el.root.classList.add("is-won");
+    if (duel) duel.report(100, state.elapsed, true);
     save();
     celebrate();
   }
@@ -627,6 +633,18 @@
     }
 
     renderShell();
+
+    // just me / together: together deals the identical deck on both phones
+    if (window.MoonpieDuel) {
+      duel = window.MoonpieDuel.create({
+        game: "memory",
+        level: function () { return state ? String(state.size) : "default"; },
+        onModeChange: function () { newGame(state ? state.size : undefined); }
+      });
+      if (el.root && el.root.parentNode) el.root.parentNode.insertBefore(duel.el, el.root);
+      else host.insertBefore(duel.el, host.firstChild);
+    }
+
     renderBoard();
     paintAll();
     if (state.won) el.root.classList.add("is-won");
@@ -638,6 +656,10 @@
   }
 
   function unmount() {
+    if (duel) {
+      duel.destroy();
+      duel = null;
+    }
     stopClock();
     clearFlipTimer();
     if (state && host) save();

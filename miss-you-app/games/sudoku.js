@@ -43,10 +43,18 @@
     return n;
   }
 
+  /* All puzzle randomness goes through here. In together mode this is a
+     seeded stream shared with the other phone, so both build the identical
+     board; alone it is ordinary Math.random, so a solo puzzle is never the
+     same twice. */
+  function rnd() {
+    return (duel && duel.mode === "together") ? duel.random() : Math.random();
+  }
+
   function shuffle(arr) {
     var i, j, t;
     for (i = arr.length - 1; i > 0; i--) {
-      j = (Math.random() * (i + 1)) | 0;
+      j = (rnd() * (i + 1)) | 0;
       t = arr[i];
       arr[i] = arr[j];
       arr[j] = t;
@@ -329,8 +337,12 @@
   var keyHandler = null;
   var host = null;
   var saveTick = 0;
+  var duel = null;
 
   function freshState(diffKey) {
+    // In together mode this restarts the shared seeded stream, so the board
+    // this builds is byte-identical to the one on the other phone.
+    if (duel) duel.resetRandom();
     var made = generatePuzzle(diffKey);
     return {
       difficulty: diffKey,
@@ -416,6 +428,18 @@
     return v;
   }
 
+  /* Share of the blank cells that are filled in correctly. This is what the
+     other phone sees while we are playing the same board. */
+  function progressPercent() {
+    var blanks = 0, right = 0, i;
+    for (i = 0; i < 81; i++) {
+      if (isGiven(i)) continue;
+      blanks++;
+      if (valueAt(i) === state.solution[i]) right++;
+    }
+    return blanks ? Math.round((right / blanks) * 100) : 100;
+  }
+
   function isSolved() {
     var i;
     for (i = 0; i < 81; i++) {
@@ -470,6 +494,7 @@
   }
 
   function celebrate() {
+    if (duel && state) duel.report(100, state.elapsed, true);
     if (!ui || !ui.board) return;
     try {
       if (window.Bloom && typeof window.Bloom.confetti === "function") {
@@ -807,6 +832,7 @@
       if (saveTick >= 5) {
         saveTick = 0;
         save();
+        if (duel) duel.report(progressPercent(), state.elapsed, false);
       }
     }
   }
@@ -825,6 +851,22 @@
     if (!restored) save();
 
     ui = buildUI(host);
+
+    // "just me" or "together" - in together mode both phones build the same
+    // board from a shared seed and each can see the other's progress.
+    if (window.MoonpieDuel) {
+      duel = window.MoonpieDuel.create({
+        game: "sudoku",
+        level: function () { return state ? state.difficulty : "easy"; },
+        onModeChange: function () {
+          // switching mode means a different board: a shared one, or a fresh
+          // private one. Either way the current grid no longer applies.
+          newGame(state ? state.difficulty : "easy");
+        }
+      });
+      host.insertBefore(duel.el, host.firstChild);
+    }
+
     paint();
     if (state.won) celebrate();
 
@@ -845,6 +887,10 @@
       keyHandler = null;
     }
     if (state) save();
+    if (duel) {
+      duel.destroy();
+      duel = null;
+    }
     if (host) {
       clear(host);
       host = null;

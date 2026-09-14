@@ -69,6 +69,216 @@
   "title": "a bed sitting under a window next to a night stand",
   "world": "The First Airport Hug"
  },
+ "bali/00": {
+  "creator": "Antonio Araujo",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-wooden-table-topped-with-plates-of-food-DnZiQ0hSk6M",
+  "query": "Bali breakfast jungle villa terrace",
+  "source": "unsplash",
+  "stop": "Breakfast among leaves",
+  "title": "A wooden table topped with plates of food",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/01": {
+  "creator": "Kier in Sight Archives",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-pile-of-colorful-pills-ICGNqLsrDBw",
+  "query": "flower petal bath spa tropical",
+  "source": "unsplash",
+  "stop": "The flower bath",
+  "title": "a pile of colorful pills",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/02": {
+  "creator": "Stefan Meier",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-lush-green-rice-field-surrounded-by-palm-trees-qMpo9X4hbFc",
+  "query": "Bali rice terraces Tegallalang green",
+  "source": "unsplash",
+  "stop": "The rice terraces",
+  "title": "a lush green rice field surrounded by palm trees",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/03": {
+  "creator": "Norbert Braun",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-green-field-with-trees-Z99Mi1f8Qzo",
+  "query": "Bali countryside road palms scooter",
+  "source": "unsplash",
+  "stop": "Scooter road",
+  "title": "a green field with trees",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/04": {
+  "creator": "Florian GIORGIO",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/boy-showering-on-lake-PSJ-B59f-LE",
+  "query": "Bali water temple pool stone",
+  "source": "unsplash",
+  "stop": "The water temple",
+  "title": "boy showering on lake",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/05": {
+  "creator": "TARUN RAJ BN",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-view-of-a-forest-through-a-rain-covered-window-4mE5rdxS81o",
+  "query": "tropical rain jungle green downpour",
+  "source": "unsplash",
+  "stop": "Rain on the roof",
+  "title": "a view of a forest through a rain covered window",
+  "world": "Bali Hidden Garden"
+ },
+ "bali/06": {
+  "creator": "T yzz",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-glowing-lantern-illuminates-lush-green-plants-at-dusk-CTcVQRwZWFA",
+  "query": "tropical garden night lanterns",
+  "source": "unsplash",
+  "stop": "Fireflies after dinner",
+  "title": "A glowing lantern illuminates lush green plants at dusk",
+  "world": "Bali Hidden Garden"
+ },
+ "cappadocia/00": {
+  "creator": "Sasha Kaunas",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/white-bed-linen-near-window-taoW2BRnONc",
+  "query": "dark hotel room early morning window",
+  "source": "unsplash",
+  "stop": "The 4:30 alarm",
+  "title": "2am, but such a cool light in my room",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/01": {
+  "creator": "Carlo Romero",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-group-of-tall-rocks-sitting-on-top-of-a-hillside-zU_VQJSgUo4",
+  "query": "Cappadocia valley rock formations dawn",
+  "source": "unsplash",
+  "stop": "The valley in the dark",
+  "title": "a group of tall rocks sitting on top of a hillside",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/02": {
+  "creator": "yyzvic",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/hot-air-balloons-on-brown-field-during-daytime-f7oe3-tlm0I",
+  "query": "Cappadocia hot air balloons sunrise",
+  "source": "unsplash",
+  "stop": "The sky fills",
+  "title": "hot air balloons on brown field during daytime",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/03": {
+  "creator": "Joe deSousa",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-bunch-of-hot-air-balloons-flying-in-the-sky-v4HHLOyNK0k",
+  "query": "hot air balloon basket flight above valley",
+  "source": "unsplash",
+  "stop": "Our own basket",
+  "title": "a bunch of hot air balloons flying in the sky",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/04": {
+  "creator": "Yasin Onus",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/pouring-dark-liquid-into-a-small-glass-at-a-meal-PBai9m7RQS0",
+  "query": "Turkish breakfast spread table",
+  "source": "unsplash",
+  "stop": "Breakfast after wonder",
+  "title": "Hot tea being poured into a glass at a traditional breakfast table, capturing a warm and authentic morning moment with shared plates and natural light.",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/05": {
+  "creator": "Tommaso Ubezio",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-luxurious-lounge-area-built-inside-a-natural-rock-cave-aEN4Onq5res",
+  "query": "cave hotel room Cappadocia interior",
+  "source": "unsplash",
+  "stop": "Cave-room nap",
+  "title": "A luxurious lounge area built inside a natural rock cave",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "cappadocia/06": {
+  "creator": "Kaan Kosemen",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/brown-rocky-mountain-under-white-clouds-during-daytime-JMjB1zQ09Oc",
+  "query": "Cappadocia sunset rock valley viewpoint",
+  "source": "unsplash",
+  "stop": "Sunset on the rocks",
+  "title": "A Sunset shot from red valley Cappadocia, Turkey\n",
+  "world": "Cappadocia Before Sunrise"
+ },
+ "kyoto/00": {
+  "creator": "Griffin Quinn",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-group-of-people-walking-outside-of-a-building-JKKCCaIRb4Q",
+  "query": "Kyoto temple morning mist",
+  "source": "unsplash",
+  "stop": "Temple morning",
+  "title": "a group of people walking outside of a building",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/01": {
+  "creator": "David Emrich",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/torii-gates-in-kyoto-EJvGBYjrwEA",
+  "query": "Fushimi Inari torii gates path",
+  "source": "unsplash",
+  "stop": "The red gates",
+  "title": "A stone path through a tunnel of orange torii gates in Kyoto, Japan",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/02": {
+  "creator": "Sandie Peters",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-wooden-porch-with-benches-and-trees-in-the-background-Dnzv-_TgM78",
+  "query": "Japanese tea house tatami paper window",
+  "source": "unsplash",
+  "stop": "Tea for two",
+  "title": "a wooden porch with benches and trees in the background",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/03": {
+  "creator": "Seval Torun",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-stone-pathway-lined-with-colorful-patterned-poles-ftRD5OxqIjo",
+  "query": "cherry blossom petals falling path Kyoto",
+  "source": "unsplash",
+  "stop": "Petal weather",
+  "title": "A stone pathway lined with colorful patterned poles",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/04": {
+  "creator": "Night Owl",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-path-through-a-dense-bamboo-forest-FAJ-dw5BQDw",
+  "query": "Arashiyama bamboo grove path",
+  "source": "unsplash",
+  "stop": "The bamboo hour",
+  "title": "A path through a dense bamboo forest",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/05": {
+  "creator": "YANGHONG YU",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/calendar-CThmSczUnnU",
+  "query": "Gion Kyoto lantern street night",
+  "source": "unsplash",
+  "stop": "Lantern evening",
+  "title": "calendar",
+  "world": "Kyoto Blossom Rain"
+ },
+ "kyoto/06": {
+  "creator": "Anthony Lim",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-river-running-through-a-lush-green-countryside-jfyAtJEZNRA",
+  "query": "Kamo river Kyoto evening riverbank",
+  "source": "unsplash",
+  "stop": "River, last light",
+  "title": "a river running through a lush green countryside",
+  "world": "Kyoto Blossom Rain"
+ },
  "maldives/00": {
   "creator": "Mike Swigunski",
   "license": "Unsplash Licence",
@@ -78,6 +288,136 @@
   "stop": "Water-villa morning",
   "title": "The Maldives - Conrad Rangali Islands!",
   "world": "Maldives, No Schedule"
+ },
+ "maldives/01": {
+  "creator": "Cauayan Island Resort",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/woman-in-swimming-pool-during-daytime-7O1mQ9sXys0",
+  "query": "floating breakfast tray pool tropical",
+  "source": "unsplash",
+  "stop": "Breakfast in the water",
+  "title": "You can always find guests enjoying Cauayan's infinity pool! ",
+  "world": "Maldives, No Schedule"
+ },
+ "maldives/02": {
+  "creator": "Simon Infanger",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-large-white-bird-standing-on-top-of-a-sandy-beach-HASdo6AuEOc",
+  "query": "turquoise lagoon shallow clear water",
+  "source": "unsplash",
+  "stop": "The slow swim",
+  "title": "A graceful white egret stalks its prey through the crystal-clear shallows of the Red Sea coast. Under a blazing midday sun, the bird’s pristine plumage stands out against the shimmering turquoise water and the golden ripples of the sandy seabed. In the distance, a quiet sandbar separates the shallow lagoon from the deep blue horizon. This image captures a moment of focused intensity in nature, where the stillness of the water meets the sharp precision of a hunter. The atmosphere is one of serene isolation and tropical warmth, highlighting the raw beauty of the coastal ecosystem.",
+  "world": "Maldives, No Schedule"
+ },
+ "maldives/03": {
+  "creator": "Oleksandr Sushko",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/an-underwater-view-of-a-coral-reef-with-fish-7AmBaTymwJg",
+  "query": "coral reef tropical fish snorkeling",
+  "source": "unsplash",
+  "stop": "Fish that ignore us",
+  "title": "an underwater view of a coral reef with fish",
+  "world": "Maldives, No Schedule"
+ },
+ "maldives/04": {
+  "creator": "Ben McLeod",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/man-in-black-jacket-and-blue-shorts-holding-green-plastic-bucket-MX-I62dPu-c",
+  "query": "beach dinner table lanterns sand night",
+  "source": "unsplash",
+  "stop": "Dinner on the sand",
+  "title": "man in black jacket and blue shorts holding green plastic bucket",
+  "world": "Maldives, No Schedule"
+ },
+ "maldives/05": {
+  "creator": "Luca Baggio",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/rocks-under-milky-way-eKU3JGNCCMg",
+  "query": "starry night sky ocean milky way",
+  "source": "unsplash",
+  "stop": "Stars with no city",
+  "title": "The summer night sky in Tuscany is something like this.",
+  "world": "Maldives, No Schedule"
+ },
+ "maldives/06": {
+  "creator": "Mari A",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-beach-with-waves-8ATTuxtb87M",
+  "query": "tropical beach early morning empty",
+  "source": "unsplash",
+  "stop": "Last swim before the flight",
+  "title": "a beach with waves",
+  "world": "Maldives, No Schedule"
+ },
+ "paris/00": {
+  "creator": "Spenser Sembrat",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-group-of-people-sitting-at-a-table-outside-of-a-restaurant-v_HdnVkMQK0",
+  "query": "Paris cafe terrace evening",
+  "source": "unsplash",
+  "stop": "The tiny cafe",
+  "title": "a group of people sitting at a table outside of a restaurant",
+  "world": "Paris After Midnight"
+ },
+ "paris/01": {
+  "creator": "Julie",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-boat-on-the-water-with-a-city-in-the-background-fQf20tlUBss",
+  "query": "Paris bridge Seine night lights",
+  "source": "unsplash",
+  "stop": "A bridge at midnight",
+  "title": "a boat on the water with a city in the background",
+  "world": "Paris After Midnight"
+ },
+ "paris/02": {
+  "creator": "Vinicius Brasil",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/the-eiffel-tower-illuminated-at-dusk-with-a-clear-sky-z090RHwnLSs",
+  "query": "Eiffel Tower night illuminated",
+  "source": "unsplash",
+  "stop": "The tower sparkles",
+  "title": "The eiffel tower illuminated at dusk with a clear sky",
+  "world": "Paris After Midnight"
+ },
+ "paris/03": {
+  "creator": "Elric Pxl",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-building-with-windows-and-a-chair-outside-bcpQRPInbxE",
+  "query": "Paris bookshop night window lit",
+  "source": "unsplash",
+  "stop": "The bookshop still open",
+  "title": "a building with windows and a chair outside",
+  "world": "Paris After Midnight"
+ },
+ "paris/04": {
+  "creator": "Matthee",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/person-sitting-on-chair-outside-store-TfRcoMs_f2Y",
+  "query": "Paris street wet cobblestones reflection night",
+  "source": "unsplash",
+  "stop": "Streets after rain",
+  "title": "A night in Paris full of soaked roads, beautiful reflections and a great vibe while having dinner outside in the rain. ",
+  "world": "Paris After Midnight"
+ },
+ "paris/05": {
+  "creator": "Denis",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-couple-of-street-lamps-sitting-on-top-of-a-sidewalk-QfxmzXsPrwE",
+  "query": "Paris street lamp night empty boulevard",
+  "source": "unsplash",
+  "stop": "Walking home",
+  "title": "a couple of street lamps sitting on top of a sidewalk",
+  "world": "Paris After Midnight"
+ },
+ "paris/06": {
+  "creator": "Markus Kammermann",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/an-empty-subway-station-platform-at-night-HuodXiktpgE",
+  "query": "Paris metro station night platform",
+  "source": "unsplash",
+  "stop": "The last métro we miss",
+  "title": "An empty subway station platform at night",
+  "world": "Paris After Midnight"
  },
  "santorini/00": {
   "creator": "PAUL UZZAL",
@@ -148,5 +488,155 @@
   "stop": "Midnight balcony",
   "title": "Oia at sunset.",
   "world": "Santorini in Lilac Light"
+ },
+ "switzerland/00": {
+  "creator": "the iop",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/view-of-a-fjord-and-mountains-from-a-window-yJlpsJ3zb0M",
+  "query": "train window seat mountain view",
+  "source": "unsplash",
+  "stop": "Window-seat treaty",
+  "title": "A serene fjord framed by the wide windows of a modern lounge. Calm waters and forested mountains meet soft clouds in the background.",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/01": {
+  "creator": "Gabriela",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/helicopter-view-over-green-mountain-valley-nwueJfqdFxU",
+  "query": "alpine valley from train window",
+  "source": "unsplash",
+  "stop": "The first tunnel",
+  "title": "A view of Kebnekaise Fjällstation framed through a helicopter window, surrounded by the steep valleys and rugged peaks of Swedish Lapland. The mountain station lies deep in the Scandinavian Mountains and serves as the main base for hikers heading towards Kebnekaise, Sweden’s highest mountain. The unusual perspective captures both the remoteness of the settlement and the scale of the Arctic landscape around it.",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/02": {
+  "creator": "Yura Lytkin",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/brown-and-white-houses-on-green-mountain-under-blue-sky-during-daytime-qZBZb-G0eEU",
+  "query": "Swiss mountain village chalets",
+  "source": "unsplash",
+  "stop": "A small mountain town",
+  "title": "A town high in the mountains with snowy mountain peaks in the background during daytime.",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/03": {
+  "creator": "Barney Goodman",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/alpine-hotels-beside-a-ski-slope-with-towering-snow-capped-mountains-bU6FP2dIHcY",
+  "query": "alpine restaurant terrace mountain lunch",
+  "source": "unsplash",
+  "stop": "Lunch with a view",
+  "title": "A timber alpine hotel sits below the snow-streaked north face of the Eiger.",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/04": {
+  "creator": "note thanun",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-bench-sitting-in-front-of-a-window-in-a-train-_j_pA4DfwvU",
+  "query": "train carriage interior quiet window light",
+  "source": "unsplash",
+  "stop": "The quiet carriage",
+  "title": "A bench sitting in front of a window in a train",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/05": {
+  "creator": "Ansgar Scheffold",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/lake-in-the-middle-of-green-mountains-z_f2JrBRbOg",
+  "query": "Swiss lake reflection mountains evening",
+  "source": "unsplash",
+  "stop": "Lake evening",
+  "title": "A mountain lake in the bernese alps at sunrise.",
+  "world": "The Swiss Window Seat"
+ },
+ "switzerland/06": {
+  "creator": "Luca Severin",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/people-walking-on-street-during-night-time-uRcpPhvngw4",
+  "query": "small train station night lights snow",
+  "source": "unsplash",
+  "stop": "Late arrival",
+  "title": "overthinking",
+  "world": "The Swiss Window Seat"
+ },
+ "venice/00": {
+  "creator": "Baron Alloway",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-black-and-white-photo-of-a-person-in-a-boat-u12KJ_QdtVc",
+  "query": "Venice canal rain umbrella",
+  "source": "unsplash",
+  "stop": "One shared umbrella",
+  "title": "a black and white photo of a person in a boat",
+  "world": "Venice After Rain"
+ },
+ "zanzibar/00": {
+  "creator": "Crispin Jones",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/man-in-white-shirt-walking-on-beach-during-daytime-5ykVBQWZREY",
+  "query": "Zanzibar beach sunrise low tide",
+  "source": "unsplash",
+  "stop": "Sunrise feet",
+  "title": "Man picking shells on beach in the evening. Small waves breaking and boats on the horizon.",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/01": {
+  "creator": "Alferio Njau",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-bicycle-parked-in-front-of-a-building-xKbRDaZ5498",
+  "query": "Stone Town Zanzibar carved wooden door",
+  "source": "unsplash",
+  "stop": "Stone Town doors",
+  "title": "a bicycle parked in front of a building",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/02": {
+  "creator": "Dewang Gupta",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-person-selling-fruit-at-an-outdoor-market-2WScVxRz3uI",
+  "query": "spice market cloves cardamom stall",
+  "source": "unsplash",
+  "stop": "Spice market",
+  "title": "a person selling fruit at an outdoor market",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/03": {
+  "creator": "Simon Spring",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-tropical-beach-with-palm-trees-and-clear-water-3ZSpxUASAQ4",
+  "query": "Indian Ocean turquoise shallow beach",
+  "source": "unsplash",
+  "stop": "The blue hour swim",
+  "title": "a tropical beach with palm trees and clear water",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/04": {
+  "creator": "Camilla Frederiksen",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/photograph-of-sail-boat-on-calm-body-of-water-during-golden-hour-DDBQWBv-nmk",
+  "query": "dhow sailing boat sunset Zanzibar",
+  "source": "unsplash",
+  "stop": "Dhow at dusk",
+  "title": "You will never get tired of the sunsets in Zanzibar. This sunset is captured in the northern part of the Island. Every single day the light was different and I was blown away!!",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/05": {
+  "creator": "Young Kane",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/old-buildings-silhouetted-against-a-soft-sunset-sky-QTglnm6mqv8",
+  "query": "Stone Town rooftop restaurant evening",
+  "source": "unsplash",
+  "stop": "Rooftop dinner",
+  "title": "Old buildings silhouetted against a soft sunset sky",
+  "world": "Zanzibar Barefoot Morning"
+ },
+ "zanzibar/06": {
+  "creator": "Néstor Morales",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/two-person-sitting-near-seashore-A9B_cgBGa_4",
+  "query": "beach night stars tropical sand",
+  "source": "unsplash",
+  "stop": "Night on the sand",
+  "title": "two person sitting near seashore",
+  "world": "Zanzibar Barefoot Morning"
  }
 }

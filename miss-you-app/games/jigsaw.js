@@ -67,6 +67,7 @@
    * }
    */
   var state = null;
+  var duel = null;
   var selected = -1;    // board index of the currently selected tile
   var runStart = 0;     // timestamp the current timing run began (0 = not running)
   var peekOn = false;
@@ -98,7 +99,10 @@
     return n;
   }
 
-  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  /* All randomness goes through here: seeded and shared while playing
+     together, ordinary Math.random when playing alone. */
+  function rnd() { return (duel && duel.mode === "together") ? duel.random() : Math.random(); }
+  function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
 
   function clampInt(v, lo, hi) {
     v = Math.round(Number(v));
@@ -194,7 +198,7 @@
       order = [];
       for (var i = 0; i < total; i++) order.push(i);
       for (var j = total - 1; j > 0; j--) {
-        var k = Math.floor(Math.random() * (j + 1));
+        var k = Math.floor(rnd() * (j + 1));
         var t = order[j]; order[j] = order[k]; order[k] = t;
       }
       attempts++;
@@ -676,6 +680,7 @@
 
   function regenerateBoard(keepStatus) {
     stopTimer();
+    if (duel) duel.resetRandom();
     selected = -1;
     var info = imageInfo();
     var grid = computeGrid(state.pieces, info.w / info.h);
@@ -760,7 +765,15 @@
     if (!state.solved) setStatus("");
   }
 
+  /* Share of tiles sitting in their correct place - what the other phone sees. */
+  function progressPercent() {
+    if (!state || !state.order || !state.order.length) return 0;
+    var total = state.order.length, wrong = displacedCount(state.order);
+    return Math.round(((total - wrong) / total) * 100);
+  }
+
   function celebrate() {
+    if (duel && state) duel.report(100, totalElapsed(), true);
     state.solved = true;
     stopTimer();
     selected = -1;
@@ -1052,6 +1065,20 @@
     host.appendChild(build());
     mounted = true;
 
+    // just me / together: together gives both phones the same photo, the same
+    // piece count and the same shuffle, then shows how far the other has got
+    if (window.MoonpieDuel) {
+      duel = window.MoonpieDuel.create({
+        game: "jigsaw",
+        level: function () { return state ? String(state.pieces || 24) : "24"; },
+        onModeChange: function () {
+          if (duel) duel.resetRandom();   // restart the shared stream so both shuffles match
+          regenerateBoard();
+        }
+      });
+      host.insertBefore(duel.el, host.firstChild);
+    }
+
     wire();
     probeImages();
     paintAll();
@@ -1069,6 +1096,10 @@
   }
 
   function unmount() {
+    if (duel) {
+      duel.destroy();
+      duel = null;
+    }
     if (!mounted) return;
     stopTimer();
     save();
