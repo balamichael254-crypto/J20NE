@@ -889,6 +889,40 @@ function wlCardHtml(movie) {
   `;
 }
 
+// Where a title can actually be watched, from TMDB's JustWatch data for our
+// region, plus a plain search as the fallback when nothing carries it here.
+// Deliberately links out to the services that hold the rights rather than
+// into a piracy app.
+function wlWatchHtml(detail) {
+  const watch = detail.watch || {};
+  const providers = watch.providers || [];
+  const query = encodeURIComponent(`${detail.title} ${detail.year || ""} watch online`.trim());
+  const searchUrl = `https://www.google.com/search?q=${query}`;
+
+  if (!providers.length) {
+    return `
+      <div class="wl-watch">
+        <p class="card-label">where to watch</p>
+        <p class="wl-watch-none">Nothing lists it for Kenya right now.</p>
+        <a class="secondary-btn wl-watch-search" href="${searchUrl}" target="_blank" rel="noopener noreferrer">look it up</a>
+      </div>`;
+  }
+  return `
+    <div class="wl-watch">
+      <p class="card-label">where to watch${watch.region && watch.region !== "KE" ? " (" + escapeHtml(watch.region) + ")" : ""}</p>
+      <div class="wl-watch-logos">
+        ${providers.map(p => `
+          <span class="wl-provider" title="${escapeHtml(p.name)}">
+            ${p.logo ? `<img src="${escapeHtml(p.logo)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.remove()">` : ""}
+            <small>${escapeHtml(p.name)}</small>
+          </span>`).join("")}
+      </div>
+      ${watch.link
+        ? `<a class="primary-btn wide wl-watch-open" href="${escapeHtml(watch.link)}" target="_blank" rel="noopener noreferrer">open it</a>`
+        : `<a class="secondary-btn wl-watch-search" href="${searchUrl}" target="_blank" rel="noopener noreferrer">look it up</a>`}
+    </div>`;
+}
+
 function wlFindShown(id) {
   const key = wlParseId(id);
   return wlResults.find(m => m.id === key) || (state.watchSaved || []).find(m => m.id === key) || (state.watchSeen || []).find(m => m.id === key);
@@ -1037,6 +1071,7 @@ async function wlOpenDetail(id) {
       ${detail.trailerKey
         ? `<div class="wl-trailer"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(detail.trailerKey)}" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
         : `<p class="wl-modal-note">No trailer found for this one.</p>`}
+      ${wlWatchHtml(detail)}
       <div class="wl-modal-actions">
         <button class="secondary-btn wl-modal-save${saved ? " on" : ""}" type="button" data-wl-save="${detail.id}">${saved ? "remove from watchlist" : "add to watchlist"}</button>
         <button class="secondary-btn wl-modal-seen${seen ? " on" : ""}" type="button" data-wl-seen="${detail.id}">${seen ? "unmark as watched" : "mark as watched"}</button>

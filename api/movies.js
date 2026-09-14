@@ -127,15 +127,41 @@ module.exports = async function handler(request, response) {
     if (op === "detail") {
       const id = Number(request.query?.id);
       if (!Number.isInteger(id) || id <= 0) return json(response, 400, { error: "bad id" });
-      const data = await tmdb(`/movie/${id}?language=en-US&append_to_response=videos`, key);
+      // watch/providers is JustWatch data: which services actually carry this
+      // title, in this country, right now. It's what makes a movie openable
+      // somewhere real rather than just readable.
+      const region = String(request.query?.region || "KE").toUpperCase().slice(0, 2);
+      const data = await tmdb(`/movie/${id}?language=en-US&append_to_response=videos,watch/providers`, key);
       const trailer = (data.videos?.results || [])
         .filter(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"))
         .sort((a, b) => (b.official === a.official ? 0 : b.official ? 1 : -1))[0];
+
+      const byRegion = data["watch/providers"]?.results || {};
+      const here = byRegion[region] || byRegion.US || {};
+      const seen = new Set();
+      const providers = []
+        .concat(here.flatrate || [], here.free || [], here.ads || [], here.rent || [], here.buy || [])
+        .filter(p => {
+          if (!p || seen.has(p.provider_id)) return false;
+          seen.add(p.provider_id);
+          return true;
+        })
+        .slice(0, 8)
+        .map(p => ({
+          name: p.provider_name,
+          logo: p.logo_path ? `${IMG}/w92${p.logo_path}` : null,
+        }));
+
       return json(response, 200, {
         ...slimMovie(data),
         runtime: data.runtime || null,
         genres: (data.genres || []).map(g => g.name),
-        trailerKey: trailer ? trailer.key : null
+        trailerKey: trailer ? trailer.key : null,
+        watch: {
+          region: byRegion[region] ? region : (byRegion.US ? "US" : null),
+          link: here.link || null,      // JustWatch page listing every option
+          providers,
+        },
       });
     }
 
