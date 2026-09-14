@@ -312,6 +312,60 @@
       toast("Locked and ready. Same passphrase on both phones.");
     });
 
+    /* Press and hold, rather than a tap.
+
+       There is already a combination padlock elsewhere in the app, so this
+       one had to be a different object. A hold is also the right gesture for
+       what is behind it: deliberate, a second of intent, not something your
+       thumb can do by accident in a pocket. The PIN is still what actually
+       unlocks it; the hold is the ritual around it. */
+    (function setupHoldLock() {
+      const button = $("#vault-holdlock");
+      const form = $("#vault-unlock-form");
+      if (!button || !form) return;
+      const HOLD_MS = 1000;
+      let raf = null, start = 0;
+
+      const setProgress = v => button.querySelector(".holdlock-ring")?.style.setProperty("--hold", String(v));
+
+      const stop = () => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        button.classList.remove("is-holding");
+        setProgress(0);
+      };
+
+      const tick = now => {
+        const progress = Math.min(1, (now - start) / HOLD_MS);
+        setProgress(progress);
+        if (progress >= 1) {
+          stop();
+          button.classList.add("is-open");
+          setTimeout(() => button.classList.remove("is-open"), 600);
+          form.requestSubmit();
+          return;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+
+      const begin = event => {
+        event.preventDefault();
+        if (raf) return;
+        if (!$("#vault-pin").value.trim()) { toast("PIN first, then hold."); return; }
+        button.classList.add("is-holding");
+        start = performance.now();
+        raf = requestAnimationFrame(tick);
+      };
+
+      button.addEventListener("pointerdown", begin);
+      button.addEventListener("pointerup", stop);
+      button.addEventListener("pointercancel", stop);
+      button.addEventListener("pointerleave", stop);
+      // keyboard: space/enter holds for as long as the key is held
+      button.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") begin(e); });
+      button.addEventListener("keyup", stop);
+    })();
+
     $("#vault-unlock-form")?.addEventListener("submit", async e => {
       e.preventDefault();
       const pin = $("#vault-pin").value.trim();

@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=113">
+  <link rel="stylesheet" href="./styles.css?v=118">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -20,7 +20,14 @@
     <div class="gate-flower gate-lily-one" aria-hidden="true"></div>
     <div class="gate-flower gate-lily-two" aria-hidden="true"></div>
     <form class="gate-card" id="passkey-form">
-      <div class="gate-seal" aria-hidden="true">25<br><small>02</small></div>
+      <div class="locket" id="entry-locket" aria-hidden="true">
+        <span class="locket-chain"></span>
+        <span class="locket-bail"></span>
+        <span class="locket-inside">ours<br>25.02</span>
+        <span class="locket-half left"></span>
+        <span class="locket-half right"></span>
+        <span class="locket-engraving">25.02</span>
+      </div>
       <p class="eyebrow">one date opens our universe</p>
       <h2>Hi, my love.</h2>
       <p>I kept this little world behind the day that became ours.</p>
@@ -36,10 +43,10 @@
     </form>
   </section>
 
-  <!-- Evergreen arrival. This used to be hardcoded to Girlfriend Day; it is now
-       just "flowers came for you", which is true on any ordinary Tuesday. The
-       bouquet is picked at random each time so she never opens the same one
-       twice in a row. -->
+  <!-- Evergreen arrival. This used to be hardcoded to Girlfriend Day; it is
+       now just "flowers came for you", which is true on any ordinary Tuesday.
+       The bouquet is stargazer lilies every time, and big - it used to rotate
+       through mixed arrangements that had roses in them. -->
   <section class="day-opening hidden" id="birthday-opening" aria-label="a bouquet arrived for you">
     <div class="opening-petals" id="opening-petals" aria-hidden="true"></div>
     <article class="opening-ritual-card">
@@ -49,13 +56,13 @@
         <h2>Flowers arrived.</h2>
         <p>No occasion. I just wanted today to have something in it.</p>
         <button class="bouquet-unwrap" id="unwrap-bouquet" type="button" aria-label="untie the ribbon and open your flowers">
-          <img src="./assets/flowers/bouquet-1.webp" alt="A bouquet wrapped in paper, tied with ribbon" class="bouquet-wrapped-img" id="wrapped-bouquet">
+          <img src="./assets/flowers/bouquet-lilies-wrapped.webp" alt="A big bouquet of stargazer lilies wrapped in paper, tied with ribbon" class="bouquet-wrapped-img" id="wrapped-bouquet">
           <span class="ribbon-bow" aria-hidden="true">🎀</span>
           <small>tap to untie</small>
         </button>
       </div>
       <div class="opening-reveal hidden" id="opening-reveal">
-        <img src="./assets/flowers/bouquet-cutout.webp" alt="An open bouquet of pink lilies and roses" id="revealed-bouquet">
+        <img src="./assets/flowers/bouquet-lilies-open.webp" alt="An armful of stargazer lilies" id="revealed-bouquet">
         <p class="script-kicker">these are yours</p>
         <h2>Lilies. Your favourite.</h2>
         <p>Ribbon's untied, everything's open. Your little universe is through here.</p>
@@ -550,8 +557,101 @@
 
       <section class="screen world-screen" id="screen-letters" aria-label="letters">
         <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Open these slowly whenever you need my voice to stay with you a little longer.</p><img class="head-charm" src="./assets/mood/notebook-4.webp" alt=""></div>
+
+        <!-- letters that arrived from the other phone, sealed until opened -->
+        <div class="letter-inbox" id="letter-inbox"></div>
+
+        <button class="write-letter-cta" id="open-composer" type="button">
+          <span class="write-letter-pen" aria-hidden="true">&#9998;</span>
+          <span>
+            <b>Write one back</b>
+            <small>paper, ink, stickers, wax. Then it lands on their phone.</small>
+          </span>
+        </button>
+
         <div class="letter-list" id="letter-list"></div>
       </section>
+
+      <!-- ====================================================================
+           The letter composer. Four steps, because a letter is not a form:
+           you write it, you choose the paper and the hand it is written in,
+           you seal it, and only then does it go. Each step is its own screen
+           so none of it feels like filling in fields.
+           ==================================================================== -->
+      <section class="screen world-screen" id="screen-compose" aria-label="write a letter">
+        <div class="compose-top">
+          <button class="tiny-button" id="compose-back" type="button">&larr; back</button>
+          <div class="compose-steps" id="compose-steps" aria-label="progress">
+            <span class="compose-step-label" id="compose-step-label">Step 1 of 4 &middot; Write</span>
+            <span class="compose-dots" aria-hidden="true">
+              <i class="on"></i><i></i><i></i><i></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- 1. write ------------------------------------------------------ -->
+        <div class="compose-pane" data-compose-pane="write">
+          <h2 class="compose-title">Write your letter</h2>
+          <div class="compose-tools">
+            <button class="compose-tool" id="compose-templates" type="button">templates</button>
+          </div>
+          <div class="compose-sheet" id="compose-sheet">
+            <input class="compose-salutation" id="compose-to" type="text" maxlength="40" placeholder="Dear...">
+            <textarea class="compose-body" id="compose-body" rows="10" maxlength="4000"
+              placeholder="Say the thing you would only write down..."></textarea>
+            <input class="compose-signoff" id="compose-from" type="text" maxlength="40" placeholder="Always, ...">
+          </div>
+        </div>
+
+        <!-- 2. style ------------------------------------------------------ -->
+        <div class="compose-pane hidden" data-compose-pane="style">
+          <h2 class="compose-title">Choose the paper</h2>
+          <p class="compose-hint">The paper it is written on, and the hand it is written in.</p>
+          <div class="compose-group">
+            <p class="card-label">paper</p>
+            <div class="chip-row" id="compose-papers"></div>
+          </div>
+          <div class="compose-group">
+            <p class="card-label">handwriting</p>
+            <div class="chip-row" id="compose-fonts"></div>
+          </div>
+          <div class="compose-group">
+            <p class="card-label">stickers &middot; tap to stick them on</p>
+            <div class="chip-row" id="compose-stickers"></div>
+          </div>
+          <div class="compose-preview" id="compose-preview-style"></div>
+        </div>
+
+        <!-- 3. seal ------------------------------------------------------- -->
+        <div class="compose-pane hidden" data-compose-pane="seal">
+          <h2 class="compose-title">Seal it</h2>
+          <p class="compose-hint">This is what lands on their phone, closed.</p>
+          <div class="compose-group">
+            <p class="card-label">envelope</p>
+            <div class="chip-row" id="compose-envelopes"></div>
+          </div>
+          <div class="compose-group">
+            <p class="card-label">stamp</p>
+            <div class="chip-row" id="compose-stamps"></div>
+          </div>
+          <div class="compose-envelope-preview" id="compose-envelope-preview"></div>
+        </div>
+
+        <!-- 4. send ------------------------------------------------------- -->
+        <div class="compose-pane hidden" data-compose-pane="send">
+          <h2 class="compose-title">Send it</h2>
+          <p class="compose-hint" id="compose-send-hint">It arrives sealed. They choose when to open it.</p>
+          <div class="compose-final" id="compose-final"></div>
+          <button class="primary-btn wide" id="compose-send" type="button">seal it and send</button>
+          <p class="compose-status" id="compose-status" hidden></p>
+        </div>
+
+        <div class="compose-nav">
+          <button class="secondary-btn" id="compose-prev" type="button" hidden>back a step</button>
+          <button class="primary-btn" id="compose-next" type="button">next</button>
+        </div>
+      </section>
+
 
       <section class="screen world-screen" id="screen-poems" aria-label="poems">
         <div class="section-head"><p class="eyebrow">after midnight</p><h2>Poems</h2><p>Small poems with room to breathe.</p><img class="head-charm" src="./assets/mood/moon-sky-1.webp" alt=""></div>
@@ -741,7 +841,13 @@
           <h3>Locked.</h3>
           <p class="tiny" id="vault-lock-note">Enter your PIN for this phone.</p>
           <input class="vault-input" id="vault-pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN">
-          <button class="primary-btn wide" type="submit">open</button>
+          <button class="holdlock" id="vault-holdlock" type="button" aria-label="press and hold to open">
+            <span class="holdlock-ring" aria-hidden="true"></span>
+            <span class="holdlock-face">
+              <span aria-hidden="true">&#128274;</span>
+              <small>press and hold</small>
+            </span>
+          </button>
         </form>
 
         <!-- unlocked -->
@@ -885,10 +991,10 @@
   <script src="./content.js?v=47"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=73"></script>
+  <script src="./app.js?v=77"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
-  <script src="./vault.js?v=2"></script>
+  <script src="./vault.js?v=3"></script>
   <script src="./poo.js?v=17"></script>
   <script src="./games/duel.js?v=2"></script>
   <script src="./games/sudoku.js?v=3"></script>
