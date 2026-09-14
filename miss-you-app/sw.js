@@ -1,8 +1,8 @@
-const CACHE_NAME = "moonpie-miss-you-v116";
+const CACHE_NAME = "moonpie-miss-you-v117";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=113",
+  "./styles.css?v=115",
   "./poo.css?v=6",
   "./content.js?v=47",
   "./movies.js?v=1",
@@ -14,7 +14,7 @@ const ASSETS = [
   "./games/memory.css?v=1",
   "./games/jigsaw.css?v=2",
   "./push.js?v=2",
-  "./app.js?v=73",
+  "./app.js?v=74",
   "./bloom.js?v=5",
   "./galaxy.js?v=1",
   "./vault.js?v=2",
@@ -27,7 +27,11 @@ const ASSETS = [
   "./assets/fonts/cormorant-italic-400.woff2",
   "./assets/fonts/dancing-600.woff2",
   "./assets/fonts/baloo2-var.woff2",
-  "./assets/fonts/quicksand-var.woff2"
+  "./assets/fonts/quicksand-var.woff2",
+  "./assets/fonts/caveat.woff2",
+  "./assets/fonts/indie-flower.woff2",
+  "./assets/fonts/gloria-hallelujah.woff2",
+  "./assets/fonts/shadows-into-light.woff2"
 ];
 
 self.addEventListener("install", event => {

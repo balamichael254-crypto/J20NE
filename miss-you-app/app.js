@@ -1519,12 +1519,25 @@ function escapeHtml(value) {
   }[char]));
 }
 
+// One stamp motif per theme, so the envelopes read as twelve different
+// letters rather than one object recoloured twelve times.
+const LETTER_STAMPS = {
+  lilies: "\u{1F337}", airport: "\u{2708}\u{FE0F}", birthday: "\u{1F382}",
+  kitchen: "\u{1F373}", moon: "\u{1F319}", rain: "\u{2602}\u{FE0F}",
+  sea: "\u{1F41A}", garden: "\u{1F33F}", night: "\u{2B50}", sun: "\u{1F31E}",
+  winter: "\u2744\uFE0F", default: "\u{1F49C}"
+};
+
 function renderLetters() {
+  const me = nickOf(window.MoonpiePush?.myProfile?.() || "Michelle");
   $("#letter-list").innerHTML = letters.map((letter, i) => `
     <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}" aria-label="${escapeHtml(letter.title)} - tap to unseal">
-      <span class="envelope-flap" aria-hidden="true"></span>
-      <span class="envelope-seal" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
+      <span class="envelope-stamp" aria-hidden="true"><span>${LETTER_STAMPS[letter.theme] || LETTER_STAMPS.default}</span></span>
+      <span class="envelope-postmark" aria-hidden="true">OURS<br>25 FEB</span>
       <span class="envelope-tab">${escapeHtml(letter.tab)}</span>
+      <span class="envelope-address">To ${escapeHtml(me)},</span>
+      <span class="envelope-flap" aria-hidden="true"></span>
+      <span class="envelope-seal" aria-hidden="true">M</span>
       <span class="envelope-body">
         <strong>${escapeHtml(letter.title)}</strong>
         <small>${escapeHtml(letter.preview)}</small>
@@ -2434,7 +2447,7 @@ function renderCare() {
 
 const COUNTER_API = "../api/counter?room=moonpie-counters-2504";
 const DAILY_API = "../api/daily-question?room=moonpie-daily-2504";
-const ANNIVERSARY = new Date("2025-02-25T00:00:00");
+const ANNIVERSARY = new Date("2026-02-25T00:00:00");
 
 // Same UTC-day-number question rotation as api/daily-question.js, so that if
 // the server round trip fails for any reason - unconfigured Supabase, a cold

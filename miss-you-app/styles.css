@@ -14,6 +14,12 @@
 @font-face{font-family:"Quicksand";src:url("./assets/fonts/quicksand-var.woff2") format("woff2-variations");font-weight:300 700;font-display:swap}
 @font-face{font-family:"Dancing Script";src:url("./assets/fonts/dancing-600.woff2") format("woff2");font-weight:600;font-display:swap}
 @font-face{font-family:"Lora";src:url("./assets/fonts/lora-400.woff2") format("woff2");font-weight:400;font-display:swap}
+/* Handwriting, for anything that is meant to look written rather than set:
+   envelopes, letters, the letter composer. All open-licensed Google fonts. */
+@font-face{font-family:"Caveat";src:url("./assets/fonts/caveat.woff2") format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Indie Flower";src:url("./assets/fonts/indie-flower.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Gloria Hallelujah";src:url("./assets/fonts/gloria-hallelujah.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Shadows Into Light";src:url("./assets/fonts/shadows-into-light.woff2") format("woff2");font-weight:400;font-display:swap}
 
 :root{
   /* --- the lavender world ------------------------------------------------ */
@@ -734,68 +740,156 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
    flap and cracks the seal before the letter itself appears, instead of a
    modal just popping up cold.
    =================================================================== */
+/* ==========================================================================
+   The envelopes.
+
+   The old one was a rounded rectangle with a triangle clipped out of the
+   top. It read as "a card with a shape on it", not as a letter. What makes
+   paper read as an envelope is the things nobody consciously looks at: the
+   two diagonal seams where the back flaps overlap, a stamp stuck slightly
+   crooked, a postmark landing half across it, an address written by hand,
+   and wax that sat down thick and uneven. All of that is drawn here in CSS.
+
+   Opening is a real fold: the wax cracks off, the flap rotates back on its
+   hinge in 3D, and the letter lifts out of the pocket.
+   ========================================================================== */
 .envelope{
   /* --paper/--paper-2 drive BOTH the flap and the body everywhere - a theme
      that wants to look dark (moon) sets these to dark values instead of
-     overriding the envelope's own background separately. That mismatch was
-     the actual bug: the flap kept pulling light paper vars while the body
-     was overridden to dark purple underneath it, so the "fold" read as a
-     jagged two-tone glitch instead of a seam in one sheet of paper. */
+     overriding the envelope's own background separately. */
   --paper:var(--lav-50); --paper-2:var(--lav-100); --seal:var(--pink-hot); --ink-on:var(--ink);
   --soft-on:var(--ink-soft); --faint-on:var(--ink-faint);
   position:relative;cursor:pointer;text-align:left;width:100%;
-  padding:46px 18px 18px;border-radius:var(--r-lg);overflow:hidden;
-  background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 100%);
-  border:2px solid var(--edge);box-shadow:var(--sh);
+  padding:108px 18px 20px;border-radius:10px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E"),
+    linear-gradient(170deg,var(--paper) 0%,var(--paper-2) 100%);
+  background-blend-mode:multiply,normal;
+  border:2px solid var(--edge);
+  box-shadow:var(--sh),inset 0 -18px 26px -18px rgba(20,6,30,.22);
   font-family:"Quicksand",sans-serif;color:var(--ink-on);
-  transition:transform .18s;
+  perspective:900px;
+  transition:transform .2s cubic-bezier(.2,.9,.3,1.2),box-shadow .2s;
 }
-.envelope:active{transform:translateY(3px)}
+.envelope:active{transform:translateY(2px) scale(.995);box-shadow:var(--sh-sm)}
 
-/* the flap - a shallow fold from the top edge, not a diagonal slash across
-   the card. The apex sits at 42% of the flap's own height, close to how a
-   real envelope flap actually looks from the front: a wide, low triangle,
-   not a wedge reaching halfway down the page. */
+/* The two diagonal seams where the back flaps overlap. This is the single
+   detail that makes a rectangle read as an envelope, and the old design had
+   nothing like it. */
+.envelope::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    linear-gradient(to bottom right,transparent calc(50% - .8px),rgba(20,6,30,.10) 50%,transparent calc(50% + .8px)),
+    linear-gradient(to bottom left, transparent calc(50% - .8px),rgba(20,6,30,.10) 50%,transparent calc(50% + .8px));
+  background-size:100% 60%,100% 60%;
+  background-position:top left,top right;
+  background-repeat:no-repeat;
+}
+
+/* the flap, hinged along the top edge, folded back in 3D on open */
 .envelope-flap{
-  position:absolute;top:0;left:0;right:0;height:44px;z-index:1;
-  background:linear-gradient(200deg,var(--paper) 0%,var(--paper-2) 100%);
-  clip-path:polygon(0 0,100% 0,100% 8%,50% 42%,0 8%);
-  transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .3s ease;
-  transform-origin:top center;
+  position:absolute;top:-2px;left:-2px;right:-2px;height:52px;z-index:3;
+  background:linear-gradient(185deg,var(--paper-2) 0%,var(--paper) 74%);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  border-radius:10px 10px 0 0;
+  transform-origin:top center;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1),opacity .3s ease .25s;
+  filter:drop-shadow(0 3px 3px rgba(20,6,30,.18));
 }
-/* the fold seam itself - a thin shadow line tracing the flap's lower edge,
-   the one detail that actually reads as "paper folded", not "shape drawn" */
-.envelope-flap::after{
-  content:"";position:absolute;left:0;right:0;top:0;height:100%;
-  clip-path:polygon(0 0,100% 0,100% 8%,50% 42%,0 8%);
-  box-shadow:0 2px 3px rgba(20,6,30,.16) inset;
-  pointer-events:none;
-}
-.envelope-seal{
-  position:absolute;top:18px;left:50%;translate:-50% 0;z-index:2;
-  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
-  background:radial-gradient(circle at 34% 28%,color-mix(in srgb,var(--seal) 40%,#fff),var(--seal));
-  color:#fff;font-family:"Baloo",sans-serif;font-weight:700;font-size:.68rem;
-  box-shadow:0 3px 0 -1px rgba(0,0,0,.18),0 5px 10px rgba(0,0,0,.24);
-  transition:transform .34s cubic-bezier(.4,0,.2,1),opacity .28s ease;
-}
-.envelope-tab{
-  position:absolute;top:9px;left:16px;z-index:2;
-  font-family:"Dancing Script",cursive;font-size:.86rem;color:var(--ink-on);opacity:.68;
-}
-.envelope-body{
-  position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;
-  padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--ink-on) 20%,transparent);
-}
-.envelope-body strong{font-family:"Baloo",sans-serif;font-size:1.08rem;font-weight:700;color:var(--ink-on)}
-.envelope-body small{font-size:.87rem;color:var(--soft-on)}
-.envelope-body em{font-style:normal;font-size:.73rem;color:var(--faint-on);margin-top:2px}
 
-/* unsealing: the flap swings up and out of the way, the seal breaks and
-   fades, right before the letter modal takes over */
-.envelope.opening .envelope-flap{transform:translateY(-10px) rotateX(35deg);opacity:0}
-.envelope.opening .envelope-seal{transform:translate(-50%,-6px) scale(.7) rotate(-14deg);opacity:0}
-.envelope.opening .envelope-tab{opacity:0;transition:opacity .2s ease}
+/* wax: an uneven blob, not a circle - real wax spreads where it lands */
+.envelope-seal{
+  position:absolute;top:34px;left:50%;translate:-50% 0;z-index:4;
+  width:38px;height:36px;display:grid;place-items:center;
+  border-radius:47% 53% 44% 56% / 52% 46% 54% 48%;
+  background:radial-gradient(circle at 34% 26%,color-mix(in srgb,var(--seal) 30%,#fff),var(--seal) 62%,color-mix(in srgb,var(--seal) 70%,#000) 100%);
+  color:#fff;font-family:"Dancing Script",cursive;font-weight:700;font-size:.95rem;
+  text-shadow:0 1px 1px rgba(0,0,0,.35);
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.35),
+    inset 0 -3px 5px rgba(0,0,0,.28),
+    0 3px 7px rgba(20,6,30,.32);
+  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;
+}
+
+/* a stamp, stuck on slightly crooked, with perforated edges bitten out */
+.envelope-stamp{
+  position:absolute;top:12px;right:14px;z-index:2;
+  width:44px;height:52px;rotate:3.5deg;padding:4px;background:#fffdf8;
+  -webkit-mask:
+    radial-gradient(circle 3px at 50% 0,transparent 96%,#000) 0 0/11px 100%,
+    radial-gradient(circle 3px at 50% 100%,transparent 96%,#000) 0 0/11px 100%,
+    radial-gradient(circle 3px at 0 50%,transparent 96%,#000) 0 0/100% 11px,
+    radial-gradient(circle 3px at 100% 50%,transparent 96%,#000) 0 0/100% 11px;
+  -webkit-mask-composite:source-in;
+  mask:
+    radial-gradient(circle 3px at 50% 0,transparent 96%,#000) 0 0/11px 100%,
+    radial-gradient(circle 3px at 50% 100%,transparent 96%,#000) 0 0/11px 100%,
+    radial-gradient(circle 3px at 0 50%,transparent 96%,#000) 0 0/100% 11px,
+    radial-gradient(circle 3px at 100% 50%,transparent 96%,#000) 0 0/100% 11px;
+  mask-composite:intersect;
+  filter:drop-shadow(0 2px 3px rgba(20,6,30,.2));
+}
+.envelope-stamp span{
+  display:grid;place-items:center;width:100%;height:100%;font-size:1.15rem;
+  background:linear-gradient(160deg,var(--paper),var(--paper-2));
+  border:1px solid color-mix(in srgb,var(--ink-on) 18%,transparent);
+}
+/* the postmark, landing half across the stamp the way a real cancel does */
+.envelope-postmark{
+  position:absolute;top:22px;right:44px;z-index:3;width:46px;height:46px;
+  rotate:-12deg;opacity:.32;pointer-events:none;
+  border:1.5px solid var(--ink-on);border-radius:50%;
+  display:grid;place-items:center;
+  font-family:"Quicksand",sans-serif;font-size:.4rem;font-weight:800;
+  letter-spacing:.03em;color:var(--ink-on);text-align:center;line-height:1.15;
+}
+.envelope-postmark::before,.envelope-postmark::after{
+  content:"";position:absolute;left:8%;right:8%;height:1.5px;background:var(--ink-on);
+}
+.envelope-postmark::before{top:28%}
+.envelope-postmark::after{bottom:28%}
+
+/* written by hand, on the ruled line every envelope has */
+.envelope-tab{
+  position:absolute;top:60px;left:18px;z-index:2;
+  font-family:"Caveat","Dancing Script",cursive;font-size:1rem;
+  color:var(--ink-on);opacity:.72;
+}
+.envelope-address{
+  position:absolute;top:78px;left:18px;right:96px;z-index:2;
+  font-family:"Caveat","Dancing Script",cursive;font-size:1.2rem;color:var(--ink-on);
+  border-bottom:1.5px solid color-mix(in srgb,var(--ink-on) 22%,transparent);
+  padding-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.envelope-body{
+  position:relative;z-index:2;display:flex;flex-direction:column;gap:4px;
+  padding-top:11px;border-top:1px dashed color-mix(in srgb,var(--ink-on) 20%,transparent);
+}
+.envelope-body strong{font-family:"Baloo",sans-serif;font-size:1.06rem;font-weight:700;color:var(--ink-on)}
+.envelope-body small{font-size:.85rem;color:var(--soft-on)}
+.envelope-body em{
+  font-style:normal;color:var(--faint-on);margin-top:3px;
+  font-family:"Caveat","Dancing Script",cursive;font-size:.95rem;
+}
+
+/* unsealing: the wax cracks off first, then the flap folds all the way back
+   on its hinge, and the letter lifts out of the pocket */
+.envelope.opening .envelope-seal{transform:translate(-50%,10px) scale(.55) rotate(-24deg);opacity:0}
+.envelope.opening .envelope-flap{transform:rotateX(-168deg)}
+.envelope.opening .envelope-tab,
+.envelope.opening .envelope-address{opacity:.25;transition:opacity .3s ease}
+.envelope.opening .envelope-body{animation:letterLift .6s cubic-bezier(.3,.9,.3,1) .18s both}
+@keyframes letterLift{
+  0%{transform:translateY(0);opacity:1}
+  100%{transform:translateY(-26px) scale(1.03);opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .envelope-flap{transition:opacity .2s ease}
+  .envelope.opening .envelope-flap{transform:none;opacity:0}
+  .envelope.opening .envelope-body{animation:none}
+}
 
 /* one paper colour + seal colour per theme - every theme sets --paper and
    --paper-2 and nothing else, so the flap and body always match */
