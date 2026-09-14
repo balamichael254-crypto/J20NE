@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {}, worldPicks: {}, worldNext: "" };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -653,7 +653,8 @@ function ensureScreenRendered(name) {
   if (renderedScreens.has(name)) return;
   const renderers = {
     garden: () => { setupGardenTree(); setupBouquetBuilder(); },
-    letters: renderLetters,
+    letters: () => { renderLetters(); renderLetterInbox(); },
+    compose: renderComposer,
     poems: renderPoems,
     notices: renderNotices,
     day: renderDay,
@@ -705,6 +706,7 @@ function openScreen(name, options = {}) {
   if (name === "galaxy") window.MoonpieGalaxy?.mount($("#galaxy-stage"));
   else window.MoonpieGalaxy?.unmount();
   if (name === "us") refreshHearth();
+  if (name === "letters") renderLetterInbox();
   if (name === "songs") {
     $$(".spotify-card iframe[data-src]").forEach(frame => {
       if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
@@ -3679,6 +3681,376 @@ function trackVisit() {
   }
 }
 
+/* ============================================================================
+   The letter composer: write one, dress it, seal it, send it.
+
+   Four steps rather than one form, because the steps are the point. A letter
+   you had to choose paper for and press wax onto is a different object from
+   a message box with a send button, even when the words are identical.
+
+   Delivery rides the existing widget shelf (api/widgets.js, type "letter"),
+   so it syncs to the other phone the same way notes already do, and a push
+   tells them it landed. It arrives sealed - they choose when to open it.
+   ========================================================================= */
+
+const COMPOSE_PAPERS = [
+  { id: "cream",   label: "cream",   bg: "linear-gradient(170deg,#fffdf6,#fdf3df)", ink: "#4b3a6b" },
+  { id: "blush",   label: "blush",   bg: "linear-gradient(170deg,#fff6fa,#ffe6f1)", ink: "#6b2f52" },
+  { id: "lilac",   label: "lilac",   bg: "linear-gradient(170deg,#fbf7ff,#efe4fd)", ink: "#4b3a6b" },
+  { id: "ruled",   label: "ruled",   bg: "repeating-linear-gradient(180deg,#fffdf8 0 27px,#e7d9f5 27px 28px)", ink: "#3c3560" },
+  { id: "grid",    label: "grid",    bg: "repeating-linear-gradient(0deg,#fdfbff 0 21px,#e9e0f7 21px 22px),repeating-linear-gradient(90deg,#fdfbff 0 21px,#e9e0f7 21px 22px)", ink: "#3c3560" },
+  { id: "midnight",label: "midnight",bg: "linear-gradient(170deg,#3a2a63,#241a44)", ink: "#f3ecff" },
+];
+
+const COMPOSE_FONTS = [
+  { id: "caveat",  label: "Caveat",  css: '"Caveat","Dancing Script",cursive', size: "1.32rem" },
+  { id: "indie",   label: "Indie",   css: '"Indie Flower",cursive',            size: "1.14rem" },
+  { id: "gloria",  label: "Gloria",  css: '"Gloria Hallelujah",cursive',       size: "1.02rem" },
+  { id: "shadows", label: "Shadows", css: '"Shadows Into Light",cursive',      size: "1.22rem" },
+  { id: "typed",   label: "Typed",   css: '"Quicksand",sans-serif',            size: "1rem" },
+];
+
+const COMPOSE_STICKERS = ["\u{1F338}", "\u{1F49C}", "\u{2B50}", "\u{1F98B}", "\u{1F380}",
+                          "\u{1F319}", "\u{1F36F}", "\u{1F343}", "\u{2728}", "\u{1F9F8}"];
+
+const COMPOSE_ENVELOPES = ["lilies", "moon", "birthday", "kitchen", "airport"];
+const COMPOSE_STAMPS = ["\u{1F337}", "\u{1F319}", "\u{1F382}", "\u{2708}\u{FE0F}", "\u{1F49C}", "\u{1F41A}"];
+
+const COMPOSE_TEMPLATES = [
+  ["Just because", "No reason for this one. I was thinking about you and it got loud enough that I had to write it down."],
+  ["When you miss me", "Open this when the distance gets heavy. I am writing it on a day when I miss you too, so you know it was not theoretical."],
+  ["Something I never said", "There is a thing I have been carrying around and never said out loud, so I am putting it here instead."],
+];
+
+const composeState = {
+  step: 0,
+  to: "", body: "", from: "",
+  paper: "cream", font: "caveat", stickers: [],
+  envelope: "lilies", stamp: "\u{1F337}",
+};
+
+const COMPOSE_STEPS = ["write", "style", "seal", "send"];
+const COMPOSE_STEP_NAMES = ["Write", "Paper", "Seal", "Send"];
+
+function composePaper() { return COMPOSE_PAPERS.find(p => p.id === composeState.paper) || COMPOSE_PAPERS[0]; }
+function composeFont() { return COMPOSE_FONTS.find(f => f.id === composeState.font) || COMPOSE_FONTS[0]; }
+
+function openComposer() {
+  composeState.step = 0;
+  const me = window.MoonpiePush?.myProfile?.() || "Michael";
+  const them = window.MoonpiePush?.otherProfile?.(me) || (me === "Michelle" ? "Michael" : "Michelle");
+  if (!composeState.to) composeState.to = `Dear ${nickOf(them)},`;
+  if (!composeState.from) composeState.from = `Always, ${nickOf(me)}`;
+  openScreen("compose");
+  renderComposer();
+}
+
+function renderComposer() {
+  const step = composeState.step;
+  $$("[data-compose-pane]").forEach(pane => {
+    pane.classList.toggle("hidden", pane.dataset.composePane !== COMPOSE_STEPS[step]);
+  });
+  $("#compose-step-label").textContent = `Step ${step + 1} of 4 · ${COMPOSE_STEP_NAMES[step]}`;
+  $$("#compose-steps .compose-dots i").forEach((dot, i) => dot.classList.toggle("on", i <= step));
+
+  $("#compose-prev").hidden = step === 0;
+  $("#compose-next").hidden = step === COMPOSE_STEPS.length - 1;
+
+  // keep the fields in sync with state when stepping back into them
+  const to = $("#compose-to"), body = $("#compose-body"), from = $("#compose-from");
+  if (to && document.activeElement !== to) to.value = composeState.to;
+  if (body && document.activeElement !== body) body.value = composeState.body;
+  if (from && document.activeElement !== from) from.value = composeState.from;
+  applyComposeSheetStyle();
+
+  if (step === 1) renderComposeStyleStep();
+  if (step === 2) renderComposeSealStep();
+  if (step === 3) renderComposeFinal();
+}
+
+function applyComposeSheetStyle() {
+  const sheet = $("#compose-sheet");
+  if (!sheet) return;
+  const paper = composePaper(), font = composeFont();
+  sheet.style.background = paper.bg;
+  sheet.style.color = paper.ink;
+  sheet.style.setProperty("--letter-ink", paper.ink);
+  sheet.style.fontFamily = font.css;
+  sheet.style.fontSize = font.size;
+}
+
+function chipHtml(attr, value, inner, on) {
+  return `<button class="compose-chip${on ? " is-on" : ""}" type="button" data-${attr}="${escapeHtml(String(value))}">${inner}</button>`;
+}
+
+function renderComposeStyleStep() {
+  $("#compose-papers").innerHTML = COMPOSE_PAPERS.map(p =>
+    chipHtml("paper", p.id,
+      `<span class="chip-swatch" style="background:${p.bg}"></span>${escapeHtml(p.label)}`,
+      composeState.paper === p.id)).join("");
+
+  $("#compose-fonts").innerHTML = COMPOSE_FONTS.map(f =>
+    chipHtml("font", f.id,
+      `<span style="font-family:${f.css}">${escapeHtml(f.label)}</span>`,
+      composeState.font === f.id)).join("");
+
+  $("#compose-stickers").innerHTML = COMPOSE_STICKERS.map(s =>
+    chipHtml("sticker", s, `<span class="chip-sticker">${s}</span>`,
+      composeState.stickers.includes(s))).join("");
+
+  renderComposePreview($("#compose-preview-style"));
+}
+
+function composeStickerLayer() {
+  // scattered rather than lined up, so they read as stuck on by hand
+  return composeState.stickers.map((s, i) => {
+    const top = 8 + ((i * 37) % 72);
+    const left = i % 2 ? 78 - ((i * 13) % 16) : 4 + ((i * 11) % 14);
+    const rot = ((i * 47) % 40) - 20;
+    return `<span class="letter-sticker" style="top:${top}%;left:${left}%;rotate:${rot}deg">${s}</span>`;
+  }).join("");
+}
+
+function composeLetterHtml() {
+  const paper = composePaper(), font = composeFont();
+  return `
+    <article class="letter-paper" style="background:${paper.bg};color:${paper.ink};font-family:${font.css};font-size:${font.size}">
+      ${composeStickerLayer()}
+      <p class="letter-paper-to">${escapeHtml(composeState.to || "")}</p>
+      <p class="letter-paper-body">${escapeHtml(composeState.body || "...").replace(/\n/g, "<br>")}</p>
+      <p class="letter-paper-from">${escapeHtml(composeState.from || "")}</p>
+    </article>`;
+}
+
+function renderComposePreview(host) {
+  if (host) host.innerHTML = composeLetterHtml();
+}
+
+function renderComposeSealStep() {
+  $("#compose-envelopes").innerHTML = COMPOSE_ENVELOPES.map(t =>
+    chipHtml("envelope", t, `<span class="chip-env theme-${t}"></span>${escapeHtml(t)}`,
+      composeState.envelope === t)).join("");
+  $("#compose-stamps").innerHTML = COMPOSE_STAMPS.map(s =>
+    chipHtml("stamp", s, `<span class="chip-sticker">${s}</span>`,
+      composeState.stamp === s)).join("");
+  $("#compose-envelope-preview").innerHTML = composeEnvelopeHtml("a letter for you");
+}
+
+function composeEnvelopeHtml(title) {
+  const me = window.MoonpiePush?.myProfile?.() || "Michael";
+  const them = window.MoonpiePush?.otherProfile?.(me) || "Michelle";
+  return `
+    <div class="envelope theme-${composeState.envelope}" aria-hidden="true">
+      <span class="envelope-stamp"><span>${composeState.stamp}</span></span>
+      <span class="envelope-postmark">OURS<br>25 FEB</span>
+      <span class="envelope-tab">from ${escapeHtml(nickOf(me))}</span>
+      <span class="envelope-address">To ${escapeHtml(nickOf(them))},</span>
+      <span class="envelope-flap"></span>
+      <span class="envelope-seal">${escapeHtml(nickOf(me).charAt(0))}</span>
+      <span class="envelope-body">
+        <strong>${escapeHtml(title)}</strong>
+        <em>tap to unseal</em>
+      </span>
+    </div>`;
+}
+
+function renderComposeFinal() {
+  $("#compose-final").innerHTML = composeEnvelopeHtml("a letter for you");
+  const ready = composeState.body.trim().length > 0;
+  $("#compose-send").disabled = !ready;
+  $("#compose-send-hint").textContent = ready
+    ? "It arrives sealed. They choose when to open it."
+    : "Write something first, then you can send it.";
+}
+
+async function sendComposedLetter() {
+  const body = composeState.body.trim();
+  if (!body) return toast("write something first");
+  const me = window.MoonpiePush?.myProfile?.() || "Michael";
+  const status = $("#compose-status");
+  const button = $("#compose-send");
+  button.disabled = true;
+  if (status) { status.hidden = false; status.textContent = "sealing..."; }
+
+  const letter = {
+    to: composeState.to, body, from: composeState.from,
+    paper: composeState.paper, font: composeState.font,
+    stickers: composeState.stickers.slice(),
+    envelope: composeState.envelope, stamp: composeState.stamp,
+  };
+  const widget = {
+    id: `letter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: "letter",
+    value: JSON.stringify(letter),
+    sender: me,
+    createdAt: Date.now(),
+  };
+
+  try {
+    const result = await fetch(WIDGET_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ widget }),
+    });
+    if (!result.ok) throw new Error(`widgets ${result.status}`);
+
+    // keep a local copy too, so it shows up here without waiting for a sync
+    state.widgets = Array.isArray(state.widgets) ? state.widgets : [];
+    state.widgets.push(widget);
+    saveState();
+
+    if (window.MoonpiePush) {
+      window.MoonpiePush.send(`${nickOf(me)} sent you a letter`, "It is sealed. Open it when you want to.");
+    }
+    if (status) status.textContent = "sent. it is on their phone now.";
+    flowerConfetti(38);
+    window.Poo?.react?.("love");
+    composeState.body = "";
+    composeState.stickers = [];
+    setTimeout(() => { openScreen("letters"); renderLetterInbox(); }, 1400);
+  } catch (error) {
+    console.warn("send letter", error);
+    if (status) status.textContent = "could not send it just now. your words are still here, try again in a moment.";
+    button.disabled = false;
+  }
+}
+
+/* --------------------------------------------------- letters that arrived */
+
+function receivedLetters() {
+  const me = window.MoonpiePush?.myProfile?.() || "Michelle";
+  return (state.widgets || [])
+    .filter(w => w && w.type === "letter" && w.sender !== me)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+function renderLetterInbox() {
+  const host = $("#letter-inbox");
+  if (!host) return;
+  const mine = receivedLetters();
+  if (!mine.length) { host.innerHTML = ""; return; }
+
+  host.innerHTML = `<p class="card-label inbox-label">just for you</p>` + mine.map((w, i) => {
+    let letter = {};
+    try { letter = JSON.parse(w.value) || {}; } catch { letter = {}; }
+    const opened = (state.openedLetters || []).includes(w.id);
+    return `
+      <button class="envelope theme-${escapeHtml(letter.envelope || "lilies")}${opened ? " is-opened" : ""}"
+              type="button" data-inbox-letter="${escapeHtml(w.id)}">
+        <span class="envelope-stamp" aria-hidden="true"><span>${letter.stamp || "\u{1F49C}"}</span></span>
+        <span class="envelope-postmark" aria-hidden="true">OURS<br>25 FEB</span>
+        <span class="envelope-tab">from ${escapeHtml(nickOf(w.sender || "Michael"))}</span>
+        <span class="envelope-address">To ${escapeHtml(nickOf(window.MoonpiePush?.myProfile?.() || "Michelle"))},</span>
+        <span class="envelope-flap" aria-hidden="true"></span>
+        <span class="envelope-seal" aria-hidden="true">${escapeHtml(nickOf(w.sender || "Michael").charAt(0))}</span>
+        <span class="envelope-body">
+          <strong>${opened ? "a letter you have read" : "a letter arrived"}</strong>
+          <small>${escapeHtml((letter.body || "").slice(0, 64))}${(letter.body || "").length > 64 ? "..." : ""}</small>
+          <em>${opened ? "read it again" : "tap to unseal"}</em>
+        </span>
+      </button>`;
+  }).join("");
+}
+
+function openReceivedLetter(id) {
+  const widget = (state.widgets || []).find(w => w.id === id);
+  if (!widget) return;
+  let letter = {};
+  try { letter = JSON.parse(widget.value) || {}; } catch { letter = {}; }
+
+  const paper = COMPOSE_PAPERS.find(p => p.id === letter.paper) || COMPOSE_PAPERS[0];
+  const font = COMPOSE_FONTS.find(f => f.id === letter.font) || COMPOSE_FONTS[0];
+  const stickers = (letter.stickers || []).map((s, i) => {
+    const top = 8 + ((i * 37) % 72);
+    const left = i % 2 ? 78 - ((i * 13) % 16) : 4 + ((i * 11) % 14);
+    const rot = ((i * 47) % 40) - 20;
+    return `<span class="letter-sticker" style="top:${top}%;left:${left}%;rotate:${rot}deg">${s}</span>`;
+  }).join("");
+
+  // reuses the existing letter dialog (#modal-title / #modal-body)
+  const modal = $("#letter-modal");
+  modal.className = `letter-dialog theme-${letter.envelope || "lilies"}`;
+  $("#modal-title").textContent = `from ${nickOf(widget.sender || "Michael")}`;
+  $("#modal-body").innerHTML = `
+    <article class="letter-paper is-open" style="background:${paper.bg};color:${paper.ink};font-family:${font.css};font-size:${font.size}">
+      ${stickers}
+      <p class="letter-paper-to">${escapeHtml(letter.to || "")}</p>
+      <p class="letter-paper-body">${escapeHtml(letter.body || "").replace(/\n/g, "<br>")}</p>
+      <p class="letter-paper-from">${escapeHtml(letter.from || "")}</p>
+    </article>`;
+  document.body.classList.add("focus-mode");
+  modal.showModal();
+
+  state.openedLetters = Array.isArray(state.openedLetters) ? state.openedLetters : [];
+  if (!state.openedLetters.includes(id)) {
+    state.openedLetters.push(id);
+    saveState();
+    renderLetterInbox();
+  }
+}
+
+function initComposer() {
+  $("#open-composer")?.addEventListener("click", openComposer);
+  $("#compose-back")?.addEventListener("click", () => openScreen("letters"));
+
+  $("#compose-next")?.addEventListener("click", () => {
+    if (composeState.step === 0 && !$("#compose-body").value.trim()) return toast("write something first");
+    composeState.step = Math.min(COMPOSE_STEPS.length - 1, composeState.step + 1);
+    renderComposer();
+  });
+  $("#compose-prev")?.addEventListener("click", () => {
+    composeState.step = Math.max(0, composeState.step - 1);
+    renderComposer();
+  });
+
+  ["compose-to", "compose-body", "compose-from"].forEach(id => {
+    $(`#${id}`)?.addEventListener("input", event => {
+      const key = id === "compose-to" ? "to" : id === "compose-body" ? "body" : "from";
+      composeState[key] = event.target.value;
+    });
+  });
+
+  $("#compose-templates")?.addEventListener("click", () => {
+    const [title, text] = pick(COMPOSE_TEMPLATES);
+    composeState.body = text;
+    $("#compose-body").value = text;
+    toast(`template: ${title}`);
+  });
+
+  // one delegated listener for every chip in every step
+  $("#screen-compose")?.addEventListener("click", event => {
+    const paper = event.target.closest("[data-paper]");
+    if (paper) { composeState.paper = paper.dataset.paper; return renderComposer(); }
+    const font = event.target.closest("[data-font]");
+    if (font) { composeState.font = font.dataset.font; return renderComposer(); }
+    const sticker = event.target.closest("[data-sticker]");
+    if (sticker) {
+      const s = sticker.dataset.sticker;
+      const at = composeState.stickers.indexOf(s);
+      if (at >= 0) composeState.stickers.splice(at, 1);
+      else if (composeState.stickers.length < 6) composeState.stickers.push(s);
+      else toast("six is plenty");
+      return renderComposer();
+    }
+    const env = event.target.closest("[data-envelope]");
+    if (env) { composeState.envelope = env.dataset.envelope; return renderComposer(); }
+    const stamp = event.target.closest("[data-stamp]");
+    if (stamp) { composeState.stamp = stamp.dataset.stamp; return renderComposer(); }
+  });
+
+  $("#compose-send")?.addEventListener("click", sendComposedLetter);
+
+  $("#letter-inbox")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-inbox-letter]");
+    if (!button) return;
+    button.classList.add("opening");
+    setTimeout(() => {
+      button.classList.remove("opening");
+      openReceivedLetter(button.dataset.inboxLetter);
+    }, 620);
+  });
+}
+
 function init() {
   document.body.dataset.world = "home";
   trackVisit();
@@ -3691,6 +4063,7 @@ function init() {
   setupEvents();
   setupSmartNav();
   initGamePicker();
+  initComposer();
   initWatchlist();
   setupInstall();
   setupOpeningRitual();

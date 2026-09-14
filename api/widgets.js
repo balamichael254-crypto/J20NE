@@ -17,12 +17,17 @@ const readBody = request => {
   return request.body;
 };
 
+// "letter" carries a composed letter as JSON (body plus the paper, font,
+// stickers and envelope it was sealed in), so it needs far more room than a
+// widget note but nothing like a doodle's data URL.
+const VALUE_LIMIT = { doodle: 750000, letter: 12000, text: 500 };
+
 const normalizeWidget = widget => {
-  if (!widget || !widget.id || !["text", "doodle"].includes(widget.type)) return null;
+  if (!widget || !widget.id || !["text", "doodle", "letter"].includes(widget.type)) return null;
   const normalized = {
     id: String(widget.id).slice(0, 120),
     type: widget.type,
-    value: String(widget.value || "").slice(0, widget.type === "doodle" ? 750000 : 500),
+    value: String(widget.value || "").slice(0, VALUE_LIMIT[widget.type] || 500),
     sender: String(widget.sender || "one of us").slice(0, 40),
     createdAt: Number(widget.createdAt || Date.now())
   };

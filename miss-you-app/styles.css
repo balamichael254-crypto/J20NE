@@ -2000,3 +2000,101 @@ body[data-world="vault"] .poo-companion{display:none}
   font-size:.76rem;font-weight:700;color:var(--ink-soft);text-align:center;line-height:1.4;
 }
 .duel-status.is-done{background:linear-gradient(150deg,#fff2f7,#ffe6f1);border-style:solid;border-color:var(--pink);color:var(--lav-700)}
+
+/* ==========================================================================
+   The letter composer. Four steps, each its own screen, so writing a letter
+   feels like making an object rather than filling in a form.
+   ========================================================================== */
+.write-letter-cta{
+  display:flex;align-items:center;gap:13px;width:100%;margin:0 0 16px;
+  padding:15px 16px;border-radius:var(--r-lg);cursor:pointer;text-align:left;
+  border:2px dashed rgba(168,130,224,.5);
+  background:linear-gradient(165deg,#fffdff,var(--lav-50));
+  box-shadow:var(--sh-sm);transition:transform .18s,box-shadow .2s;
+}
+.write-letter-cta:active{transform:translateY(2px);box-shadow:none}
+.write-letter-pen{
+  flex:none;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;
+  background:linear-gradient(150deg,var(--pink),var(--lav-300));color:#fff;font-size:1.2rem;
+}
+.write-letter-cta b{display:block;font-family:"Baloo",sans-serif;font-size:1.02rem;color:var(--lav-700)}
+.write-letter-cta small{display:block;font-size:.76rem;color:var(--ink-faint);font-weight:600;margin-top:2px}
+
+.inbox-label{margin:0 0 9px}
+.letter-inbox{display:flex;flex-direction:column;gap:13px;margin-bottom:18px}
+.letter-inbox .envelope.is-opened{opacity:.72}
+
+/* --- the composer chrome ------------------------------------------------ */
+.compose-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.compose-steps{text-align:right}
+.compose-step-label{display:block;font-size:.72rem;font-weight:800;color:var(--ink-faint)}
+.compose-dots{display:inline-flex;gap:5px;margin-top:5px}
+.compose-dots i{width:8px;height:8px;border-radius:50%;background:rgba(168,130,224,.32)}
+.compose-dots i.on{background:var(--pink-hot)}
+
+.compose-title{margin:0 0 4px;font-family:"Baloo",sans-serif;font-size:1.34rem;color:var(--lav-700)}
+.compose-hint{margin:0 0 14px;font-size:.82rem;color:var(--ink-soft);font-weight:600}
+.compose-group{margin-bottom:16px}
+.compose-group .card-label{margin-bottom:8px}
+.compose-tools{display:flex;gap:8px;margin:10px 0 12px}
+.compose-tool{
+  min-height:38px;padding:0 15px;border-radius:999px;cursor:pointer;
+  border:2px solid var(--edge);background:rgba(255,255,255,.85);color:var(--lav-700);
+  font-family:"Quicksand",sans-serif;font-size:.8rem;font-weight:700;box-shadow:var(--sh-sm);
+}
+.compose-tool:active{transform:scale(.96)}
+
+/* the sheet she actually types on, which is already the paper she picked */
+.compose-sheet{
+  --letter-ink:var(--ink);
+  padding:20px 18px;border-radius:var(--r);border:2px solid var(--edge);
+  box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px;
+}
+.compose-sheet input,.compose-sheet textarea{
+  width:100%;border:0;background:transparent;resize:vertical;
+  font-family:inherit;font-size:inherit;color:inherit;line-height:1.7;
+}
+.compose-sheet input::placeholder,.compose-sheet textarea::placeholder{color:currentColor;opacity:.38}
+.compose-sheet input:focus,.compose-sheet textarea:focus{outline:none}
+.compose-salutation{font-size:1.06em}
+.compose-signoff{text-align:right}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.compose-chip{
+  display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 13px;
+  border-radius:999px;cursor:pointer;border:2px solid var(--edge);
+  background:rgba(255,255,255,.85);color:var(--lav-700);
+  font-family:"Quicksand",sans-serif;font-size:.8rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:transform .16s,background .2s,color .2s;
+}
+.compose-chip:active{transform:scale(.95)}
+.compose-chip.is-on{background:linear-gradient(150deg,var(--pink),var(--lav-300));color:#fff}
+.chip-swatch{width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(0,0,0,.12)}
+.chip-sticker{font-size:1.1rem;line-height:1}
+.chip-env{
+  width:22px;height:16px;border-radius:3px;border:1.5px solid rgba(0,0,0,.14);
+  background:linear-gradient(170deg,var(--paper,#f6f1ff),var(--paper-2,#e6dbfa));
+}
+
+/* the letter itself, as it will actually look */
+.letter-paper{
+  position:relative;padding:22px 20px;border-radius:var(--r);
+  border:2px solid var(--edge);box-shadow:var(--sh);
+  line-height:1.75;overflow:hidden;min-height:150px;
+}
+.letter-paper-to{margin:0 0 12px}
+.letter-paper-body{margin:0;white-space:pre-wrap}
+.letter-paper-from{margin:16px 0 0;text-align:right}
+.letter-sticker{position:absolute;font-size:1.5rem;pointer-events:none;opacity:.92}
+.letter-paper.is-open{min-height:auto;box-shadow:none;border:0;border-radius:0}
+
+.compose-preview,.compose-envelope-preview,.compose-final{margin-top:14px}
+.compose-envelope-preview .envelope,.compose-final .envelope{cursor:default}
+
+.compose-nav{display:flex;gap:10px;margin-top:20px}
+.compose-nav .primary-btn,.compose-nav .secondary-btn{flex:1}
+.compose-status{
+  margin-top:12px;padding:11px 14px;border-radius:var(--r);text-align:center;
+  font-size:.82rem;font-weight:700;color:var(--ink-soft);
+  background:rgba(255,255,255,.75);border:2px dashed rgba(168,130,224,.4);
+}
