@@ -60,3 +60,16 @@ from Wikimedia Commons - each is traceable back to its own file history at
 | tulip-icon.svg | Tulpe_tultip.svg | CC0 |
 | orchid-icon.svg | Orchid.svg | CC0 |
 | cherry-blossom-icon.svg | Cherry_blossom.svg | CC0 |
+
+## The arrival bouquet
+
+`bouquet-lilies-wrapped.webp` and `bouquet-lilies-open.webp` are built by
+`tools/build_lily_bouquet.py`.
+
+The base is Unsplash photo `3h5kKCsa9us` by **Amelia Cui** (Unsplash Licence):
+a real florist's bouquet, for its paper wrap, ribbon, baby's breath and window
+light. Stargazer lily heads (from the `lily-*.webp` cut-outs above) are set
+into the bloom area in place of the roses, because the lily is her flower.
+
+Unsplash has plenty of lily photographs and essentially no wrapped lily
+bouquet, which is why this is a composite rather than a single photo.
