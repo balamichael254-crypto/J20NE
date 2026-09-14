@@ -209,6 +209,76 @@
   "title": "A Sunset shot from red valley Cappadocia, Turkey\n",
   "world": "Cappadocia Before Sunrise"
  },
+ "kenya/00": {
+  "creator": "Alphonse Oudia",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/restaurant-patio-illuminated-at-night-EKNz9Ru8nYc",
+  "query": "Nairobi restaurant candlelight dinner",
+  "source": "unsplash",
+  "stop": "Candlelit Nairobi",
+  "title": "A night photo of a restaurant building at the organic farmers market in Karen. During the rain downpour",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/01": {
+  "creator": "Dwayne joe",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/two-cyclists-pose-on-a-tropical-beach-fVdMs-FfVgw",
+  "query": "Kenya coastal road palms drive",
+  "source": "unsplash",
+  "stop": "The road to Diani",
+  "title": "Two cyclists pose on a tropical beach",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/02": {
+  "creator": "Elena Ktenopoulou",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/brown-sands-near-seashore-at-daytime-cjzV4WK46qY",
+  "query": "Diani beach white sand turquoise",
+  "source": "unsplash",
+  "stop": "First sight of the water",
+  "title": "3:40 p.m. August. Greece.\r\nI looked ahead and there was no land between the water and the sky. The sound of the waves was intense. It was windy. I was happy and relaxed. That feeling is what this picture means to me.",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/03": {
+  "creator": "Quan Cory",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-beach-bar-with-lounge-chairs-under-palm-trees-WnSoxlwVs_8",
+  "query": "beach loungers palm shade ocean",
+  "source": "unsplash",
+  "stop": "Two loungers, one view",
+  "title": "A beach bar with lounge chairs under palm trees",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/04": {
+  "creator": "Felipe Oliveira",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-sign-for-the-coastal-rail-trail-with-cars-nearby-em7hBqOkHAI",
+  "query": "grilled fish coastal restaurant Kenya",
+  "source": "unsplash",
+  "stop": "Fresh fish, no cutlery",
+  "title": "A sign for the coastal rail trail with cars nearby",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/05": {
+  "creator": "Bennett Dungan",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/woman-walking-along-the-beach-during-daytime-gvETPMkm_cQ",
+  "query": "beach walk sunset footprints sand",
+  "source": "unsplash",
+  "stop": "Barefoot after sunset",
+  "title": "Dreaming",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
+ "kenya/06": {
+  "creator": "Rhamely",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-road-with-trees-on-the-side-7fR24IUudk4",
+  "query": "night road headlights driving",
+  "source": "unsplash",
+  "stop": "Night drive back",
+  "title": "a road with trees on the side",
+  "world": "Nairobi and Diani, Our Kenya Date"
+ },
  "kyoto/00": {
   "creator": "Griffin Quinn",
   "license": "Unsplash Licence",
@@ -489,6 +559,16 @@
   "title": "Oia at sunset.",
   "world": "Santorini in Lilac Light"
  },
+ "seychelles/00": {
+  "creator": "Florian Delée",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-river-running-through-a-lush-green-forest-HoakiV03_DY",
+  "query": "jungle path to beach tropical",
+  "source": "unsplash",
+  "stop": "The hidden path",
+  "title": "A river running through a lush green forest",
+  "world": "Seychelles Secret Cove"
+ },
  "switzerland/00": {
   "creator": "the iop",
   "license": "Unsplash Licence",
@@ -567,6 +647,66 @@
   "source": "unsplash",
   "stop": "One shared umbrella",
   "title": "a black and white photo of a person in a boat",
+  "world": "Venice After Rain"
+ },
+ "venice/01": {
+  "creator": "Ivars Utināns",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-canal-runs-through-a-city-at-night-b-JFSPDm6HY",
+  "query": "Venice narrow alley canal bridge",
+  "source": "unsplash",
+  "stop": "Getting beautifully lost",
+  "title": "a canal runs through a city at night",
+  "world": "Venice After Rain"
+ },
+ "venice/02": {
+  "creator": "Eileen Alcini",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-cup-of-coffee-sitting-on-top-of-a-saucer-uuldnPReInI",
+  "query": "Italian espresso bar counter",
+  "source": "unsplash",
+  "stop": "Coffee standing up",
+  "title": "In Italy, espresso is less a drink and more a moment—ordered, sipped in seconds at the counter, and gone before the world even notices.",
+  "world": "Venice After Rain"
+ },
+ "venice/03": {
+  "creator": "Ivars Utināns",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-canal-runs-through-a-city-at-night-b-JFSPDm6HY",
+  "query": "Venice gondola canal narrow",
+  "source": "unsplash",
+  "stop": "A quiet gondola",
+  "title": "a canal runs through a city at night",
+  "world": "Venice After Rain"
+ },
+ "venice/04": {
+  "creator": "Maximilian Zahn",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/white-and-brown-concrete-building-under-gray-sky-during-daytime-PdylrI4Q0Tg",
+  "query": "St Marks Square Venice evening",
+  "source": "unsplash",
+  "stop": "The square at dusk",
+  "title": "St. Marks basilica at sunrise",
+  "world": "Venice After Rain"
+ },
+ "venice/05": {
+  "creator": "Rasa Kasparaviciene",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/a-piece-of-cake-on-a-plate-with-berries-tAW0OPqDhuI",
+  "query": "tiramisu dessert cafe table",
+  "source": "unsplash",
+  "stop": "Tiramisu verdict",
+  "title": "A piece of cake with berries in the plate. Close up",
+  "world": "Venice After Rain"
+ },
+ "venice/06": {
+  "creator": "Aurora Song",
+  "license": "Unsplash Licence",
+  "page": "https://unsplash.com/photos/night-view-of-a-venetian-canal-with-illuminated-historic-buildings-mKu75_8fq9M",
+  "query": "Venice grand canal night boat lights",
+  "source": "unsplash",
+  "stop": "Last vaporetto",
+  "title": "Venice",
   "world": "Venice After Rain"
  },
  "zanzibar/00": {
