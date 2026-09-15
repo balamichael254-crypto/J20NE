@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=129">
+  <link rel="stylesheet" href="./styles.css?v=130">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -714,10 +714,50 @@
         <div class="place-rail" id="place-rail"></div>
       </section>
 
+      <!-- One player, not a stack of embeds. Artwork and a thirty second
+           preview come from api/music.js; the note for each song sits with
+           it, because the note is the actual point of this screen. -->
       <section class="screen world-screen" id="screen-songs" aria-label="songs">
-        <div class="section-head"><p class="eyebrow">press play and stay awhile</p><h2>Songs That Are You</h2><p>Real Spotify players, with the reason each song keeps finding its way back to you.</p><img class="head-charm" src="./assets/mood/vinyl-2.webp" alt=""></div>
-        <div class="song-featured" id="song-featured"></div>
-        <p class="card-label song-list-label">the rest of the playlist</p>
+        <div class="section-head">
+          <p class="eyebrow">press play and stay awhile</p>
+          <h2>Songs That Are You</h2>
+          <p>Every one of these got added for a reason. The reason is under each one.</p>
+          <img class="head-charm" src="./assets/mood/vinyl-2.webp" alt="">
+        </div>
+
+        <article class="player-card premium-card">
+          <div class="player-art is-empty" id="player-art" aria-hidden="true"></div>
+          <div class="player-meta">
+            <h3 id="player-title">&nbsp;</h3>
+            <strong id="player-artist">&nbsp;</strong>
+            <p class="player-note" id="player-note">&nbsp;</p>
+          </div>
+
+          <div class="player-progress" id="player-progress" role="presentation">
+            <span class="player-progress-fill" id="player-progress-fill"></span>
+          </div>
+          <div class="player-times">
+            <span id="player-elapsed">0:00</span>
+            <span class="player-status" id="player-status">tap a song</span>
+            <span id="player-total"></span>
+          </div>
+
+          <div class="player-controls">
+            <button class="player-skip" id="player-prev" type="button" aria-label="previous song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M20 5 9 12l11 7z"/></svg>
+            </button>
+            <button class="player-toggle" id="player-toggle" type="button" data-playing="no" aria-label="play">
+              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
+            </button>
+            <button class="player-skip" id="player-next" type="button" aria-label="next song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5v14M4 5l11 7-11 7z"/></svg>
+            </button>
+          </div>
+          <a class="player-link" id="player-link" href="#" target="_blank" rel="noopener" hidden>hear the whole thing</a>
+        </article>
+
+        <p class="card-label song-list-label">the whole playlist</p>
         <div class="song-list" id="song-list"></div>
       </section>
 
@@ -1033,7 +1073,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=85"></script>
+  <script src="./app.js?v=86"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>

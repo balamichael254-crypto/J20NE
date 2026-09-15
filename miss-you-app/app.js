@@ -746,11 +746,7 @@ function openScreen(name, options = {}) {
   else window.MoonpieGalaxy?.unmount();
   if (name === "us") refreshHearth();
   if (name === "letters") renderLetterInbox();
-  if (name === "songs") {
-    $$(".spotify-card iframe[data-src]").forEach(frame => {
-      if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
-    });
-  }
+  window.dispatchEvent(new CustomEvent("moonpie:screen", { detail: name }));
   if (changed) flowerPageTransition();
   revealNav(2600);
 }
@@ -2186,33 +2182,209 @@ function openFutureWorld(index) {
   flowerPageTransition();
 }
 
-function songCardHtml([name, artist, note, spotifyId], i) {
+/* ============================================================================
+   Songs That Are You: a player, rather than a list of players.
+
+   This screen was a column of Spotify embeds. A Spotify embed does not play
+   to somebody who is not signed in to Spotify on that device - it shows the
+   artwork and puts the song behind a login, and on a phone with the app
+   installed it tries to hand off instead. So a playlist that could not be
+   played, which is the one thing a playlist has to do.
+
+   It is one real audio player now. Album art and a thirty second preview
+   come from api/music.js (Apple's keyless search endpoint), the deck plays
+   straight through and advances on its own, and the full track is one tap
+   away for whoever wants the whole thing. The note for each song sits with
+   it, because the note is the actual point of this screen.
+   ========================================================================= */
+const MUSIC_API = "../api/music";
+
+/* Lookups are stable forever and cost a round trip, so they are remembered
+   between visits. A miss is remembered too, otherwise a song Apple does not
+   carry re-asks on every single visit. */
+const musicCache = (() => {
+  const KEY = "moonpie-music-v1";
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch { map = {}; }
+  return {
+    get: key => map[key],
+    set(key, value) {
+      map[key] = value;
+      try { localStorage.setItem(KEY, JSON.stringify(map)); } catch { /* private mode */ }
+    },
+  };
+})();
+
+async function musicLookup(title, artist) {
+  const key = `${title}|${artist}`.toLowerCase();
+  const cached = musicCache.get(key);
+  if (cached !== undefined) return cached;
+  try {
+    const query = new URLSearchParams({ title, artist: artist || "" });
+    const result = await fetch(`${MUSIC_API}?${query}`);
+    const found = result.ok ? await result.json() : null;
+    musicCache.set(key, found);
+    return found;
+  } catch {
+    return null;   // offline: the notes still read, there is just no sound
+  }
+}
+
+const player = {
+  audio: null,
+  index: -1,
+  loading: false,
+  deck: [],
+};
+
+function playerAudio() {
+  if (player.audio) return player.audio;
+  const audio = new Audio();
+  audio.preload = "none";
+  audio.addEventListener("timeupdate", paintPlayerProgress);
+  audio.addEventListener("ended", () => playSongAt(player.index + 1));
+  audio.addEventListener("play", paintPlayerState);
+  audio.addEventListener("pause", paintPlayerState);
+  player.audio = audio;
+  return audio;
+}
+
+function paintPlayerProgress() {
+  const audio = player.audio;
+  const fill = $("#player-progress-fill");
+  if (!audio || !fill) return;
+  const ratio = audio.duration ? audio.currentTime / audio.duration : 0;
+  fill.style.width = `${Math.min(100, ratio * 100)}%`;
+  const elapsed = $("#player-elapsed");
+  if (elapsed) elapsed.textContent = formatClock(audio.currentTime);
+}
+
+function formatClock(seconds) {
+  if (!Number.isFinite(seconds)) return "0:00";
+  const whole = Math.floor(seconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}
+
+function paintPlayerState() {
+  const playing = player.audio && !player.audio.paused;
+  const button = $("#player-toggle");
+  if (button) {
+    button.dataset.playing = playing ? "yes" : "no";
+    button.setAttribute("aria-label", playing ? "pause" : "play");
+  }
+  $$(".song-row").forEach(row => {
+    const on = Number(row.dataset.songIndex) === player.index;
+    row.classList.toggle("is-playing", on && playing);
+    row.classList.toggle("is-current", on);
+  });
+}
+
+async function playSongAt(index) {
+  if (!player.deck.length) return;
+  const wrapped = ((index % player.deck.length) + player.deck.length) % player.deck.length;
+  const song = player.deck[wrapped];
+  player.index = wrapped;
+  player.loading = true;
+  paintNowPlaying(song, null);
+
+  const found = await musicLookup(song[0], song[1]);
+  player.loading = false;
+  // she may have tapped another track while this one was still resolving
+  if (player.index !== wrapped) return;
+  paintNowPlaying(song, found);
+  if (!found?.preview) { paintPlayerState(); return; }
+
+  const audio = playerAudio();
+  audio.src = found.preview;
+  audio.currentTime = 0;
+  try { await audio.play(); } catch { /* autoplay blocked until she taps */ }
+  paintPlayerState();
+}
+
+function paintNowPlaying(song, found) {
+  const [title, artist, note] = song;
+  const art = $("#player-art");
+  if (art) {
+    if (found?.artwork) {
+      art.style.backgroundImage = `url("${found.artwork}")`;
+      art.classList.remove("is-empty");
+    } else if (!found) {
+      art.classList.add("is-empty");
+    }
+  }
+  const set = (sel, text) => { const el = $(sel); if (el) el.textContent = text; };
+  set("#player-title", title);
+  set("#player-artist", artist);
+  set("#player-note", note);
+  set("#player-total", found?.preview ? "0:30" : "");
+  const status = $("#player-status");
+  if (status) {
+    status.textContent = player.loading ? "finding it..."
+      : found?.preview ? "thirty second preview"
+      : "no preview for this one, but the words still count";
+  }
+  const link = $("#player-link");
+  if (link) {
+    link.hidden = !found?.link;
+    if (found?.link) link.href = found.link;
+  }
+  paintPlayerState();
+}
+
+function togglePlayer() {
+  const audio = player.audio;
+  if (player.index < 0) return playSongAt(0);
+  if (!audio || !audio.src) return playSongAt(player.index);
+  if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+}
+
+function songRowHtml([title, artist, note], i) {
   return `
-    <article class="song-card spotify-card premium-card">
-      <div class="song-note">
-        <p class="card-label">track ${String(i + 1).padStart(2, "0")}</p>
-        <h3>${escapeHtml(name)}</h3>
-        <strong>${escapeHtml(artist)}</strong>
-        <p>${escapeHtml(note)}</p>
-      </div>
-      ${spotifyId ? `<iframe title="Play ${escapeHtml(name)} on Spotify" data-src="https://open.spotify.com/embed/track/${encodeURIComponent(spotifyId)}?utm_source=generator&theme=0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
-    </article>
-  `;
+    <button class="song-row" type="button" data-song-index="${i}">
+      <span class="song-row-num">${String(i + 1).padStart(2, "0")}</span>
+      <span class="song-row-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="song-row-text">
+        <strong>${escapeHtml(title)}</strong>
+        <small>${escapeHtml(artist)}</small>
+        <em>${escapeHtml(note)}</em>
+      </span>
+    </button>`;
 }
 
 function renderSongs() {
-  // A featured pick up top, stable for the whole day and different tomorrow -
-  // so opening this screen twice in an hour doesn't reshuffle it, but coming
-  // back next week finds something new leading the list.
+  // The deck leads with a different song each day, so opening this twice in
+  // an hour finds the same one and coming back next week does not.
   const day = Math.floor(Date.now() / 86400000);
-  const featuredIndex = day % songs.length;
-  const featured = songs[featuredIndex];
-  const rest = songs.filter((_, i) => i !== featuredIndex);
-  $("#song-featured").innerHTML = `
-    <p class="card-label">playing for you tonight</p>
-    ${songCardHtml(featured, featuredIndex).replace('class="song-card spotify-card premium-card"', 'class="song-card spotify-card premium-card song-featured-card"')}
-  `;
-  $("#song-list").innerHTML = rest.map(songCardHtml).join("");
+  const lead = day % songs.length;
+  player.deck = songs.slice(lead).concat(songs.slice(0, lead));
+
+  const list = $("#song-list");
+  if (list) list.innerHTML = player.deck.map(songRowHtml).join("");
+
+  if (player.index < 0) paintNowPlaying(player.deck[0], undefined);
+  else paintPlayerState();
+}
+
+function initSongPlayer() {
+  $("#player-toggle")?.addEventListener("click", togglePlayer);
+  $("#player-prev")?.addEventListener("click", () => playSongAt(player.index - 1));
+  $("#player-next")?.addEventListener("click", () => playSongAt(player.index + 1));
+  $("#song-list")?.addEventListener("click", event => {
+    const row = event.target.closest("[data-song-index]");
+    if (row) playSongAt(Number(row.dataset.songIndex));
+  });
+  // scrubbing the preview
+  $("#player-progress")?.addEventListener("click", event => {
+    const audio = player.audio;
+    if (!audio?.duration) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((event.clientX - box.left) / box.width) * audio.duration;
+  });
+  // leaving the screen stops the music; nothing should keep playing from a
+  // screen she has walked away from
+  window.addEventListener("moonpie:screen", event => {
+    if (event.detail !== "songs") player.audio?.pause();
+  });
 }
 
 function renderPromises() {
@@ -4484,6 +4656,7 @@ function init() {
   setupEvents();
   setupSmartNav();
   initGamePicker();
+  initSongPlayer();
   initComposer();
   initWatchlist();
   $("#sign-out")?.addEventListener("click", signOut);
