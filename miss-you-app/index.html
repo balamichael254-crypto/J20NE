@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=137">
+  <link rel="stylesheet" href="./styles.css?v=138">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -807,12 +807,19 @@
 
       <section class="screen world-screen" id="screen-reasons" aria-label="reasons">
         <div class="section-head"><p class="eyebrow">pluck one from the sky</p><h2>100 Reasons</h2><img class="head-charm" src="./assets/mood/bunny-glow-4.webp" alt=""></div>
-        <article class="reason-oracle premium-card card-warm">
-          <div class="star">✦</div>
-          <p id="reason-text"></p>
-          <button class="primary-btn" id="new-reason" type="button">another reason</button>
-        </article>
-        <div class="reason-stack" id="reason-stack"></div>
+        <!-- a jar of folded slips. Tap it and one comes out and unfolds. -->
+        <div class="reason-stage">
+          <button class="reason-jar" id="reason-jar" type="button" aria-label="pull a reason out of the jar">
+            <span class="reason-jar-body" aria-hidden="true">
+              <span class="reason-jar-fill"></span>
+              <span class="reason-jar-shine"></span>
+            </span>
+            <span class="reason-jar-lid" aria-hidden="true"></span>
+          </button>
+          <p class="reason-count" id="reason-count"></p>
+          <div class="reason-slip" id="reason-slip"><p id="reason-text"></p></div>
+          <div class="reason-pile" id="reason-pile" aria-hidden="true"></div>
+        </div>
       </section>
 
       <section class="screen world-screen" id="screen-memory" aria-label="memories">
@@ -1086,7 +1093,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=90"></script>
+  <script src="./app.js?v=92"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>
