@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=132">
+  <link rel="stylesheet" href="./styles.css?v=133">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -233,7 +233,7 @@
         <div class="section-head">
           <p class="eyebrow">not basic cards</p>
           <h2>Your universe atlas</h2>
-          <p>Every part of the little world I made for you, gathered here for the moments you miss me.</p>
+          <p>All of it, in one place.</p>
           <img class="head-charm" src="./assets/mood/window-scene-1.webp" alt="">
         </div>
         <div class="atlas-grid" id="atlas-grid"></div>
@@ -364,7 +364,7 @@
         <div class="section-head">
           <p class="eyebrow">tiny notes from me</p>
           <h2>Widget studio</h2>
-          <p>Little notes and doodles you can come back to whenever missing me gets loud.</p>
+          <p>Notes and doodles, both our phones.</p>
           <img class="head-charm" src="./assets/mood/bunny-sleep-1.webp" alt="">
         </div>
 
@@ -432,7 +432,7 @@
         <div class="section-head">
           <p class="eyebrow">for the nights you want to disappear into something</p>
           <h2>What are we watching?</h2>
-          <p>Pick a mood, tap the heart to save it for later, tap the tick if you have already seen it.</p>
+          <p>Save one for later, tick one you have seen.</p>
           <img class="head-charm" src="./assets/mood/window-rain-4.webp" alt="">
         </div>
 
@@ -532,7 +532,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-games" aria-label="games">
-        <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>I made you a few tiny games for the moments you want something sweet to tap while you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>Something to tap when you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
         <!-- The three real games. Each module owns its own DOM inside
              #game-stage and is mounted only while chosen, so none of them
              runs a timer or a rAF loop while you are on another screen. -->
@@ -593,7 +593,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-letters" aria-label="letters">
-        <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Open these slowly whenever you need my voice to stay with you a little longer.</p><img class="head-charm" src="./assets/mood/notebook-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Open one whenever you need me closer.</p><img class="head-charm" src="./assets/mood/notebook-4.webp" alt=""></div>
 
         <!-- letters that arrived from the other phone, sealed until opened -->
         <div class="letter-inbox" id="letter-inbox"></div>
@@ -696,17 +696,17 @@
       </section>
 
       <section class="screen world-screen" id="screen-notices" aria-label="tiny things">
-        <div class="section-head"><p class="eyebrow">I notice everything</p><h2>Tiny Things</h2><p>All the little details that make you wonderfully, unmistakably you.</p><img class="head-charm" src="./assets/mood/jar-note-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">I notice everything</p><h2>Tiny Things</h2><p>Things I notice.</p><img class="head-charm" src="./assets/mood/jar-note-4.webp" alt=""></div>
         <div class="notice-list" id="notice-list"></div>
       </section>
 
       <section class="screen world-screen" id="screen-day" aria-label="one perfect day">
-        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>Scroll through one of the beautiful ordinary days I cannot wait to share with you.</p><img class="head-charm" src="./assets/mood/window-rain-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>One ordinary day, hour by hour.</p><img class="head-charm" src="./assets/mood/window-rain-4.webp" alt=""></div>
         <div class="day-timeline" id="day-timeline"></div>
       </section>
 
       <section class="screen world-screen" id="screen-places" aria-label="places">
-        <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Tap a place and step inside. Every world holds its own gallery, atmosphere, and little life waiting for us.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Twenty places. Tap one and step in.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
         <p class="places-progress" id="places-progress"></p>
         <!-- filled by renderPlaces() when she has pinned one world as the one
              they are actually doing next, with the moments she picked in it -->
@@ -767,7 +767,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-distance" aria-label="distance">
-        <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>Little beacons for when the distance starts acting too powerful.</p></div>
+        <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>For when the distance gets loud.</p></div>
 
         <!-- A real thread you can actually pull, not just a decoration - one
              tap sends a pulse across it that lands on the other phone. -->
@@ -796,7 +796,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-memory" aria-label="memories">
-        <div class="section-head"><p class="eyebrow">the bits I keep</p><h2>Our Little World</h2><p>Memory polaroids for the tiny private mythology.</p><img class="head-charm" src="./assets/mood/polaroid-2.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">the bits I keep</p><h2>Our Little World</h2><p>The bits only we would keep.</p><img class="head-charm" src="./assets/mood/polaroid-2.webp" alt=""></div>
         <div class="memory-list" id="memory-list"></div>
       </section>
 
@@ -893,7 +893,7 @@
         <div class="section-head">
           <p class="eyebrow">our eyes only</p>
           <h2>Just for us</h2>
-          <p>Encrypted on this phone before it goes anywhere.</p>
+          <p>Locked. Only the two of us.</p>
           <img class="head-charm" src="./assets/mood/bunny-loveheart-hero.webp" alt="">
         </div>
 
@@ -908,7 +908,6 @@
           <input class="vault-input" id="vault-pass" type="password" autocomplete="new-password" placeholder="our thing">
           <label class="field-label" for="vault-new-pin">a PIN for this phone</label>
           <input class="vault-input" id="vault-new-pin" type="password" inputmode="numeric" maxlength="8" placeholder="4&ndash;8 digits">
-          <p class="tiny vault-note">The PIN just skips retyping it here. The passphrase is what actually locks things.</p>
           <button class="primary-btn wide" type="submit">lock it</button>
         </form>
 
@@ -916,7 +915,6 @@
         <form class="premium-card vault-panel hidden" id="vault-unlock-form" data-phase="locked">
           <div class="vault-bigmark" aria-hidden="true">🔒</div>
           <h3>Locked.</h3>
-          <p class="tiny" id="vault-lock-note">Enter your PIN for this phone.</p>
           <input class="vault-input" id="vault-pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN">
           <button class="holdlock" id="vault-holdlock" type="button" aria-label="press and hold to open">
             <span class="holdlock-ring" aria-hidden="true"></span>
@@ -937,7 +935,7 @@
               </label>
               <button class="secondary-btn" id="vault-lock-now" type="button">lock</button>
             </div>
-            <p class="tiny vault-note">One-way. Once it's sent, it's theirs &mdash; you don't get it back, and they can't send it back to you either.</p>
+            <p class="tiny vault-note">One-way. Once it&rsquo;s sent, it&rsquo;s theirs.</p>
             <div class="vault-grid" id="vault-inbox-grid"></div>
           </article>
 
@@ -945,7 +943,6 @@
             <span class="tape tr" aria-hidden="true"></span>
             <p class="card-label">both of you, one collection</p>
             <h3>Collective Memories</h3>
-            <p class="tiny">Anything either of you wants to keep &mdash; still just for the two of you.</p>
             <div class="vault-actions">
               <label class="primary-btn vault-add">
                 add a memory
@@ -955,10 +952,6 @@
             <div class="vault-grid" id="memories-grid"></div>
           </article>
 
-          <article class="premium-card vault-truth">
-            <p class="card-label">the fine print</p>
-            <p>Encrypted, hold-to-view, locks itself the second you switch apps. It can&rsquo;t stop a screenshot &mdash; nothing on the web can &mdash; but it reacts instantly instead of pretending.</p>
-          </article>
         </div>
 
         <div class="vault-viewer" id="vault-viewer" hidden>
@@ -969,7 +962,7 @@
       </section>
 
       <section class="screen" id="screen-care" aria-label="care">
-        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>You do not have to scroll around hoping to find the right comfort. Tell me what kind of moment this is and let me meet you there.</p></div>
+        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>Tell me what kind of moment this is.</p></div>
         <article class="care-checkin premium-card">
           <p class="card-label">what does your heart need?</p>
           <div class="care-modes">
