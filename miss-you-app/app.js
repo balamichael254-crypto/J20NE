@@ -2090,14 +2090,104 @@ function handwrite(host, blocks) {
   handwriting.raf = requestAnimationFrame(step);
 }
 
+/* ============================================================================
+   Poems: a notebook, not a list.
+
+   Twelve poems as twelve stacked cards means she scrolls past eleven of them
+   to reach the twelfth, and a poem read while scrolling past it is not read.
+   A poem wants one page and nothing else on it.
+
+   So it is a real notebook. One poem to a page, in handwriting on the same
+   photographed paper the letters use, and the page turns - a rotateY around
+   the spine with the sheet's own weight behind it. Turn by tapping the corner
+   or dragging the page across, the way you would with paper.
+   ========================================================================= */
+let poemPage = 0;
+
+function poemPageHtml(poem, i, total) {
+  // content.js carries [title, form, body]; the originals in app.js are just
+  // [title, body]. Taking the last element as the body handles both, which
+  // matters because reading it as [title, body] printed the form line where
+  // the poem should be and dropped the poem entirely.
+  const title = poem[0];
+  const form = poem.length > 2 ? poem[1] : "";
+  const body = poem[poem.length - 1];
+  const lines = String(body).split("\n");
+  return `
+    <article class="nb-page" data-page="${i}" style="z-index:${total - i}">
+      <div class="nb-face">
+        <span class="nb-rule" aria-hidden="true"></span>
+        <p class="nb-num">${String(i + 1).padStart(2, "0")} of ${total}</p>
+        <h3>${escapeHtml(title)}</h3>
+        ${form ? `<p class="nb-form">${escapeHtml(form)}</p>` : ""}
+        <div class="nb-body">${lines.map(line =>
+          `<span>${escapeHtml(line) || "&nbsp;"}</span>`).join("")}</div>
+        <span class="nb-corner" aria-hidden="true"></span>
+      </div>
+      <div class="nb-back" aria-hidden="true"></div>
+    </article>`;
+}
+
+function paintPoemPages() {
+  const total = poems.length;
+  $$(".nb-page").forEach(page => {
+    const i = Number(page.dataset.page);
+    const turned = i < poemPage;
+    page.classList.toggle("is-turned", turned);
+    // turned pages stack up on the left in the order they were turned;
+    // untouched ones keep the original stack with the current one on top
+    page.style.zIndex = turned ? i : total - i;
+  });
+  const label = $("#poem-count");
+  if (label) label.textContent = `${Math.min(poemPage + 1, total)} / ${total}`;
+  const prev = $("#poem-prev"), next = $("#poem-next");
+  if (prev) prev.disabled = poemPage === 0;
+  if (next) next.disabled = poemPage >= total - 1;
+}
+
+function turnPoem(delta) {
+  const next = poemPage + delta;
+  if (next < 0 || next > poems.length - 1) return;
+  poemPage = next;
+  paintPoemPages();
+}
+
 function renderPoems() {
-  $("#poem-list").innerHTML = poems.map(([title, form, body]) => `
-    <article class="poem-card premium-card">
-      <p class="card-label">${escapeHtml(form || "after midnight")}</p>
-      <h3>${escapeHtml(title)}</h3>
-      <pre>${escapeHtml(body)}</pre>
-    </article>
-  `).join("");
+  const host = $("#notebook-pages");
+  if (!host) return;
+  host.innerHTML = poems.map((poem, i) => poemPageHtml(poem, i, poems.length)).join("");
+  paintPoemPages();
+  bindPoemDrag(host);
+}
+
+/* Dragging the page. A horizontal drag past a threshold turns it; anything
+   shorter springs back, so a scroll down the screen never turns a page by
+   accident. */
+function bindPoemDrag(host) {
+  if (host.dataset.bound) return;
+  host.dataset.bound = "1";
+  let startX = null, startY = null;
+  host.addEventListener("pointerdown", event => {
+    startX = event.clientX; startY = event.clientY;
+  });
+  host.addEventListener("pointerup", event => {
+    if (startX === null) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    startX = startY = null;
+    if (Math.abs(dx) < 46 || Math.abs(dy) > Math.abs(dx)) return;
+    turnPoem(dx < 0 ? 1 : -1);
+  });
+  host.addEventListener("pointercancel", () => { startX = startY = null; });
+}
+
+function initPoems() {
+  $("#poem-prev")?.addEventListener("click", () => turnPoem(-1));
+  $("#poem-next")?.addEventListener("click", () => turnPoem(1));
+  // tapping the page itself turns it forward, the corner included
+  $("#notebook-pages")?.addEventListener("click", event => {
+    if (event.target.closest(".nb-corner")) turnPoem(1);
+  });
 }
 
 function renderNotices() {
@@ -4922,6 +5012,7 @@ function init() {
   setupSmartNav();
   initGamePicker();
   initSongPlayer();
+  initPoems();
   initComposer();
   initWatchlist();
   $("#sign-out")?.addEventListener("click", signOut);

@@ -3101,3 +3101,121 @@ body[data-world="day"] #screen-day{transition:color .4s}
   .day-stars{animation:none}
   .day-stop{transition:none}
 }
+
+/* ==========================================================================
+   Poems: a notebook.
+
+   Twelve poems as twelve stacked cards means scrolling past eleven of them to
+   reach the twelfth, and a poem read while scrolling past it is not read. A
+   poem wants one page and nothing else on it.
+
+   So: one poem to a page, handwritten on the same photographed paper the
+   letters use, and the page turns around its spine with the sheet's weight
+   behind it.
+   ========================================================================== */
+.notebook{
+  position:relative;margin-top:4px;
+  perspective:1600px;
+}
+/* the cover the pages are bound into */
+.notebook::before{
+  content:"";position:absolute;inset:-9px -7px -13px;border-radius:12px;
+  background:linear-gradient(150deg,#6b4a8f,#4a3270 55%,#3a2559);
+  box-shadow:0 16px 30px -14px rgba(32,10,54,.7),inset 0 1px 0 rgba(255,255,255,.18);
+}
+/* the stitched spine down the left edge */
+.notebook::after{
+  content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:7px;z-index:40;
+  border-radius:3px;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,transparent 0 13px,rgba(255,225,190,.5) 13px 22px),
+    linear-gradient(90deg,rgba(0,0,0,.34),rgba(0,0,0,.05));
+}
+
+.notebook-pages{
+  position:relative;width:100%;aspect-ratio:.72/1;
+  transform-style:preserve-3d;touch-action:pan-y;
+}
+.nb-page{
+  position:absolute;inset:0;
+  transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .66s cubic-bezier(.4,.02,.2,1);
+  cursor:pointer;
+}
+.nb-page.is-turned{transform:rotateY(-174deg)}
+
+.nb-face,.nb-back{
+  position:absolute;inset:0;border-radius:3px 9px 9px 3px;
+  backface-visibility:hidden;overflow:hidden;
+  background-color:#fffdf5;
+  background-image:url("./assets/paper/sheet-cream.webp");
+  background-size:340px auto;
+}
+.nb-face{
+  padding:26px 22px 22px 30px;
+  /* the long ones run past the bottom of the page rather than being cut off
+     at it; a fixed page that silently clips a poem is worse than one that
+     scrolls */
+  overflow-y:auto;overscroll-behavior:contain;
+  box-shadow:inset 13px 0 18px -14px rgba(60,30,20,.55),0 3px 10px -6px rgba(40,14,60,.5);
+}
+/* the reverse of the sheet, seen while it is mid-turn */
+.nb-back{
+  transform:rotateY(180deg);
+  filter:brightness(.94);
+  box-shadow:inset -13px 0 18px -14px rgba(60,30,20,.5);
+}
+/* the margin rule every notebook page has */
+.nb-rule{
+  position:absolute;top:0;bottom:0;left:20px;width:1.5px;
+  background:rgba(208,110,140,.32);
+}
+.nb-num{
+  margin:0 0 3px;font-family:"Quicksand",sans-serif;font-size:.66rem;
+  font-weight:800;letter-spacing:.08em;color:rgba(120,90,160,.65);
+}
+.nb-form{
+  margin:-10px 0 14px;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.02rem;color:rgba(120,90,160,.75);
+}
+.nb-face h3{
+  margin:0 0 16px;font-family:"Baloo",sans-serif;font-size:1.2rem;
+  color:#4b3a6b;
+}
+.nb-body{
+  display:flex;flex-direction:column;gap:3px;
+  font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.42rem;line-height:1.5;color:#4b3a6b;
+}
+.nb-body span{display:block}
+
+/* the corner you lift to turn the page */
+.nb-corner{
+  position:absolute;right:0;bottom:0;width:46px;height:46px;
+  background:linear-gradient(135deg,transparent 48%,rgba(90,60,30,.16) 50%,rgba(255,255,255,.85) 54%);
+  border-radius:0 0 9px 0;
+  transition:width .2s,height .2s;
+}
+.nb-page:hover .nb-corner,
+.nb-page:active .nb-corner{width:62px;height:62px}
+
+.notebook-nav{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-top:26px;
+}
+.notebook-nav button{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;display:grid;
+  place-items:center;border:2px solid var(--edge);background:#fff;
+  color:var(--lav-600);font-size:1.1rem;box-shadow:var(--sh-sm);
+  transition:transform .15s,opacity .2s;
+}
+.notebook-nav button:active{transform:scale(.92)}
+.notebook-nav button:disabled{opacity:.34;cursor:default}
+#poem-count{
+  min-width:62px;text-align:center;font-family:"Quicksand",sans-serif;
+  font-size:.82rem;font-weight:800;color:var(--lav-600);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .nb-page{transition:none}
+}

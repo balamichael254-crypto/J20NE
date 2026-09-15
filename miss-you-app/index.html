@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=134">
+  <link rel="stylesheet" href="./styles.css?v=137">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -692,7 +692,15 @@
 
       <section class="screen world-screen" id="screen-poems" aria-label="poems">
         <div class="section-head"><p class="eyebrow">after midnight</p><h2>Poems</h2><p>Small poems with room to breathe.</p><img class="head-charm" src="./assets/mood/moon-sky-1.webp" alt=""></div>
-        <div class="poem-list" id="poem-list"></div>
+        <!-- one poem to a page, and the page actually turns -->
+        <div class="notebook">
+          <div class="notebook-pages" id="notebook-pages"></div>
+        </div>
+        <div class="notebook-nav">
+          <button id="poem-prev" type="button" aria-label="previous poem">&larr;</button>
+          <span id="poem-count">1 / 1</span>
+          <button id="poem-next" type="button" aria-label="next poem">&rarr;</button>
+        </div>
       </section>
 
       <section class="screen world-screen" id="screen-notices" aria-label="tiny things">
@@ -1078,7 +1086,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=88"></script>
+  <script src="./app.js?v=90"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>
