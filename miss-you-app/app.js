@@ -1800,8 +1800,134 @@ function stampSrc(name) {
   return `./assets/paper/stamp-${id}.webp`;
 }
 
-function envelopeHtml(opts) {
+/* ============================================================================
+   How a letter is folded.
+
+   Every letter in here opened the same way: one envelope, one flap, one
+   animation, sixteen times. Changing the paper colour under it does not make
+   it a different letter, it makes it the same letter in a different shirt.
+
+   Before envelopes were mass produced in the 1800s, a letter WAS its own
+   envelope, and how you folded it was part of what you were saying. The
+   field that studies this is called letterlocking (Dambrogio and Smith's
+   work at MIT and Yale catalogues hundreds of formats). A letter sewn shut
+   with thread and booby-trapped so it tore if opened wrong is a different
+   object from one tied in a love knot, and both are different from a heart
+   folded out of the page it is written on.
+
+   So there are seven folds here, and each one comes apart its own way:
+
+     envelope   the flap falls back and the sheet rises out of the pocket
+     heart      two lobes open, then the square unfolds from its corners
+     knot       a woven tab pulls free and the paper unrolls in two stages
+     scroll     the ribbon unties and the roll runs down the screen
+     accordion  concertina panels fan out one after another
+     dagger     sewn shut: cut the thread first, then pry the flap
+     pleat      folded so half of it is hidden, and the hidden half unfolds
+
+   The dagger one is the only one that asks for something back: you have to
+   drag across the stitching to cut it before it will open, the way the real
+   format made a reader work for it.
+   ========================================================================= */
+const LETTER_FOLDS = {
+  envelope:  { tag: "sealed with wax",            openMs: 620 },
+  heart:     { tag: "folded into a heart",        openMs: 980 },
+  knot:      { tag: "tied in a love knot",        openMs: 880 },
+  scroll:    { tag: "rolled and tied",            openMs: 960 },
+  accordion: { tag: "folded like a concertina",   openMs: 900 },
+  dagger:    { tag: "sewn shut",                  openMs: 1050, cut: true },
+  pleat:     { tag: "folded to hide half of it",  openMs: 940 },
+};
+const FOLD_ORDER = ["envelope", "heart", "knot", "scroll", "accordion", "dagger", "pleat"];
+
+/* A letter keeps the same fold forever - it is part of which letter it is,
+   not a surprise that changes between visits. Content can name one; anything
+   that does not gets one from its position, so the list never shows the same
+   fold twice in a row. */
+function foldFor(letter, index) {
+  if (letter?.fold && LETTER_FOLDS[letter.fold]) return letter.fold;
+  return FOLD_ORDER[index % FOLD_ORDER.length];
+}
+
+/* --------------------------------------------------------------- markup */
+
+function foldInnerHtml(fold, opts) {
   const stamp = stampSrc(opts.stamp || opts.theme);
+  const to = escapeHtml(opts.to || "");
+  const tab = escapeHtml(opts.tab || "");
+  const seal = escapeHtml(opts.initial || "M");
+
+  if (fold === "heart") {
+    // a square of paper folded corner to corner, with the two lobes of the
+    // heart on top. The lobes swing away, then the corners drop.
+    return `
+      <span class="fold-heart">
+        <span class="heart-lobe left"></span>
+        <span class="heart-lobe right"></span>
+        <span class="heart-body"></span>
+        <span class="heart-corner tl"></span>
+        <span class="heart-corner tr"></span>
+        <span class="heart-corner bl"></span>
+        <span class="heart-corner br"></span>
+        <span class="heart-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "knot") {
+    return `
+      <span class="fold-knot">
+        <span class="knot-sheet"></span>
+        <span class="knot-band"></span>
+        <span class="knot-tab" aria-hidden="true"></span>
+        <span class="knot-ink">${to}</span>
+        <span class="knot-hint">pull the tab</span>
+      </span>`;
+  }
+
+  if (fold === "scroll") {
+    return `
+      <span class="fold-scroll">
+        <span class="scroll-paper"></span>
+        <span class="scroll-roll top"></span>
+        <span class="scroll-roll bottom"></span>
+        <span class="scroll-ribbon"></span>
+        <span class="scroll-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "accordion") {
+    return `
+      <span class="fold-accordion">
+        ${"<i></i>".repeat(7)}
+        <span class="acc-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "dagger") {
+    // the historical booby-trapped lock: sewn shut, then sealed. The stitch
+    // is a real target - dragging across it is what opens this one.
+    return `
+      <span class="fold-dagger">
+        <span class="dagger-sheet"></span>
+        <span class="dagger-flap"></span>
+        <svg class="dagger-thread" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M6 20 L18 8 L30 32 L42 8 L54 32 L66 8 L78 32 L94 20"/>
+        </svg>
+        <span class="dagger-wax">${seal}</span>
+        <span class="dagger-ink">${to}</span>
+        <span class="dagger-hint">drag across the stitching</span>
+      </span>`;
+  }
+
+  if (fold === "pleat") {
+    return `
+      <span class="fold-pleat">
+        ${"<i></i>".repeat(6)}
+        <span class="pleat-ink">${to}</span>
+      </span>`;
+  }
+
+  // the envelope, which is still the right answer for a lot of them
   return `
     <span class="env-stack">
       <span class="env-back" aria-hidden="true"></span>
@@ -1809,26 +1935,65 @@ function envelopeHtml(opts) {
       <span class="env-front" aria-hidden="true"></span>
       <img class="env-stamp" src="${stamp}" alt="" aria-hidden="true">
       <span class="env-postmark" aria-hidden="true">OURS<br>25 FEB</span>
-      <span class="env-tab">${escapeHtml(opts.tab || "")}</span>
-      <span class="env-to">${escapeHtml(opts.to || "")}</span>
+      <span class="env-tab">${tab}</span>
+      <span class="env-to">${to}</span>
       <span class="env-flap" aria-hidden="true"><i></i></span>
-      <span class="env-seal" aria-hidden="true">${escapeHtml(opts.initial || "M")}</span>
-    </span>
+      <span class="env-seal" aria-hidden="true">${seal}</span>
+    </span>`;
+}
+
+function envelopeHtml(opts) {
+  const fold = opts.fold || "envelope";
+  return `
+    ${foldInnerHtml(fold, opts)}
     <span class="env-caption">
       <strong>${escapeHtml(opts.title || "")}</strong>
       ${opts.preview ? `<small>${escapeHtml(opts.preview)}</small>` : ""}
-      <em>${escapeHtml(opts.cta || "tap to unseal")}</em>
+      <em>${escapeHtml(opts.cta || LETTER_FOLDS[fold].tag)}</em>
     </span>`;
+}
+
+/* ------------------------------------------------------------- unfolding */
+
+/* The dagger fold will not open until the thread is cut. One drag across the
+   stitching does it - pointer events, so a finger and a mouse are the same
+   code, and the stitch redraws as it parts rather than just vanishing. */
+function armThreadCutting(card) {
+  const thread = card.querySelector(".dagger-thread");
+  if (!thread || thread.dataset.armed) return;
+  thread.dataset.armed = "1";
+  let from = null;
+  const start = event => {
+    from = event.clientX;
+    try { thread.setPointerCapture(event.pointerId); } catch { /* not always allowed */ }
+  };
+  const move = event => {
+    if (from === null) return;
+    if (Math.abs(event.clientX - from) < 42) return;
+    from = null;
+    card.classList.add("thread-cut");
+    window.Poo?.react?.("excited");
+    // the letter opens on its own once it is actually cut
+    setTimeout(() => card.click(), 420);
+  };
+  const end = () => { from = null; };
+  thread.addEventListener("pointerdown", start);
+  thread.addEventListener("pointermove", move);
+  thread.addEventListener("pointerup", end);
+  thread.addEventListener("pointercancel", end);
 }
 
 function renderLetters() {
   // These twelve were written by Sunstone for Moonpie. They keep her name on
   // the envelope whoever opens the app, the way a letter in a drawer does.
   const me = nickOf("Michelle"), them = nickOf("Michael");
-  $("#letter-list").innerHTML = letters.map((letter, i) => `
-    <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}"
-            aria-label="${escapeHtml(letter.title)} - tap to unseal">
+  $("#letter-list").innerHTML = letters.map((letter, i) => {
+    const fold = foldFor(letter, i);
+    return `
+    <button class="envelope theme-${letter.theme} fold-is-${fold}" type="button" data-letter="${i}"
+            data-fold="${fold}" aria-label="${escapeHtml(letter.title)} - ${LETTER_FOLDS[fold].tag}">
       ${envelopeHtml({
+        fold,
         theme: letter.theme,
         tab: letter.tab,
         to: `for ${me}`,
@@ -1836,8 +2001,10 @@ function renderLetters() {
         title: letter.title,
         preview: letter.preview,
       })}
-    </button>
-  `).join("");
+    </button>`;
+  }).join("");
+  // the sewn one has to be cut before it will open
+  $$("#letter-list .fold-is-dagger").forEach(armThreadCutting);
 }
 
 /* ---------------------------------------------------------------------------
@@ -4128,8 +4295,15 @@ function setupEvents() {
     const card = event.target.closest("[data-letter]");
     if (!card || card.classList.contains("opening")) return;
     const letter = letters[Number(card.dataset.letter)];
-    // the flap lifts and the seal breaks before the letter itself appears -
-    // a beat of "unsealing" instead of instantly popping a modal open
+    const fold = card.dataset.fold || "envelope";
+    // the sewn one is the only fold that asks for something back: it stays
+    // shut until the thread has actually been cut
+    if (LETTER_FOLDS[fold]?.cut && !card.classList.contains("thread-cut")) {
+      toast("this one is sewn shut. cut the stitching first");
+      return;
+    }
+    // the fold comes apart before the letter appears, and they take different
+    // lengths of time to do it
     card.classList.add("opening");
     const rect = card.getBoundingClientRect();
     burstAt(rect.left + rect.width / 2, rect.top + 18, 8);
@@ -4144,8 +4318,10 @@ function setupEvents() {
       ]);
       document.body.classList.add("focus-mode");
       modal.showModal();
-      setTimeout(() => card.classList.remove("opening"), 400);
-    }, 620);
+      setTimeout(() => {
+        card.classList.remove("opening", "thread-cut");
+      }, 400);
+    }, LETTER_FOLDS[fold]?.openMs || 620);
   });
   $("#letter-modal").addEventListener("close", () => {
     handwriteFinish();

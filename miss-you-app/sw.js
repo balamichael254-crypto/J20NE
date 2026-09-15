@@ -1,4 +1,4 @@
-const CACHE_NAME = "moonpie-miss-you-v131";
+const CACHE_NAME = "moonpie-miss-you-v132";
 const ASSETS = [
   "./",
   "./index.html",
