@@ -10,7 +10,7 @@ const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], bouquetWrap: "kraft", bouquetRecipe: 0, localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -1237,7 +1237,39 @@ const BOUQUET_DRAG_THRESHOLD = 6; // px of movement before a touch counts as a d
    real bouquet is. That single fact is what was missing: flowers dropped at
    arbitrary angles with no stems read as stickers on paper, while the same
    flowers with stems converging on a tie read as an armful of flowers. */
-const BOUQUET_TIE = { x: 50, y: 97 };
+const BOUQUET_TIE = { x: 50, y: 88 };   // the neck of the wrap, under the ribbon
+
+/* The paper it gets wrapped in. Five, because "make me a bouquet" with one
+   fixed wrap is a colouring book with one crayon. */
+const BOUQUET_WRAPS = [
+  { id: "kraft",  label: "kraft"  },
+  { id: "blush",  label: "blush"  },
+  { id: "lilac",  label: "lilac"  },
+  { id: "sage",   label: "sage"   },
+  { id: "lace",   label: "lace"   },
+];
+
+function bouquetWrapId() {
+  const id = state.bouquetWrap;
+  return BOUQUET_WRAPS.some(w => w.id === id) ? id : "kraft";
+}
+
+function applyBouquetWrap() {
+  const shape = $("#bouquet-vase");
+  if (!shape) return;
+  BOUQUET_WRAPS.forEach(w => shape.classList.toggle(`wrap-${w.id}`, w.id === bouquetWrapId()));
+}
+
+function renderBouquetWraps() {
+  const host = $("#bouquet-wraps");
+  if (!host) return;
+  host.innerHTML = BOUQUET_WRAPS.map(w =>
+    `<button class="bouquet-wrap-pick wrap-${w.id}${bouquetWrapId() === w.id ? " is-on" : ""}"
+       type="button" data-bouquet-wrap="${w.id}" aria-label="wrap it in ${w.label}"><span></span>${w.label}</button>`
+  ).join("");
+  applyBouquetWrap();
+}
+
 
 function bouquetStemAngle(item) {
   // point the bloom away from the tie, so heads fan outward off the stems
@@ -1253,21 +1285,38 @@ function bouquetRenderStems() {
     // a slight bow outward, so a stem is a stem and not a drawn rod
     const midX = (BOUQUET_TIE.x + item.x) / 2 + (item.x - BOUQUET_TIE.x) * 0.18;
     const midY = (BOUQUET_TIE.y + item.y) / 2 + 5;
-    return `<path d="M ${BOUQUET_TIE.x} ${BOUQUET_TIE.y} Q ${midX} ${midY} ${item.x} ${item.y}"
-      fill="none" stroke="#4f7a44" stroke-width="1.05" stroke-linecap="round" opacity=".8"/>`;
+    // run it past the tie and down into the paper, so it is cut off by the
+    // wrap rather than ending in mid air just above it
+    const green = STEM_GREENS[item.id.charCodeAt(item.id.length - 1) % STEM_GREENS.length];
+    const width = item.kind === "filler" || item.kind === "daisy" ? 0.8
+                : item.kind === "sunflower" ? 1.7 : 1.2;
+    return `<path d="M ${BOUQUET_TIE.x} 100 L ${BOUQUET_TIE.x} ${BOUQUET_TIE.y} Q ${midX} ${midY} ${item.x} ${item.y}"
+      fill="none" stroke="${green}" stroke-width="${width}" stroke-linecap="round" opacity=".86"/>`;
   }).join("");
 }
 
+/* real stems in one bunch are never the same green */
+const STEM_GREENS = ["#4f7a44", "#5d8a4e", "#436b3b", "#6b9558", "#3c6236"];
+
 function bouquetClamp(v) { return v < -8 ? -8 : v > 108 ? 108 : v; }
+/* blooms stay above the paper. Without this she could drop a lily at the
+   bottom of the box, where the wrap is drawn over it, and it would simply
+   vanish. */
+function bouquetClampX(v) { return v < -4 ? -4 : v > 104 ? 104 : v; }
+function bouquetClampY(v) { return v < -8 ? -8 : v > 70 ? 70 : v; }
 
 function bouquetPlacedNode(item) {
   const el = document.createElement("div");
-  el.className = `bouquet-placed${item.kind === "bow" ? " bow-placed" : ""}`;
+  el.className = `bouquet-placed kind-${item.kind}${item.kind === "bow" ? " bow-placed" : ""}`;
   el.dataset.bouquetId = item.id;
   el.style.left = `${item.x}%`;
   el.style.top = `${item.y}%`;
   el.style.transform = `rotate(${item.kind === "bow" ? item.rot : bouquetStemAngle(item) + item.rot * 0.25}deg)`;
   el.innerHTML = item.kind === "bow" ? "&#127872;" : `<img src="${escapeHtml(item.src)}" alt="">`;
+  // every stem sways on its own clock, so a full bouquet moves like one
+  // rather than pulsing in unison
+  el.style.setProperty("--sway-delay", `${(item.id.charCodeAt(item.id.length - 1) % 20) * 0.17}s`);
+  el.style.setProperty("--sway-span", `${2.8 + (item.id.charCodeAt(1) % 7) * 0.32}s`);
   return el;
 }
 
@@ -1278,10 +1327,12 @@ function bouquetSyncHint() {
 }
 
 function bouquetAddItem(kind, src, xPercent, yPercent) {
-  const item = { id: `b${Date.now()}${(Math.random() * 1000) | 0}`, kind, src, x: bouquetClamp(xPercent), y: bouquetClamp(yPercent), rot: rnd(-14, 14) };
+  const item = { id: `b${Date.now()}${(Math.random() * 1000) | 0}`, kind, src, x: bouquetClampX(xPercent), y: bouquetClampY(yPercent), rot: rnd(-14, 14) };
   (state.bouquetItems || (state.bouquetItems = [])).push(item);
   saveState();
   const node = bouquetPlacedNode(item);
+  node.classList.add("just-placed");
+  setTimeout(() => node.classList.remove("just-placed"), 620);
   node.classList.add("placing-in");
   $("#bouquet-vase")?.appendChild(node);
   bouquetSyncHint();
@@ -1296,6 +1347,121 @@ function bouquetRemoveItem(id) {
   }
   state.bouquetItems = (state.bouquetItems || []).filter(i => i.id !== id);
   saveState();
+  bouquetSyncHint();
+}
+
+/* ---------------------------------------------------------------------------
+   Arranging.
+
+   Dropping stems one at a time is the fun way, but it is not the only way,
+   and a bouquet dropped by hand at eleven at night tends to come out as a
+   pile. "arrange it" ties her one: it picks a recipe she has not had yet if
+   the wrap is empty, and then lays every stem out the way a florist builds a
+   round bouquet - focal flowers in the middle, filler around them, greenery
+   breaking the outline - so it is a different bouquet each time she asks.
+   ------------------------------------------------------------------------ */
+const BOUQUET_SOURCES = {
+  lily:      ["./assets/flowers/lily-3.webp", "./assets/flowers/lily-5.webp"],
+  rose:      ["./assets/flowers/cut-rose.webp"],
+  tulip:     ["./assets/flowers/cut-tulip.webp", "./assets/flowers/cut-tulip-pink.webp"],
+  daisy:     ["./assets/flowers/cut-daisy.webp"],
+  carnation: ["./assets/flowers/cut-carnation.webp"],
+  sunflower: ["./assets/flowers/cut-sunflower.webp"],
+  hydrangea: ["./assets/flowers/cut-hydrangea.webp"],
+  greenery:  ["./assets/flowers/cut-eucalyptus.webp"],
+  filler:    ["./assets/flowers/cut-babysbreath.webp"],
+};
+
+/* how far back in the bunch a kind belongs: high numbers go to the middle */
+const BOUQUET_DEPTH = {
+  lily: 5, sunflower: 5, hydrangea: 4, rose: 4,
+  carnation: 3, tulip: 3, daisy: 2, filler: 1, greenery: 0, bow: -1,
+};
+
+const BOUQUET_RECIPES = [
+  { wrap: "blush", note: "stargazers, the way they came the first time",
+    stems: ["lily","lily","lily","lily","lily","filler","filler","greenery","greenery","greenery"] },
+  { wrap: "lilac", note: "a soft one: lilies, hydrangea, a lot of greenery",
+    stems: ["lily","lily","lily","hydrangea","hydrangea","carnation","filler","greenery","greenery","greenery","greenery"] },
+  { wrap: "kraft", note: "a garden bunch, picked rather than bought",
+    stems: ["rose","rose","tulip","tulip","daisy","daisy","daisy","carnation","filler","filler","greenery","greenery"] },
+  { wrap: "sage", note: "the loud one, for a day that needs it",
+    stems: ["sunflower","sunflower","sunflower","tulip","tulip","daisy","daisy","greenery","greenery","greenery"] },
+  { wrap: "lace", note: "white on white, nothing shouting",
+    stems: ["lily","lily","daisy","daisy","daisy","hydrangea","filler","filler","filler","greenery","greenery"] },
+  { wrap: "blush", note: "everything, because why pick",
+    stems: ["lily","rose","tulip","tulip","sunflower","daisy","carnation","hydrangea","filler","greenery","greenery"] },
+];
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+/* Even packing across a dome. Phyllotaxis is what a hand-tied bouquet
+   actually approximates, so the spacing comes out right without anything
+   landing on top of anything else. */
+function bouquetDomeSpot(index, total) {
+  const r = Math.sqrt((index + 0.5) / total);
+  const angle = index * GOLDEN_ANGLE;
+  return {
+    x: 50 + Math.cos(angle) * r * 33,
+    // outer stems sit a touch lower, which is what makes it a dome sitting in
+    // paper rather than a circle floating above it
+    y: 33 + Math.sin(angle) * r * 19 + r * 7,
+  };
+}
+
+function bouquetArrange() {
+  let items = (state.bouquetItems || []).filter(i => i.kind !== "bow");
+  const bows = (state.bouquetItems || []).filter(i => i.kind === "bow");
+
+  let note = "";
+  if (!items.length) {
+    const index = (Number(state.bouquetRecipe) || 0) % BOUQUET_RECIPES.length;
+    const recipe = BOUQUET_RECIPES[index];
+    state.bouquetRecipe = index + 1;
+    state.bouquetWrap = recipe.wrap;
+    note = recipe.note;
+    items = recipe.stems.map((kind, n) => {
+      const sources = BOUQUET_SOURCES[kind] || BOUQUET_SOURCES.lily;
+      return {
+        id: `b${Date.now()}${n}${(Math.random() * 100) | 0}`,
+        kind, src: sources[n % sources.length], x: 50, y: 40, rot: rnd(-14, 14),
+      };
+    });
+  }
+
+  // middle of the bunch first, so the focal flowers get the small radii
+  items.sort((a, b) => (BOUQUET_DEPTH[b.kind] ?? 2) - (BOUQUET_DEPTH[a.kind] ?? 2));
+  items.forEach((item, index) => {
+    const spot = bouquetDomeSpot(index, items.length);
+    item.x = bouquetClampX(spot.x + rnd(-2, 2));
+    item.y = bouquetClampY(spot.y + rnd(-2, 2));
+    item.rot = rnd(-16, 16);
+  });
+
+  state.bouquetItems = items.concat(bows);
+  saveState();
+  applyBouquetWrap();
+  renderBouquetWraps();
+  bouquetRepaint(true);
+  return note;
+}
+
+/* tear the placed stems down and put them back from state */
+function bouquetRepaint(animate) {
+  const stage = $("#bouquet-vase");
+  if (!stage) return;
+  $$(".bouquet-placed").forEach(node => node.remove());
+  (state.bouquetItems || []).forEach((item, index) => {
+    const node = bouquetPlacedNode(item);
+    if (animate) {
+      // they land one after another, not all at once
+      node.style.animationDelay = `${index * 0.055}s`;
+      node.classList.add("just-placed");
+      setTimeout(() => { node.classList.remove("just-placed"); node.style.animationDelay = ""; }, 700 + index * 55);
+    }
+    stage.appendChild(node);
+    bindBouquetPlacedDrag(node);
+  });
   bouquetSyncHint();
 }
 
@@ -1330,7 +1496,7 @@ function bindBouquetPlacedDrag(node) {
       if (!moved && Math.hypot(dx, dy) > BOUQUET_DRAG_THRESHOLD) { moved = true; node.classList.add("dragging"); }
       if (!moved) return;
       const pos = bouquetPercentFromPoint(moveEvent.clientX, moveEvent.clientY);
-      const nx = bouquetClamp(pos.x), ny = bouquetClamp(pos.y);
+      const nx = bouquetClampX(pos.x), ny = bouquetClampY(pos.y);
       node.style.left = `${nx}%`;
       node.style.top = `${ny}%`;
       // the stem follows the bloom while it is being moved, and the head
@@ -1351,7 +1517,7 @@ function bindBouquetPlacedDrag(node) {
       if (moved) {
         const pos = bouquetPercentFromPoint(upEvent.clientX, upEvent.clientY);
         const item = (state.bouquetItems || []).find(i => i.id === id);
-        if (item) { item.x = bouquetClamp(pos.x); item.y = bouquetClamp(pos.y); saveState(); }
+        if (item) { item.x = bouquetClampX(pos.x); item.y = bouquetClampY(pos.y); saveState(); }
       } else {
         bouquetRemoveItem(id);
       }
@@ -1396,6 +1562,19 @@ function setupBouquetBuilder() {
   const vase = $("#bouquet-vase");
   if (!vase) return;
   $$(".bouquet-pick").forEach(bindBouquetTrayPick);
+  renderBouquetWraps();
+  $("#bouquet-wraps")?.addEventListener("click", event => {
+    const pick = event.target.closest("[data-bouquet-wrap]");
+    if (!pick) return;
+    state.bouquetWrap = pick.dataset.bouquetWrap;
+    saveState();
+    renderBouquetWraps();
+  });
+  $("#bouquet-arrange")?.addEventListener("click", () => {
+    const note = bouquetArrange();
+    if (note) toast(note);
+  });
+
   $("#bouquet-clear")?.addEventListener("click", () => {
     (state.bouquetItems || []).slice().forEach(item => bouquetRemoveItem(item.id));
   });
@@ -1558,32 +1737,141 @@ function escapeHtml(value) {
   }[char]));
 }
 
-// One stamp motif per theme, so the envelopes read as twelve different
-// letters rather than one object recoloured twelve times.
-const LETTER_STAMPS = {
-  lilies: "\u{1F337}", airport: "\u{2708}\u{FE0F}", birthday: "\u{1F382}",
-  kitchen: "\u{1F373}", moon: "\u{1F319}", rain: "\u{2602}\u{FE0F}",
-  sea: "\u{1F41A}", garden: "\u{1F33F}", night: "\u{2B50}", sun: "\u{1F31E}",
-  winter: "\u2744\uFE0F", default: "\u{1F49C}"
-};
+/* Every envelope in the app is built here.
+
+   There were three copies of this markup - the twelve letters, the composer
+   preview and her inbox - and they had already drifted apart from each
+   other. The stamp is a real photograph now (assets/paper/stamp-*.webp,
+   built by tools/build_stationery.py from the same travel photos as Our
+   Worlds), so there is a file per stamp and only one list of which exist. */
+const LETTER_STAMPS = ["lilies", "airport", "birthday", "kitchen", "moon",
+                       "safe", "stars", "voice", "kyoto", "santorini",
+                       "venice", "maldives", "kenya", "zanzibar"];
+
+function stampSrc(name) {
+  const id = LETTER_STAMPS.includes(name) ? name : "lilies";
+  return `./assets/paper/stamp-${id}.webp`;
+}
+
+function envelopeHtml(opts) {
+  const stamp = stampSrc(opts.stamp || opts.theme);
+  return `
+    <span class="env-stack">
+      <span class="env-back" aria-hidden="true"></span>
+      <span class="env-letter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="env-front" aria-hidden="true"></span>
+      <img class="env-stamp" src="${stamp}" alt="" aria-hidden="true">
+      <span class="env-postmark" aria-hidden="true">OURS<br>25 FEB</span>
+      <span class="env-tab">${escapeHtml(opts.tab || "")}</span>
+      <span class="env-to">${escapeHtml(opts.to || "")}</span>
+      <span class="env-flap" aria-hidden="true"><i></i></span>
+      <span class="env-seal" aria-hidden="true">${escapeHtml(opts.initial || "M")}</span>
+    </span>
+    <span class="env-caption">
+      <strong>${escapeHtml(opts.title || "")}</strong>
+      ${opts.preview ? `<small>${escapeHtml(opts.preview)}</small>` : ""}
+      <em>${escapeHtml(opts.cta || "tap to unseal")}</em>
+    </span>`;
+}
 
 function renderLetters() {
   const me = nickOf(window.MoonpiePush?.myProfile?.() || "Michelle");
+  const them = nickOf(window.MoonpiePush?.otherProfile?.() || "Michael");
   $("#letter-list").innerHTML = letters.map((letter, i) => `
-    <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}" aria-label="${escapeHtml(letter.title)} - tap to unseal">
-      <span class="envelope-stamp" aria-hidden="true"><span>${LETTER_STAMPS[letter.theme] || LETTER_STAMPS.default}</span></span>
-      <span class="envelope-postmark" aria-hidden="true">OURS<br>25 FEB</span>
-      <span class="envelope-tab">${escapeHtml(letter.tab)}</span>
-      <span class="envelope-address">To ${escapeHtml(me)},</span>
-      <span class="envelope-flap" aria-hidden="true"></span>
-      <span class="envelope-seal" aria-hidden="true">M</span>
-      <span class="envelope-body">
-        <strong>${escapeHtml(letter.title)}</strong>
-        <small>${escapeHtml(letter.preview)}</small>
-        <em>tap to unseal</em>
-      </span>
+    <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}"
+            aria-label="${escapeHtml(letter.title)} - tap to unseal">
+      ${envelopeHtml({
+        theme: letter.theme,
+        tab: letter.tab,
+        to: `for ${me}`,
+        initial: them.charAt(0),
+        title: letter.title,
+        preview: letter.preview,
+      })}
     </button>
   `).join("");
+}
+
+/* ---------------------------------------------------------------------------
+   Writing the letter out.
+
+   A letter that is simply there when the envelope opens is a block of text
+   on a page. A letter that appears the way it was written - a word at a
+   time, with the pen still on the paper - is somebody writing to you. That
+   single difference is most of what the good letter sites are doing, and it
+   costs one animation frame loop.
+
+   Pacing is by total length rather than per character, so a four paragraph
+   letter and a one paragraph letter both finish in about the same seven
+   seconds and nothing ever leaves her waiting. Tapping the paper finishes
+   it immediately, and reduced motion skips it entirely.
+   ------------------------------------------------------------------------ */
+const handwriting = { raf: 0, host: null, nodes: [], texts: [] };
+
+function handwriteFinish() {
+  if (!handwriting.host) return;
+  cancelAnimationFrame(handwriting.raf);
+  handwriting.nodes.forEach((node, i) => {
+    node.textContent = handwriting.texts[i];
+    node.classList.remove("writing-now");
+  });
+  handwriting.host.classList.remove("is-writing");
+  handwriting.raf = 0;
+  handwriting.host = null;
+}
+
+function handwrite(host, blocks) {
+  handwriteFinish();
+  if (!host) return;
+  host.innerHTML = blocks.map(b =>
+    `<p class="${b.cls || "letter-line"}"></p>`).join("");
+  const nodes = Array.from(host.querySelectorAll("p"));
+  const texts = blocks.map(b => String(b.text || ""));
+  const total = texts.reduce((n, t) => n + t.length, 0);
+  if (!total) return;
+
+  if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) {
+    nodes.forEach((node, i) => { node.textContent = texts[i]; });
+    return;
+  }
+
+  handwriting.host = host;
+  handwriting.nodes = nodes;
+  handwriting.texts = texts;
+  host.classList.add("is-writing");
+
+  /* Paced by the clock, not by the frame.
+
+     Writing a fixed number of characters per frame looks right at 60fps and
+     falls apart everywhere else: a backgrounded tab, a phone in low power
+     mode or a browser throttling animation frames drops to a couple of
+     frames a second, and the letter that should take seven seconds takes
+     several minutes. Deriving the position from elapsed time instead means
+     it finishes in seven seconds however few frames it gets to use. */
+  const DURATION = 7000;
+  const started = performance.now();
+  const step = () => {
+    const elapsed = performance.now() - started;
+    const target = Math.min(total, Math.ceil(total * (elapsed / DURATION)));
+    let seen = 0;
+    for (let i = 0; i < nodes.length; i++) {
+      const text = texts[i];
+      const shown = Math.max(0, Math.min(text.length, target - seen));
+      if (nodes[i].textContent.length !== shown) nodes[i].textContent = text.slice(0, shown);
+      // the pen is on whichever line is still filling
+      nodes[i].classList.toggle("writing-now", shown > 0 && shown < text.length);
+      seen += text.length;
+    }
+    if (target < total) {
+      handwriting.raf = requestAnimationFrame(step);
+    } else {
+      nodes.forEach(node => node.classList.remove("writing-now"));
+      handwriting.raf = 0;
+      handwriting.host = null;
+      host.classList.remove("is-writing");
+    }
+  };
+  handwriting.raf = requestAnimationFrame(step);
 }
 
 function renderPoems() {
@@ -3625,21 +3913,28 @@ function setupEvents() {
       const modal = $("#letter-modal");
       modal.className = `letter-dialog theme-${letter.theme}`;
       $("#modal-title").textContent = letter.title;
-      $("#modal-body").innerHTML = `
-        <p class="letter-salutation">${escapeHtml(letter.salutation)}</p>
-        ${letter.body.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}
-        <p class="letter-closing">${escapeHtml(letter.closing)}</p>
-      `;
+      handwrite($("#modal-body"), [
+        { text: letter.salutation, cls: "letter-salutation" },
+        ...letter.body.map(paragraph => ({ text: paragraph, cls: "letter-line" })),
+        { text: letter.closing, cls: "letter-closing" },
+      ]);
       document.body.classList.add("focus-mode");
       modal.showModal();
       setTimeout(() => card.classList.remove("opening"), 400);
-    }, 420);
+    }, 620);
   });
   $("#letter-modal").addEventListener("close", () => {
+    handwriteFinish();
     document.body.classList.remove("focus-mode");
     revealNav(1800);
   });
   $("#close-letter").addEventListener("click", () => $("#letter-modal").close());
+  // tapping the paper while it is being written finishes it, for when she
+  // has read it before and does not want to sit through the pen again
+  $("#letter-sheet")?.addEventListener("click", event => {
+    if (event.target.closest(".modal-close")) return;
+    handwriteFinish();
+  });
   $("#world-modal")?.addEventListener("close", () => {
     document.body.classList.remove("focus-mode");
     revealNav(1800);
@@ -3736,14 +4031,25 @@ function trackVisit() {
    tells them it landed. It arrives sealed - they choose when to open it.
    ========================================================================= */
 
+/* The paper she writes on is photographed, not a gradient: one real sheet of
+   handmade paper duotoned six ways (tools/build_stationery.py), so every one
+   of them still has the fibres and flecks of the sheet it came from. Ruled
+   and grid are drawn over that paper rather than instead of it. */
 const COMPOSE_PAPERS = [
-  { id: "cream",   label: "cream",   bg: "linear-gradient(170deg,#fffdf6,#fdf3df)", ink: "#4b3a6b" },
-  { id: "blush",   label: "blush",   bg: "linear-gradient(170deg,#fff6fa,#ffe6f1)", ink: "#6b2f52" },
-  { id: "lilac",   label: "lilac",   bg: "linear-gradient(170deg,#fbf7ff,#efe4fd)", ink: "#4b3a6b" },
-  { id: "ruled",   label: "ruled",   bg: "repeating-linear-gradient(180deg,#fffdf8 0 27px,#e7d9f5 27px 28px)", ink: "#3c3560" },
-  { id: "grid",    label: "grid",    bg: "repeating-linear-gradient(0deg,#fdfbff 0 21px,#e9e0f7 21px 22px),repeating-linear-gradient(90deg,#fdfbff 0 21px,#e9e0f7 21px 22px)", ink: "#3c3560" },
-  { id: "midnight",label: "midnight",bg: "linear-gradient(170deg,#3a2a63,#241a44)", ink: "#f3ecff" },
+  { id: "cream",   label: "cream",   sheet: "cream",    ink: "#4b3a6b" },
+  { id: "blush",   label: "blush",   sheet: "blush",    ink: "#6b2f52" },
+  { id: "lilac",   label: "lilac",   sheet: "lilac",    ink: "#4b3a6b" },
+  { id: "sage",    label: "sage",    sheet: "sage",     ink: "#33513c" },
+  { id: "sand",    label: "sand",    sheet: "sand",     ink: "#5e4326" },
+  { id: "ruled",   label: "ruled",   sheet: "cream",    ink: "#3c3560", rule: "ruled" },
+  { id: "grid",    label: "grid",    sheet: "cream",    ink: "#3c3560", rule: "grid" },
+  { id: "midnight",label: "midnight",sheet: "midnight", ink: "#f3ecff" },
 ];
+
+function paperStyle(paper) {
+  return `background-image:url("./assets/paper/sheet-${paper.sheet}.webp");` +
+         `background-size:340px auto;color:${paper.ink}`;
+}
 
 const COMPOSE_FONTS = [
   { id: "caveat",  label: "Caveat",  css: '"Caveat","Dancing Script",cursive', size: "1.32rem" },
@@ -3757,7 +4063,9 @@ const COMPOSE_STICKERS = ["\u{1F338}", "\u{1F49C}", "\u{2B50}", "\u{1F98B}", "\u
                           "\u{1F319}", "\u{1F36F}", "\u{1F343}", "\u{2728}", "\u{1F9F8}"];
 
 const COMPOSE_ENVELOPES = ["lilies", "moon", "birthday", "kitchen", "airport"];
-const COMPOSE_STAMPS = ["\u{1F337}", "\u{1F319}", "\u{1F382}", "\u{2708}\u{FE0F}", "\u{1F49C}", "\u{1F41A}"];
+/* she picks which of our places goes on it */
+const COMPOSE_STAMPS = ["lilies", "moon", "birthday", "airport", "kyoto",
+                        "santorini", "venice", "maldives", "kenya", "zanzibar"];
 
 const COMPOSE_TEMPLATES = [
   ["Just because", "No reason for this one. I was thinking about you and it got loud enough that I had to write it down."],
@@ -3769,7 +4077,7 @@ const composeState = {
   step: 0,
   to: "", body: "", from: "",
   paper: "cream", font: "caveat", stickers: [],
-  envelope: "lilies", stamp: "\u{1F337}",
+  envelope: "lilies", stamp: "lilies",
 };
 
 const COMPOSE_STEPS = ["write", "style", "seal", "send"];
@@ -3815,8 +4123,8 @@ function applyComposeSheetStyle() {
   const sheet = $("#compose-sheet");
   if (!sheet) return;
   const paper = composePaper(), font = composeFont();
-  sheet.style.background = paper.bg;
-  sheet.style.color = paper.ink;
+  sheet.style.cssText = paperStyle(paper);
+  sheet.dataset.rule = paper.rule || "";
   sheet.style.setProperty("--letter-ink", paper.ink);
   sheet.style.fontFamily = font.css;
   sheet.style.fontSize = font.size;
@@ -3829,7 +4137,7 @@ function chipHtml(attr, value, inner, on) {
 function renderComposeStyleStep() {
   $("#compose-papers").innerHTML = COMPOSE_PAPERS.map(p =>
     chipHtml("paper", p.id,
-      `<span class="chip-swatch" style="background:${p.bg}"></span>${escapeHtml(p.label)}`,
+      `<span class="chip-swatch" style="${paperStyle(p)};background-size:cover"></span>${escapeHtml(p.label)}`,
       composeState.paper === p.id)).join("");
 
   $("#compose-fonts").innerHTML = COMPOSE_FONTS.map(f =>
@@ -3857,7 +4165,7 @@ function composeStickerLayer() {
 function composeLetterHtml() {
   const paper = composePaper(), font = composeFont();
   return `
-    <article class="letter-paper" style="background:${paper.bg};color:${paper.ink};font-family:${font.css};font-size:${font.size}">
+    <article class="letter-paper" data-rule="${paper.rule || ""}" style="${paperStyle(paper)};font-family:${font.css};font-size:${font.size}">
       ${composeStickerLayer()}
       <p class="letter-paper-to">${escapeHtml(composeState.to || "")}</p>
       <p class="letter-paper-body">${escapeHtml(composeState.body || "...").replace(/\n/g, "<br>")}</p>
@@ -3873,9 +4181,11 @@ function renderComposeSealStep() {
   $("#compose-envelopes").innerHTML = COMPOSE_ENVELOPES.map(t =>
     chipHtml("envelope", t, `<span class="chip-env theme-${t}"></span>${escapeHtml(t)}`,
       composeState.envelope === t)).join("");
-  $("#compose-stamps").innerHTML = COMPOSE_STAMPS.map(s =>
-    chipHtml("stamp", s, `<span class="chip-sticker">${s}</span>`,
-      composeState.stamp === s)).join("");
+  $("#compose-stamps").innerHTML = COMPOSE_STAMPS.map(name =>
+    chipHtml("stamp", name,
+      `<img class="chip-stamp" src="${stampSrc(name)}" alt="">`,
+      composeState.stamp === name)).join("");
+
   $("#compose-envelope-preview").innerHTML = composeEnvelopeHtml("a letter for you");
 }
 
@@ -3884,16 +4194,15 @@ function composeEnvelopeHtml(title) {
   const them = window.MoonpiePush?.otherProfile?.(me) || "Michelle";
   return `
     <div class="envelope theme-${composeState.envelope}" aria-hidden="true">
-      <span class="envelope-stamp"><span>${composeState.stamp}</span></span>
-      <span class="envelope-postmark">OURS<br>25 FEB</span>
-      <span class="envelope-tab">from ${escapeHtml(nickOf(me))}</span>
-      <span class="envelope-address">To ${escapeHtml(nickOf(them))},</span>
-      <span class="envelope-flap"></span>
-      <span class="envelope-seal">${escapeHtml(nickOf(me).charAt(0))}</span>
-      <span class="envelope-body">
-        <strong>${escapeHtml(title)}</strong>
-        <em>tap to unseal</em>
-      </span>
+      ${envelopeHtml({
+        theme: composeState.envelope,
+        stamp: composeState.stamp,
+        tab: `from ${nickOf(me)}`,
+        to: `for ${nickOf(them)}`,
+        initial: nickOf(me).charAt(0),
+        title,
+        cta: "sealed, waiting for her",
+      })}
     </div>`;
 }
 
@@ -3973,24 +4282,23 @@ function renderLetterInbox() {
   const mine = receivedLetters();
   if (!mine.length) { host.innerHTML = ""; return; }
 
-  host.innerHTML = `<p class="card-label inbox-label">just for you</p>` + mine.map((w, i) => {
+  host.innerHTML = `<p class="card-label inbox-label">just for you</p>` + mine.map(w => {
     let letter = {};
     try { letter = JSON.parse(w.value) || {}; } catch { letter = {}; }
     const opened = (state.openedLetters || []).includes(w.id);
+    const from = nickOf(w.sender || "Michael");
     return `
       <button class="envelope theme-${escapeHtml(letter.envelope || "lilies")}${opened ? " is-opened" : ""}"
               type="button" data-inbox-letter="${escapeHtml(w.id)}">
-        <span class="envelope-stamp" aria-hidden="true"><span>${letter.stamp || "\u{1F49C}"}</span></span>
-        <span class="envelope-postmark" aria-hidden="true">OURS<br>25 FEB</span>
-        <span class="envelope-tab">from ${escapeHtml(nickOf(w.sender || "Michael"))}</span>
-        <span class="envelope-address">To ${escapeHtml(nickOf(window.MoonpiePush?.myProfile?.() || "Michelle"))},</span>
-        <span class="envelope-flap" aria-hidden="true"></span>
-        <span class="envelope-seal" aria-hidden="true">${escapeHtml(nickOf(w.sender || "Michael").charAt(0))}</span>
-        <span class="envelope-body">
-          <strong>${opened ? "a letter you have read" : "a letter arrived"}</strong>
-          <small>${escapeHtml((letter.body || "").slice(0, 64))}${(letter.body || "").length > 64 ? "..." : ""}</small>
-          <em>${opened ? "read it again" : "tap to unseal"}</em>
-        </span>
+        ${envelopeHtml({
+          theme: letter.envelope || "lilies",
+          stamp: letter.stamp,
+          tab: `from ${from}`,
+          to: `for ${nickOf(window.MoonpiePush?.myProfile?.() || "Michelle")}`,
+          initial: from.charAt(0),
+          title: opened ? "a letter you have read" : "a letter arrived",
+          cta: opened ? "read it again" : "tap to unseal",
+        })}
       </button>`;
   }).join("");
 }
@@ -4015,12 +4323,17 @@ function openReceivedLetter(id) {
   modal.className = `letter-dialog theme-${letter.envelope || "lilies"}`;
   $("#modal-title").textContent = `from ${nickOf(widget.sender || "Michael")}`;
   $("#modal-body").innerHTML = `
-    <article class="letter-paper is-open" style="background:${paper.bg};color:${paper.ink};font-family:${font.css};font-size:${font.size}">
+    <article class="letter-paper is-open" data-rule="${paper.rule || ""}"
+             style="${paperStyle(paper)};font-family:${font.css};font-size:${font.size}">
       ${stickers}
-      <p class="letter-paper-to">${escapeHtml(letter.to || "")}</p>
-      <p class="letter-paper-body">${escapeHtml(letter.body || "").replace(/\n/g, "<br>")}</p>
-      <p class="letter-paper-from">${escapeHtml(letter.from || "")}</p>
+      <div class="letter-paper-text"></div>
     </article>`;
+  // hers arrives the same way the twelve do: written out rather than printed
+  handwrite($("#modal-body .letter-paper-text"), [
+    { text: letter.to || "", cls: "letter-paper-to" },
+    ...String(letter.body || "").split(/\n{2,}/).map(t => ({ text: t.replace(/\n/g, " "), cls: "letter-line" })),
+    { text: letter.from || "", cls: "letter-paper-from" },
+  ]);
   document.body.classList.add("focus-mode");
   modal.showModal();
 
