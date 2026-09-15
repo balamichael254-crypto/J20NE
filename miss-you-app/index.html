@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=128">
+  <link rel="stylesheet" href="./styles.css?v=129">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -23,10 +23,10 @@
       <div class="locket" id="entry-locket" aria-hidden="true">
         <span class="locket-chain"></span>
         <span class="locket-bail"></span>
-        <span class="locket-inside">ours<br>25.02</span>
+        <span class="locket-inside">ours<br>always</span>
         <span class="locket-half left"></span>
         <span class="locket-half right"></span>
-        <span class="locket-engraving">25.02</span>
+        <span class="locket-engraving">&#9825;</span>
       </div>
       <p class="eyebrow">one date opens our universe</p>
       <h2>Hi, my love.</h2>
@@ -36,7 +36,7 @@
       <p class="gate-hint" id="passkey-hint">Four numbers. One very important day.</p>
       <div class="profile-choice" aria-label="who is opening the app">
         <button class="profile-option active" type="button" data-profile="Michelle">Moonpie</button>
-        <button class="profile-option" type="button" data-profile="Michael">Michael</button>
+        <button class="profile-option" type="button" data-profile="Michael">Sunstone</button>
       </div>
       <p class="gate-error" id="passkey-error" role="alert"></p>
       <button class="primary-btn wide" type="submit">open what I made for you</button>
@@ -111,7 +111,7 @@
     <header class="topbar">
       <button class="topbar-back hidden" id="back-button" type="button" aria-label="go back"><span>←</span><small>back</small></button>
       <div>
-        <p class="eyebrow">Moonpie's private universe</p>
+        <p class="eyebrow"><span data-voice-name="me">Moonpie</span>'s private universe</p>
         <h1>Open when you miss me</h1>
       </div>
       <span class="topbar-spacer" aria-hidden="true"></span>
@@ -136,7 +136,7 @@
           <span class="tape tl" aria-hidden="true"></span>
           <div class="garden-copy">
             <p class="script-kicker" id="hero-kicker">hi, my favourite person</p>
-            <h2>Moonpie</h2>
+            <h2 data-voice-name="me">Moonpie</h2>
             <p id="hero-line">A little world folded into your phone, for whenever you want me closer.</p>
             <button class="primary-btn" data-open="garden" type="button">open the garden</button>
           </div>
@@ -181,7 +181,7 @@
         <article class="hero-card">
           <div class="hero-copy">
             <p class="mini">right now</p>
-            <h2>Hi, my Moonpie.</h2>
+            <h2>Hi, my <span data-voice-name="me">Moonpie</span>.</h2>
             <p id="daily-line">If missing me feels loud today, come sit here for a minute. I left the light on.</p>
             <p class="presence-line" id="presence-line" hidden></p>
             <p class="streak-line" id="streak-line" hidden></p>
@@ -313,42 +313,39 @@
             <div class="bouquet-wraps" id="bouquet-wraps" role="group" aria-label="wrapping paper"></div>
 
             <div class="bouquet-tray" id="bouquet-tray" role="group" aria-label="flowers to drag into the wrap">
-            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily">
-              <img src="./assets/flowers/lily-3.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily">
-              <img src="./assets/flowers/lily-5.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose.webp" type="button" aria-label="add a rose">
-              <img src="./assets/flowers/cut-rose.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip.webp" type="button" aria-label="add a red tulip">
-              <img src="./assets/flowers/cut-tulip.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip-pink.webp" type="button" aria-label="add a pink tulip">
-              <img src="./assets/flowers/cut-tulip-pink.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="daisy" data-bouquet-src="./assets/flowers/cut-daisy.webp" type="button" aria-label="add a daisy">
-              <img src="./assets/flowers/cut-daisy.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="carnation" data-bouquet-src="./assets/flowers/cut-carnation.webp" type="button" aria-label="add a carnation">
-              <img src="./assets/flowers/cut-carnation.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/cut-sunflower.webp" type="button" aria-label="add a sunflower">
-              <img src="./assets/flowers/cut-sunflower.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="hydrangea" data-bouquet-src="./assets/flowers/cut-hydrangea.webp" type="button" aria-label="add a hydrangea">
-              <img src="./assets/flowers/cut-hydrangea.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="greenery" data-bouquet-src="./assets/flowers/cut-eucalyptus.webp" type="button" aria-label="add a eucalyptus sprig">
-              <img src="./assets/flowers/cut-eucalyptus.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="filler" data-bouquet-src="./assets/flowers/cut-babysbreath.webp" type="button" aria-label="add baby's breath">
-              <img src="./assets/flowers/cut-babysbreath.webp" alt="">
-            </button>
-              <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow">
-                <span>&#127872;</span>
-              </button>
+              <p class="bouquet-tray-label">her lilies</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily"><img src="./assets/flowers/lily-3.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily"><img src="./assets/flowers/lily-5.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/cut-lily-white.webp" type="button" aria-label="add a white lily"><img src="./assets/flowers/cut-lily-white.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="calla" data-bouquet-src="./assets/flowers/cut-lily-calla.webp" type="button" aria-label="add a calla lily"><img src="./assets/flowers/cut-lily-calla.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="calla" data-bouquet-src="./assets/flowers/cut-lily-calla-2.webp" type="button" aria-label="add a calla lily"><img src="./assets/flowers/cut-lily-calla-2.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">roses</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose.webp" type="button" aria-label="add a red rose"><img src="./assets/flowers/cut-rose.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose-red-2.webp" type="button" aria-label="add a long-stem rose"><img src="./assets/flowers/cut-rose-red-2.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose-pink.webp" type="button" aria-label="add a pink rose"><img src="./assets/flowers/cut-rose-pink.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">the rest of the shop</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="peony" data-bouquet-src="./assets/flowers/cut-peony.webp" type="button" aria-label="add a peony"><img src="./assets/flowers/cut-peony.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="ranunculus" data-bouquet-src="./assets/flowers/cut-ranunculus.webp" type="button" aria-label="add a ranunculus"><img src="./assets/flowers/cut-ranunculus.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="anemone" data-bouquet-src="./assets/flowers/cut-anemone.webp" type="button" aria-label="add an anemone"><img src="./assets/flowers/cut-anemone.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="chrysanthemum" data-bouquet-src="./assets/flowers/cut-chrysanthemum.webp" type="button" aria-label="add a chrysanthemum"><img src="./assets/flowers/cut-chrysanthemum.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip.webp" type="button" aria-label="add a red tulip"><img src="./assets/flowers/cut-tulip.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip-pink.webp" type="button" aria-label="add a pink tulip"><img src="./assets/flowers/cut-tulip-pink.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="carnation" data-bouquet-src="./assets/flowers/cut-carnation.webp" type="button" aria-label="add a carnation"><img src="./assets/flowers/cut-carnation.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="daisy" data-bouquet-src="./assets/flowers/cut-daisy.webp" type="button" aria-label="add a daisy"><img src="./assets/flowers/cut-daisy.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/cut-sunflower.webp" type="button" aria-label="add a sunflower"><img src="./assets/flowers/cut-sunflower.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="hydrangea" data-bouquet-src="./assets/flowers/cut-hydrangea.webp" type="button" aria-label="add a hydrangea"><img src="./assets/flowers/cut-hydrangea.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">green and filler</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="greenery" data-bouquet-src="./assets/flowers/cut-eucalyptus.webp" type="button" aria-label="add a eucalyptus sprig"><img src="./assets/flowers/cut-eucalyptus.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="filler" data-bouquet-src="./assets/flowers/cut-babysbreath.webp" type="button" aria-label="add baby's breath"><img src="./assets/flowers/cut-babysbreath.webp" alt=""></button>
+                <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow"><span>&#127872;</span></button>
+              </div>
             </div>
           </div>
         </article>
@@ -424,7 +421,10 @@
           <p class="card-label">our shared little shelf</p>
           <h3>What you leave here reaches the other phone.</h3>
           <p id="sync-status">Connecting our two phones...</p>
-          <button class="secondary-btn" id="refresh-widgets" type="button">check for a new note</button>
+          <div class="sync-actions">
+            <button class="secondary-btn" id="refresh-widgets" type="button">check for a new note</button>
+            <button class="secondary-btn" id="sign-out" type="button">sign out of this phone</button>
+          </div>
         </article>
       </section>
 
@@ -677,7 +677,7 @@
         <!-- 4. send ------------------------------------------------------- -->
         <div class="compose-pane hidden" data-compose-pane="send">
           <h2 class="compose-title">Send it</h2>
-          <p class="compose-hint" id="compose-send-hint">It arrives sealed. They choose when to open it.</p>
+          <p class="compose-hint" id="compose-send-hint">It arrives sealed.</p>
           <div class="compose-final" id="compose-final"></div>
           <button class="primary-btn wide" id="compose-send" type="button">seal it and send</button>
           <p class="compose-status" id="compose-status" hidden></p>
@@ -1033,7 +1033,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=84"></script>
+  <script src="./app.js?v=85"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>

@@ -2063,10 +2063,18 @@ body[data-world="vault"] .poo-companion{display:none}
 .bouquet-placed.removing{animation:bouquetPoof .22s ease-out forwards}
 @keyframes bouquetPoof{to{transform:scale(0.2) rotate(20deg);opacity:0}}
 
+/* Twenty flowers in one undivided pile is a spare-parts bin. Named rows,
+   her lilies first, so picking one is browsing a shop rather than scanning. */
 .bouquet-tray{
-  display:flex;flex-wrap:wrap;gap:9px;padding:10px;border-radius:var(--r-lg);
+  padding:10px 10px 12px;border-radius:var(--r-lg);
   background:rgba(255,255,255,.55);border:2px dashed rgba(168,130,224,.35);
 }
+.bouquet-tray-label{
+  margin:9px 0 5px 3px;font-family:"Quicksand",sans-serif;font-size:.7rem;
+  font-weight:800;letter-spacing:.06em;text-transform:lowercase;color:var(--lav-600);
+}
+.bouquet-tray-label:first-child{margin-top:0}
+.bouquet-tray-row{display:flex;flex-wrap:wrap;gap:8px}
 .bouquet-pick{
   width:50px;height:50px;border-radius:12px;cursor:grab;touch-action:none;
   border:2px solid var(--edge);background:#fff;display:grid;place-items:center;
@@ -2519,13 +2527,13 @@ body[data-world="vault"] .poo-companion{display:none}
 .kind-daisy,.kind-filler{animation-name:bloomBob}
 @keyframes bloomBob{ from{translate:0 1px;rotate:-2.4deg} to{translate:-1px -3px;rotate:2.6deg} }
 /* sunflower and hydrangea: heavy heads that swing slowly and barely tilt */
-.kind-sunflower,.kind-hydrangea{animation-name:bloomHeavy}
+.kind-sunflower,.kind-hydrangea,.kind-peony{animation-name:bloomHeavy}
 @keyframes bloomHeavy{ from{translate:-2px 0;rotate:-.7deg} to{translate:2px -1px;rotate:.9deg} }
 /* eucalyptus: a sprig, so it flutters */
 .kind-greenery{animation-name:bloomFlutter}
 @keyframes bloomFlutter{ from{rotate:-3.4deg;translate:0 0} to{rotate:3.8deg;translate:1px -1px} }
 /* roses and carnations: tight heads that open and close as they breathe */
-.kind-rose,.kind-carnation{animation-name:bloomBreathe}
+.kind-rose,.kind-carnation,.kind-ranunculus,.kind-anemone{animation-name:bloomBreathe}
 @keyframes bloomBreathe{ from{scale:.98;translate:0 0} to{scale:1.035;translate:0 -1.5px} }
 /* the bow just wobbles */
 .bow-placed{animation-name:bowWobble}
@@ -2545,6 +2553,11 @@ body[data-world="vault"] .poo-companion{display:none}
 .kind-rose,.kind-carnation{width:74px;height:74px;margin:-37px 0 0 -37px}
 .kind-tulip{width:78px;height:78px;margin:-39px 0 0 -39px}
 .kind-daisy{width:62px;height:62px;margin:-31px 0 0 -31px}
+.kind-calla{width:92px;height:92px;margin:-46px 0 0 -46px}
+.kind-peony{width:86px;height:86px;margin:-43px 0 0 -43px}
+.kind-anemone{width:80px;height:80px;margin:-40px 0 0 -40px}
+.kind-chrysanthemum{width:78px;height:78px;margin:-39px 0 0 -39px}
+.kind-ranunculus{width:70px;height:70px;margin:-35px 0 0 -35px}
 .kind-greenery{width:104px;height:104px;margin:-52px 0 0 -52px;opacity:.95}
 .kind-filler{width:80px;height:80px;margin:-40px 0 0 -40px;opacity:.9}
 

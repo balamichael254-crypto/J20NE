@@ -9,6 +9,45 @@ const expansion = window.MOONPIE_EXPANSION || {};
 const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
+/* ---------------------------------------------------------------------------
+   Two sides.
+
+   This app is a gift in both directions. Whoever unlocked it is "me"; the
+   other one is "them". Everything the app says about the two of us - the
+   greeting, the streak, who a letter is being sent to, whose score is whose
+   - runs through here, so on her phone it speaks to Moonpie about Sunstone
+   and on his it speaks to Sunstone about Moonpie. It used to assume the
+   reader was always her, which meant he came back three days running and
+   was congratulated for her streak.
+
+   The written content is deliberately NOT flipped. The twelve letters, the
+   hundred reasons and the songs were written by one of us for the other,
+   and they stay addressed the way they were written, the same way a letter
+   in a drawer still has a name on it when the person who wrote it reads it
+   back.
+   ------------------------------------------------------------------------ */
+function meId() { return state.profile === "Michael" ? "Michael" : "Michelle"; }
+function themId() { return meId() === "Michael" ? "Michelle" : "Michael"; }
+function myName() { return nickOf(meId()); }
+function theirName() { return nickOf(themId()); }
+function readerIsHer() { return meId() === "Michelle"; }
+
+/* Markup carries both readings inline rather than needing a template:
+     data-voice-name="me|them"         prints the right nickname
+     data-voice-hers / data-voice-his  swaps a whole line
+   One pass at boot and again whenever the profile changes. */
+function applyVoice(root = document) {
+  $$("[data-voice-name]", root).forEach(el => {
+    el.textContent = el.dataset.voiceName === "them" ? theirName() : myName();
+  });
+  $$("[data-voice-hers]", root).forEach(el => {
+    el.textContent = readerIsHer()
+      ? el.dataset.voiceHers
+      : (el.dataset.voiceHis || el.dataset.voiceHers);
+  });
+  document.body.dataset.side = readerIsHer() ? "hers" : "his";
+}
+
 const STORE_KEY = "moonpie-miss-you-v9";
 const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], bouquetWrap: "kraft", bouquetRecipe: 0, localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
 let state = loadState();
@@ -1361,36 +1400,48 @@ function bouquetRemoveItem(id) {
    breaking the outline - so it is a different bouquet each time she asks.
    ------------------------------------------------------------------------ */
 const BOUQUET_SOURCES = {
-  lily:      ["./assets/flowers/lily-3.webp", "./assets/flowers/lily-5.webp"],
-  rose:      ["./assets/flowers/cut-rose.webp"],
-  tulip:     ["./assets/flowers/cut-tulip.webp", "./assets/flowers/cut-tulip-pink.webp"],
-  daisy:     ["./assets/flowers/cut-daisy.webp"],
-  carnation: ["./assets/flowers/cut-carnation.webp"],
-  sunflower: ["./assets/flowers/cut-sunflower.webp"],
-  hydrangea: ["./assets/flowers/cut-hydrangea.webp"],
-  greenery:  ["./assets/flowers/cut-eucalyptus.webp"],
-  filler:    ["./assets/flowers/cut-babysbreath.webp"],
+  lily:          ["./assets/flowers/lily-3.webp", "./assets/flowers/lily-5.webp",
+                  "./assets/flowers/cut-lily-white.webp"],
+  calla:         ["./assets/flowers/cut-lily-calla.webp", "./assets/flowers/cut-lily-calla-2.webp"],
+  rose:          ["./assets/flowers/cut-rose.webp", "./assets/flowers/cut-rose-red-2.webp",
+                  "./assets/flowers/cut-rose-pink.webp"],
+  tulip:         ["./assets/flowers/cut-tulip.webp", "./assets/flowers/cut-tulip-pink.webp"],
+  peony:         ["./assets/flowers/cut-peony.webp"],
+  ranunculus:    ["./assets/flowers/cut-ranunculus.webp"],
+  anemone:       ["./assets/flowers/cut-anemone.webp"],
+  chrysanthemum: ["./assets/flowers/cut-chrysanthemum.webp"],
+  daisy:         ["./assets/flowers/cut-daisy.webp"],
+  carnation:     ["./assets/flowers/cut-carnation.webp"],
+  sunflower:     ["./assets/flowers/cut-sunflower.webp"],
+  hydrangea:     ["./assets/flowers/cut-hydrangea.webp"],
+  greenery:      ["./assets/flowers/cut-eucalyptus.webp"],
+  filler:        ["./assets/flowers/cut-babysbreath.webp"],
 };
 
 /* how far back in the bunch a kind belongs: high numbers go to the middle */
 const BOUQUET_DEPTH = {
-  lily: 5, sunflower: 5, hydrangea: 4, rose: 4,
-  carnation: 3, tulip: 3, daisy: 2, filler: 1, greenery: 0, bow: -1,
+  lily: 5, calla: 5, sunflower: 5, peony: 4, hydrangea: 4, rose: 4,
+  anemone: 3, chrysanthemum: 3, ranunculus: 3, carnation: 3, tulip: 3,
+  daisy: 2, filler: 1, greenery: 0, bow: -1,
 };
 
 const BOUQUET_RECIPES = [
   { wrap: "blush", note: "stargazers, the way they came the first time",
     stems: ["lily","lily","lily","lily","lily","filler","filler","greenery","greenery","greenery"] },
-  { wrap: "lilac", note: "a soft one: lilies, hydrangea, a lot of greenery",
-    stems: ["lily","lily","lily","hydrangea","hydrangea","carnation","filler","greenery","greenery","greenery","greenery"] },
+  { wrap: "lace", note: "all white: callas, lilies and nothing shouting",
+    stems: ["calla","calla","calla","lily","lily","chrysanthemum","filler","filler","greenery","greenery"] },
+  { wrap: "lilac", note: "a soft one: peonies, ranunculus, a lot of greenery",
+    stems: ["peony","peony","ranunculus","ranunculus","lily","hydrangea","filler","greenery","greenery","greenery"] },
   { wrap: "kraft", note: "a garden bunch, picked rather than bought",
-    stems: ["rose","rose","tulip","tulip","daisy","daisy","daisy","carnation","filler","filler","greenery","greenery"] },
+    stems: ["rose","rose","tulip","tulip","daisy","daisy","anemone","carnation","filler","greenery","greenery"] },
   { wrap: "sage", note: "the loud one, for a day that needs it",
-    stems: ["sunflower","sunflower","sunflower","tulip","tulip","daisy","daisy","greenery","greenery","greenery"] },
-  { wrap: "lace", note: "white on white, nothing shouting",
-    stems: ["lily","lily","daisy","daisy","daisy","hydrangea","filler","filler","filler","greenery","greenery"] },
+    stems: ["sunflower","sunflower","sunflower","tulip","tulip","daisy","chrysanthemum","greenery","greenery","greenery"] },
+  { wrap: "blush", note: "a dozen roses, because sometimes that is the answer",
+    stems: ["rose","rose","rose","rose","rose","rose","filler","filler","greenery","greenery"] },
+  { wrap: "lilac", note: "anemones and callas, the strange elegant one",
+    stems: ["anemone","anemone","calla","calla","ranunculus","peony","filler","greenery","greenery"] },
   { wrap: "blush", note: "everything, because why pick",
-    stems: ["lily","rose","tulip","tulip","sunflower","daisy","carnation","hydrangea","filler","greenery","greenery"] },
+    stems: ["lily","calla","rose","peony","tulip","sunflower","daisy","anemone","hydrangea","filler","greenery"] },
 ];
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
@@ -1775,8 +1826,9 @@ function envelopeHtml(opts) {
 }
 
 function renderLetters() {
-  const me = nickOf(window.MoonpiePush?.myProfile?.() || "Michelle");
-  const them = nickOf(window.MoonpiePush?.otherProfile?.() || "Michael");
+  // These twelve were written by Sunstone for Moonpie. They keep her name on
+  // the envelope whoever opens the app, the way a letter in a drawer does.
+  const me = nickOf("Michelle"), them = nickOf("Michael");
   $("#letter-list").innerHTML = letters.map((letter, i) => `
     <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}"
             aria-label="${escapeHtml(letter.title)} - tap to unseal">
@@ -4011,12 +4063,14 @@ function trackVisit() {
   const streak = computeStreak(state.visitLog);
   const el = $("#streak-line");
   if (!el) return;
-  if (streak >= 2) {
-    el.hidden = false;
-    el.textContent = `🔥 day ${streak} in a row you've come back to me. ${state.visitLog.length} visits and counting.`;
-  } else {
-    el.hidden = true;
-  }
+  if (streak < 2) { el.hidden = true; return; }
+  el.hidden = false;
+  // the visit log lives on this phone, so the streak is always the streak of
+  // whoever is holding it. It used to be written as though that were always
+  // her, which congratulated him for her run of days.
+  el.textContent = readerIsHer()
+    ? `\u{1F525} day ${streak} in a row you've come back to me. ${state.visitLog.length} visits and counting.`
+    : `\u{1F525} day ${streak} in a row you've come back to her. ${state.visitLog.length} visits and counting.`;
 }
 
 /* ============================================================================
@@ -4088,10 +4142,8 @@ function composeFont() { return COMPOSE_FONTS.find(f => f.id === composeState.fo
 
 function openComposer() {
   composeState.step = 0;
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
-  const them = window.MoonpiePush?.otherProfile?.(me) || (me === "Michelle" ? "Michael" : "Michelle");
-  if (!composeState.to) composeState.to = `Dear ${nickOf(them)},`;
-  if (!composeState.from) composeState.from = `Always, ${nickOf(me)}`;
+  if (!composeState.to) composeState.to = `Dear ${theirName()},`;
+  if (!composeState.from) composeState.from = `Always, ${myName()}`;
   openScreen("compose");
   renderComposer();
 }
@@ -4190,18 +4242,16 @@ function renderComposeSealStep() {
 }
 
 function composeEnvelopeHtml(title) {
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
-  const them = window.MoonpiePush?.otherProfile?.(me) || "Michelle";
   return `
     <div class="envelope theme-${composeState.envelope}" aria-hidden="true">
       ${envelopeHtml({
         theme: composeState.envelope,
         stamp: composeState.stamp,
-        tab: `from ${nickOf(me)}`,
-        to: `for ${nickOf(them)}`,
-        initial: nickOf(me).charAt(0),
+        tab: `from ${myName()}`,
+        to: `for ${theirName()}`,
+        initial: myName().charAt(0),
         title,
-        cta: "sealed, waiting for her",
+        cta: `sealed, waiting for ${theirName()}`,
       })}
     </div>`;
 }
@@ -4211,14 +4261,14 @@ function renderComposeFinal() {
   const ready = composeState.body.trim().length > 0;
   $("#compose-send").disabled = !ready;
   $("#compose-send-hint").textContent = ready
-    ? "It arrives sealed. They choose when to open it."
+    ? `It arrives on ${theirName()}'s phone sealed. They choose when to open it.`
     : "Write something first, then you can send it.";
 }
 
 async function sendComposedLetter() {
   const body = composeState.body.trim();
   if (!body) return toast("write something first");
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
+  const me = meId();
   const status = $("#compose-status");
   const button = $("#compose-send");
   button.disabled = true;
@@ -4294,7 +4344,7 @@ function renderLetterInbox() {
           theme: letter.envelope || "lilies",
           stamp: letter.stamp,
           tab: `from ${from}`,
-          to: `for ${nickOf(window.MoonpiePush?.myProfile?.() || "Michelle")}`,
+          to: `for ${myName()}`,
           initial: from.charAt(0),
           title: opened ? "a letter you have read" : "a letter arrived",
           cta: opened ? "read it again" : "tap to unseal",
@@ -4407,8 +4457,23 @@ function initComposer() {
   });
 }
 
+/* Signing out.
+
+   Not a logout in the account sense - there are no accounts here, and the
+   two of us share one passcode. It puts the gate back and forgets which
+   side of the app this phone was reading as, which is what you actually
+   want when you hand the phone over or when one of us opens it on the
+   other's device by mistake. Everything saved on the phone stays saved. */
+function signOut() {
+  state.hasEnteredUniverse = false;
+  state.lockOpened = false;
+  saveState();
+  location.reload();
+}
+
 function init() {
   document.body.dataset.world = "home";
+  applyVoice();
   trackVisit();
   renderMoon();
   document.body.classList.toggle("soft-mode", state.softMode);
@@ -4421,6 +4486,7 @@ function init() {
   initGamePicker();
   initComposer();
   initWatchlist();
+  $("#sign-out")?.addEventListener("click", signOut);
   setupInstall();
   setupOpeningRitual();
   if (state.hasEnteredUniverse) setupWidgetSync();
