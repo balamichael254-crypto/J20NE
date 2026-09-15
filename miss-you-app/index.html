@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=133">
+  <link rel="stylesheet" href="./styles.css?v=134">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -701,7 +701,19 @@
       </section>
 
       <section class="screen world-screen" id="screen-day" aria-label="one perfect day">
-        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>One ordinary day, hour by hour.</p><img class="head-charm" src="./assets/mood/window-rain-4.webp" alt=""></div>
+        <!-- the sky, the sun and the stars sit behind everything and are
+             driven by --day-t, which tracks whichever hour she is reading -->
+        <div class="day-sky" aria-hidden="true">
+          <span class="sky-dawn"></span>
+          <span class="sky-noon"></span>
+          <span class="sky-gold"></span>
+          <span class="sky-night"></span>
+        </div>
+        <div class="day-stars" aria-hidden="true"></div>
+        <div class="day-sun" aria-hidden="true"></div>
+        <div class="day-moon" aria-hidden="true"></div>
+
+        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>One ordinary day, hour by hour.</p></div>
         <div class="day-timeline" id="day-timeline"></div>
       </section>
 
@@ -1066,7 +1078,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=87"></script>
+  <script src="./app.js?v=88"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>

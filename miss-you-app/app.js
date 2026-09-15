@@ -737,6 +737,7 @@ function openScreen(name, options = {}) {
   // jigsaw holds object URLs and a drag listener on document; neither should
   // outlive the screen they belong to.
   if (name !== "games") unmountGame();
+  if (name !== "day") stopDayClock();
   // The galaxy canvas runs its own continuous rAF loop - that has to stop
   // the instant she leaves the screen (not just when she navigates away
   // from the app entirely), or it keeps drawing at full rate behind whatever
@@ -2108,13 +2109,101 @@ function renderNotices() {
   `).join("");
 }
 
+/* ============================================================================
+   One Perfect Day.
+
+   Twelve rows of "time, then a sentence" is a bus timetable. The whole point
+   of this screen is that it is a DAY - it starts at 7:42 in the morning and
+   ends two minutes before midnight - and none of that was on screen.
+
+   So the day actually runs now. The sky behind it moves from dawn through
+   noon and golden hour into night as she scrolls, the sun climbs and sets
+   along an arc, stars come out for the last few hours, and every stop knows
+   what time of day it belongs to. Scrolling from the top to the bottom of
+   this screen is sixteen hours passing.
+
+   All of it hangs off one number: --day-t, zero at 7:42am and one at 11:58pm.
+   The sky layers cross-fade on it, the sun is positioned by it, and each card
+   carries its own so it can be tinted to its own hour.
+   ========================================================================= */
+
+/* "9:15 PM" -> minutes since midnight */
+function dayMinutes(label) {
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(label).trim());
+  if (!match) return 0;
+  let hour = Number(match[1]) % 12;
+  if (/pm/i.test(match[3])) hour += 12;
+  return hour * 60 + Number(match[2]);
+}
+
+/* Where a stop sits in this particular day, 0 at the first stop and 1 at the
+   last. Not "fraction of 24 hours": the day starts when we wake up. */
+function dayFraction(label) {
+  const first = dayMinutes(dayPlan[0][0]);
+  const last = dayMinutes(dayPlan[dayPlan.length - 1][0]);
+  const span = Math.max(1, last - first);
+  return Math.min(1, Math.max(0, (dayMinutes(label) - first) / span));
+}
+
 function renderDay() {
-  $("#day-timeline").innerHTML = dayPlan.map(([time, text]) => `
-    <article class="timeline-row">
-      <time>${time}</time>
-      <p>${text}</p>
-    </article>
-  `).join("");
+  const host = $("#day-timeline");
+  if (!host) return;
+  host.innerHTML = dayPlan.map(([time, text], i) => {
+    const t = dayFraction(time);
+    return `
+      <article class="day-stop" style="--t:${t.toFixed(3)}" data-t="${t.toFixed(3)}">
+        <span class="day-stop-dot" aria-hidden="true"></span>
+        <time>${escapeHtml(time)}</time>
+        <p>${escapeHtml(text)}</p>
+      </article>`;
+  }).join("");
+  startDayClock();
+}
+
+/* The sky follows whichever stop is nearest the middle of the screen, so it
+   tracks reading position rather than raw scroll offset - the card she is
+   actually looking at is the hour the sky is showing. */
+let dayClockRaf = 0;
+function startDayClock() {
+  stopDayClock();
+  const screen = $("#screen-day");
+  const stops = $$(".day-stop");
+  if (!screen || !stops.length) return;
+
+  let last = -1;
+  const tick = () => {
+    const middle = window.innerHeight * 0.45;
+    let best = stops[0], bestGap = Infinity;
+    for (const stop of stops) {
+      const box = stop.getBoundingClientRect();
+      const gap = Math.abs(box.top + box.height / 2 - middle);
+      if (gap < bestGap) { bestGap = gap; best = stop; }
+    }
+    // ease between neighbours instead of snapping, so the sky drifts
+    const box = best.getBoundingClientRect();
+    const own = Number(best.dataset.t);
+    const index = stops.indexOf(best);
+    const above = box.top + box.height / 2 < middle;
+    const neighbour = stops[index + (above ? 1 : -1)];
+    let t = own;
+    if (neighbour) {
+      const span = Math.max(1, box.height + 22);
+      const lean = Math.min(1, bestGap / span) * 0.5;
+      t = own + (Number(neighbour.dataset.t) - own) * lean;
+    }
+    if (Math.abs(t - last) > 0.001) {
+      screen.style.setProperty("--day-t", t.toFixed(4));
+      last = t;
+    }
+    stops.forEach(stop => stop.classList.toggle("is-now", stop === best));
+    dayClockRaf = requestAnimationFrame(tick);
+  };
+  dayClockRaf = requestAnimationFrame(tick);
+}
+
+function stopDayClock() {
+  if (dayClockRaf) cancelAnimationFrame(dayClockRaf);
+  dayClockRaf = 0;
 }
 
 // Places she has actually stepped into, by name (stable across a reorder or
