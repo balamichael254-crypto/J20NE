@@ -49,7 +49,7 @@ function applyVoice(root = document) {
 }
 
 const STORE_KEY = "moonpie-miss-you-v9";
-const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], bouquetWrap: "kraft", bouquetRecipe: 0, localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
+const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], bouquetWrap: "kraft", bouquetRecipe: 0, signedPromises: [], localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
 let state = loadState();
 let selectedMood = state.mood || "soft";
 let deferredInstallPrompt = null;
@@ -2190,14 +2190,7 @@ function initPoems() {
   });
 }
 
-function renderNotices() {
-  $("#notice-list").innerHTML = notices.map((notice, i) => `
-    <article class="notice-note" style="--r:${(i % 5) - 2}deg">
-      <span>${String(i + 1).padStart(2, "0")}</span>
-      <p>${notice}</p>
-    </article>
-  `).join("");
-}
+
 
 /* ============================================================================
    One Perfect Day.
@@ -2233,6 +2226,197 @@ function dayFraction(label) {
   const last = dayMinutes(dayPlan[dayPlan.length - 1][0]);
   const span = Math.max(1, last - first);
   return Math.min(1, Math.max(0, (dayMinutes(label) - first) / span));
+}
+
+/* ============================================================================
+   100 Reasons: a jar you pull one out of.
+
+   This was a card with a line of text and a button labelled "another reason".
+   Pressing a button to receive a sentence is a slot machine, and the hundred
+   reasons underneath it were a wall of numbered chips nobody reads.
+
+   It is a jar of folded paper slips now. Tap it, one comes up out of the
+   mouth, unfolds in the air, and that is the reason. The ones already pulled
+   pile up beside the jar so a hundred of them is something she can see
+   getting smaller, which a counter never is.
+
+   The deck logic underneath is the one that was already there: shuffled, no
+   repeats until all hundred are gone.
+   ========================================================================= */
+function reasonsPulled() {
+  return Array.isArray(state.openedReasons) ? state.openedReasons : [];
+}
+
+function paintReasonJar() {
+  const pulled = reasonsPulled().length;
+  const total = reasons.length;
+  const jar = $("#reason-jar");
+  // the slips inside thin out as the jar empties
+  if (jar) jar.style.setProperty("--fill", String(Math.max(0, 1 - pulled / total)));
+  const count = $("#reason-count");
+  if (count) {
+    count.textContent = pulled >= total
+      ? `all ${total}. you have read every one.`
+      : `${pulled} of ${total} pulled`;
+  }
+  const pile = $("#reason-pile");
+  if (pile) {
+    // only the last dozen are drawn; a hundred folded slips is a mess and
+    // the point is just that the pile is growing
+    const recent = reasonsPulled().slice(-12);
+    pile.innerHTML = recent.map((_, i) =>
+      `<span class="reason-slip-done" style="--i:${i}"></span>`).join("");
+  }
+}
+
+function pullReason() {
+  const card = $("#reason-slip");
+  if (!card || card.classList.contains("is-pulling")) return;
+
+  const index = nextReason();               // the existing shuffled deck
+  const list = reasonsPulled();
+  if (!list.includes(index)) {
+    state.openedReasons = list.concat(index);
+    saveState();
+  }
+
+  card.classList.remove("is-open");
+  card.classList.add("is-pulling");
+  window.Poo?.react?.("excited");
+  // it leaves the jar folded and opens once it is clear of the mouth
+  setTimeout(() => card.classList.add("is-open"), 330);
+  setTimeout(() => {
+    card.classList.remove("is-pulling");
+    paintReasonJar();
+  }, 900);
+}
+
+function renderReasons() {
+  const slip = $("#reason-slip");
+  if (slip && !$("#reason-text").textContent) nextReason();
+  paintReasonJar();
+}
+
+/* ============================================================================
+   Promises: signed, not listed.
+
+   A promise typed in a row of a list is a bullet point. A promise is supposed
+   to be a thing somebody put their name to, so each one is a small
+   certificate with a seal and a signature line, and she can countersign it.
+   Signing is kept, so the ones she has agreed to stay signed.
+   ========================================================================= */
+function signedPromises() {
+  return Array.isArray(state.signedPromises) ? state.signedPromises : [];
+}
+
+function renderPromises() {
+  const signed = signedPromises();
+  $("#promise-list").innerHTML = promises.map((promise, i) => `
+    <article class="promise-cert${signed.includes(i) ? " is-signed" : ""}" data-promise="${i}"
+             style="--r:${((i * 7) % 5) - 2}deg">
+      <span class="cert-rule" aria-hidden="true"></span>
+      <p class="cert-number">no. ${String(i + 1).padStart(2, "0")}</p>
+      <p class="cert-body">${escapeHtml(promise)}</p>
+      <div class="cert-foot">
+        <span class="cert-sign">
+          <b>${escapeHtml(nickOf("Michael"))}</b>
+          <small>who wrote it</small>
+        </span>
+        <span class="cert-seal" aria-hidden="true">&#10084;</span>
+        <button class="cert-sign cert-countersign" type="button" data-sign="${i}">
+          <b>${signed.includes(i) ? escapeHtml(myName()) : "sign here"}</b>
+          <small>${signed.includes(i) ? "held to it" : "tap to countersign"}</small>
+        </button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function countersignPromise(index) {
+  const list = signedPromises();
+  if (list.includes(index)) return;
+  state.signedPromises = list.concat(index);
+  saveState();
+  const card = $(`[data-promise="${index}"]`);
+  card?.classList.add("is-signing");
+  setTimeout(() => {
+    renderPromises();
+    $(`[data-promise="${index}"]`)?.classList.add("is-signed");
+  }, 520);
+  window.Poo?.react?.("happy");
+}
+
+/* ============================================================================
+   Tiny Things: a board, not a list.
+
+   Forty things noticed about somebody, rendered as forty identical rows, is
+   a spreadsheet of affection. They are sticky notes on a board now, in four
+   paper colours, each pinned at its own angle, and the one she taps comes
+   forward to be read.
+   ========================================================================= */
+function renderNotices() {
+  $("#notice-list").innerHTML = notices.map((notice, i) => `
+    <button class="sticky" type="button" data-sticky="${i}"
+            style="--r:${((i * 13) % 7) - 3}deg;--c:${i % 4}">
+      <span class="sticky-pin" aria-hidden="true"></span>
+      <span class="sticky-num">${String(i + 1).padStart(2, "0")}</span>
+      <p>${escapeHtml(notice)}</p>
+    </button>
+  `).join("");
+}
+
+/* ============================================================================
+   Our Little World: a wall, not a feed.
+
+   Fifteen memories with an emoji standing in for a photograph. There are a
+   hundred and sixty real photographs already in this app, so these hang on a
+   string as actual prints, pegged up, and the one she taps comes off the
+   line to be read.
+   ========================================================================= */
+const MEMORY_PHOTOS = [
+  "./assets/mood/window-scene-1.webp", "./assets/worlds/paris-1.webp",
+  "./assets/mood/moon-sky-1.webp", "./assets/worlds/airport-hug-1.webp",
+  "./assets/mood/flower-jar-1.webp", "./assets/worlds/kyoto-1.webp",
+  "./assets/mood/window-rain-4.webp", "./assets/worlds/santorini-1.webp",
+  "./assets/mood/hero-evening.webp", "./assets/worlds/venice-1.webp",
+  "./assets/mood/lav-jar-2.webp", "./assets/worlds/amalfi-1.webp",
+  "./assets/mood/moon-sky-2.webp", "./assets/worlds/maldives-1.webp",
+  "./assets/mood/hero-night.webp",
+];
+
+function renderMemory() {
+  $("#memory-list").innerHTML = memories.map(([title, text], i) => `
+    <button class="print" type="button" data-print="${i}"
+            style="--r:${((i * 11) % 7) - 3}deg;--drop:${(i % 3) * 9}px">
+      <span class="print-peg" aria-hidden="true"></span>
+      <span class="print-photo">
+        <img src="${MEMORY_PHOTOS[i % MEMORY_PHOTOS.length]}" alt="" loading="lazy"
+             onerror="this.closest('.print-photo').classList.add('no-photo');this.remove()">
+      </span>
+      <span class="print-cap">${escapeHtml(title)}</span>
+      <span class="print-note">${escapeHtml(text)}</span>
+    </button>
+  `).join("");
+}
+
+function initAtlasSections() {
+  $("#reason-jar")?.addEventListener("click", pullReason);
+  $("#new-reason")?.addEventListener("click", pullReason);
+  $("#promise-list")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-sign]");
+    if (button) countersignPromise(Number(button.dataset.sign));
+  });
+  // one note or print is forward at a time, so tapping another puts the last
+  // one back rather than leaving a pile of opened things on the board
+  const lift = (host, cls) => host?.addEventListener("click", event => {
+    const item = event.target.closest(`.${cls}`);
+    if (!item) return;
+    const wasOpen = item.classList.contains("is-lifted");
+    $$(`.${cls}.is-lifted`).forEach(el => el.classList.remove("is-lifted"));
+    if (!wasOpen) item.classList.add("is-lifted");
+  });
+  lift($("#notice-list"), "sticky");
+  lift($("#memory-list"), "print");
 }
 
 function renderDay() {
@@ -2733,14 +2917,7 @@ function initSongPlayer() {
   });
 }
 
-function renderPromises() {
-  $("#promise-list").innerHTML = promises.map((promise, i) => `
-    <article class="promise-row premium-card">
-      <span>Promise ${i + 1}</span>
-      <p>${promise}</p>
-    </article>
-  `).join("");
-}
+
 
 function renderDistance() {
   $("#distance-list").innerHTML = distanceBeacons.map(([title, text]) => `
@@ -2804,20 +2981,9 @@ async function initSignalThread() {
   });
 }
 
-function renderReasons() {
-  nextReason();
-  $("#reason-stack").innerHTML = reasons.map((r, i) => `<div class="reason-chip">${i + 1}. ${r}</div>`).join("");
-}
 
-function renderMemory() {
-  $("#memory-list").innerHTML = memories.map(([title, text], i) => `
-    <article class="memory-polaroid" style="--r:${[-2,1.5,-1,2,-1.5][i % 5]}deg">
-      <div class="fake-photo">${["🌙","📞","💬","🛫","💗"][i % 5]}</div>
-      <h3>${title}</h3>
-      <p>${text}</p>
-    </article>
-  `).join("");
-}
+
+
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, value));
@@ -4436,7 +4602,7 @@ function setupEvents() {
     saveState();
     burstAt(window.innerWidth / 2, window.innerHeight * 0.5, 6);
   });
-  $("#new-reason").addEventListener("click", nextReason);
+  // the jar owns pulling a reason now; it binds in initAtlasSections
   $("#save-text-widget").addEventListener("click", saveTextWidget);
   $("#clear-text-widget").addEventListener("click", () => $("#widget-text").value = "");
   $("#enable-notifications")?.addEventListener("click", requestLoveNotifications);
@@ -5013,6 +5179,7 @@ function init() {
   initGamePicker();
   initSongPlayer();
   initPoems();
+  initAtlasSections();
   initComposer();
   initWatchlist();
   $("#sign-out")?.addEventListener("click", signOut);

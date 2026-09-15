@@ -3219,3 +3219,247 @@ body[data-world="day"] #screen-day{transition:color .4s}
 @media (prefers-reduced-motion:reduce){
   .nb-page{transition:none}
 }
+
+/* ==========================================================================
+   The last four Atlas screens, which were all the same screen: a list of
+   text in cards. A jar, a certificate, a board and a washing line instead.
+   ========================================================================== */
+
+/* --- 100 Reasons: a jar ------------------------------------------------- */
+.reason-stage{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:22px 14px 18px;border-radius:var(--r-lg);
+  background:radial-gradient(120% 74% at 50% 8%,rgba(255,255,255,.62),transparent 66%),
+             linear-gradient(180deg,#efe4f8,#fbeede);
+  border:2px solid var(--edge);box-shadow:var(--sh);
+}
+.reason-jar{
+  --fill:1;
+  position:relative;width:148px;height:176px;cursor:pointer;border:0;padding:0;
+  background:none;transition:transform .18s;
+}
+.reason-jar:active{transform:scale(.96)}
+/* the glass */
+.reason-jar-body{
+  position:absolute;left:8%;right:8%;top:14%;bottom:0;
+  border-radius:14px 14px 26px 26px;
+  background:linear-gradient(100deg,
+    rgba(255,255,255,.72) 0%,rgba(255,255,255,.3) 22%,
+    rgba(214,196,238,.26) 55%,rgba(255,255,255,.5) 100%);
+  border:2px solid rgba(255,255,255,.75);
+  box-shadow:inset 0 -14px 22px -14px rgba(90,60,140,.4),
+             inset 0 8px 14px -10px rgba(255,255,255,.9),
+             0 10px 20px -10px rgba(70,40,110,.45);
+  overflow:hidden;
+}
+/* the lid */
+.reason-jar-lid{
+  position:absolute;left:14%;right:14%;top:2%;height:16%;border-radius:8px;
+  background:linear-gradient(180deg,#d8a8c8,#b87ba4 60%,#9c6389);
+  box-shadow:0 3px 6px rgba(70,40,110,.34),inset 0 2px 0 rgba(255,255,255,.4);
+}
+/* the folded slips inside, thinning out as it empties */
+.reason-jar-fill{
+  position:absolute;left:4%;right:4%;bottom:0;
+  height:calc(24% + var(--fill) * 62%);
+  transition:height .6s cubic-bezier(.4,0,.2,1);
+  background:
+    repeating-linear-gradient(58deg,#fffaf1 0 7px,#f6e7d6 7px 13px,#fdf3e6 13px 20px),
+    repeating-linear-gradient(-49deg,rgba(226,196,214,.5) 0 9px,transparent 9px 17px);
+  border-radius:8px 8px 22px 22px;
+  opacity:.95;
+}
+.reason-jar-shine{
+  position:absolute;left:18%;top:20%;width:11%;height:56%;border-radius:99px;
+  background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.1));
+  filter:blur(1px);pointer-events:none;
+}
+
+/* the slip that comes out */
+.reason-slip{
+  position:relative;width:min(100%,330px);min-height:96px;
+  padding:16px 18px;border-radius:3px;
+  background-color:#fffdf5;background-image:url("./assets/paper/sheet-cream.webp");
+  background-size:320px auto;
+  box-shadow:0 10px 22px -12px rgba(60,30,100,.55);
+  opacity:0;transform:translateY(-26px) scaleY(.12);transform-origin:top center;
+  transition:opacity .3s ease,transform .46s cubic-bezier(.3,1.05,.35,1);
+}
+.reason-slip.is-open{opacity:1;transform:none}
+/* the crease it was folded on */
+.reason-slip::after{
+  content:"";position:absolute;left:0;right:0;top:50%;height:11px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(90,60,30,.1),rgba(255,255,255,.5) 55%,transparent);
+}
+.reason-slip p{
+  margin:0;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.34rem;line-height:1.45;color:#4b3a6b;text-align:center;
+}
+.reason-jar.is-pulling{transform:translateY(3px)}
+
+.reason-count{
+  font-family:"Quicksand",sans-serif;font-size:.76rem;font-weight:800;
+  color:var(--lav-600);letter-spacing:.02em;
+}
+/* the pile of the ones already read */
+.reason-pile{position:relative;height:26px;width:150px}
+.reason-slip-done{
+  position:absolute;bottom:0;left:calc(var(--i) * 11px);
+  width:26px;height:13px;border-radius:2px;
+  background:linear-gradient(160deg,#fffaf1,#efdcc8);
+  box-shadow:0 1px 2px rgba(70,40,110,.25);
+  rotate:calc((var(--i) * 17deg) - 40deg);
+}
+
+/* --- Promises: certificates --------------------------------------------- */
+.promise-list{display:flex;flex-direction:column;gap:15px}
+.promise-cert{
+  position:relative;padding:18px 18px 14px 26px;border-radius:5px;rotate:var(--r);
+  background-color:#fffdf5;background-image:url("./assets/paper/sheet-cream.webp");
+  background-size:360px auto;
+  border:1px solid rgba(150,110,70,.28);
+  box-shadow:0 8px 18px -12px rgba(60,30,100,.5),inset 0 0 0 4px rgba(255,255,255,.5);
+  transition:rotate .3s,box-shadow .3s;
+}
+.promise-cert.is-signed{rotate:0deg;box-shadow:0 10px 22px -12px rgba(60,30,100,.6)}
+.cert-rule{
+  position:absolute;top:8px;bottom:8px;left:14px;width:1.5px;
+  background:rgba(208,110,140,.3);
+}
+.cert-number{
+  margin:0 0 6px;font-family:"Quicksand",sans-serif;font-size:.64rem;
+  font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(140,100,60,.75);
+}
+.cert-body{
+  margin:0 0 16px;font-family:"Lora",Georgia,serif;font-size:1rem;
+  line-height:1.62;color:#4a3a2c;
+}
+.cert-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.cert-sign{
+  flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;
+  border-top:1.5px solid rgba(120,90,60,.4);padding-top:3px;
+}
+.cert-sign b{
+  display:block;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.2rem;font-weight:700;color:#4b3a6b;line-height:1.1;
+}
+.cert-sign small{
+  display:block;font-size:.6rem;font-weight:700;letter-spacing:.05em;
+  color:rgba(120,90,60,.7);margin-top:1px;
+}
+.cert-countersign{cursor:pointer;text-align:right}
+.cert-countersign b{opacity:.45;font-style:italic}
+.promise-cert.is-signed .cert-countersign b{opacity:1;font-style:normal}
+/* the seal presses down when she signs */
+.cert-seal{
+  display:grid;place-items:center;width:38px;height:36px;flex:none;
+  border-radius:47% 53% 44% 56% / 52% 46% 54% 48%;
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.3),transparent 52%),
+    linear-gradient(158deg,#e2789f,#c8365f 54%,#8e2544);
+  color:rgba(255,255,255,.9);font-size:.9rem;
+  box-shadow:inset 0 0 0 1.5px #8e2544,inset 0 -2px 3px rgba(0,0,0,.28),
+             0 2px 4px rgba(20,6,30,.3);
+  opacity:.28;scale:.86;
+  transition:opacity .4s,scale .4s cubic-bezier(.3,1.5,.4,1);
+}
+.promise-cert.is-signed .cert-seal,
+.promise-cert.is-signing .cert-seal{opacity:1;scale:1}
+.promise-cert.is-signing{animation:certPress .5s ease}
+@keyframes certPress{40%{transform:scale(.985)}}
+
+/* --- Tiny Things: a board ------------------------------------------------ */
+.notice-list{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:13px;
+  padding:16px 12px;border-radius:var(--r-lg);
+  /* cork */
+  background:
+    radial-gradient(1.6px 1.6px at 20% 30%,rgba(120,80,40,.24),transparent),
+    radial-gradient(1.9px 1.9px at 62% 68%,rgba(120,80,40,.2),transparent),
+    radial-gradient(1.4px 1.4px at 82% 22%,rgba(120,80,40,.22),transparent),
+    linear-gradient(160deg,#dcb98c,#c9a273);
+  box-shadow:inset 0 0 0 6px rgba(120,80,40,.22),var(--sh);
+}
+.sticky{
+  --c:0;
+  position:relative;display:block;width:100%;text-align:left;cursor:pointer;
+  padding:22px 13px 14px;border:0;border-radius:2px;rotate:var(--r);
+  background:var(--sticky-paper,#fdf08a);
+  box-shadow:0 6px 12px -6px rgba(60,35,10,.55);
+  transition:transform .28s cubic-bezier(.3,.9,.3,1.1),box-shadow .28s,rotate .28s;
+}
+.sticky[style*="--c:0"]{--sticky-paper:#fdf09a}
+.sticky[style*="--c:1"]{--sticky-paper:#ffc9d8}
+.sticky[style*="--c:2"]{--sticky-paper:#c9e8fb}
+.sticky[style*="--c:3"]{--sticky-paper:#d6f5c9}
+/* the curl where a sticky note lifts off the board */
+.sticky::after{
+  content:"";position:absolute;right:0;bottom:0;width:22px;height:22px;
+  background:linear-gradient(135deg,transparent 48%,rgba(0,0,0,.1) 50%,rgba(255,255,255,.5) 54%);
+}
+.sticky-pin{
+  position:absolute;top:7px;left:50%;translate:-50% 0;width:11px;height:11px;
+  border-radius:50%;background:radial-gradient(circle at 34% 30%,#ff8fae,#c8365f);
+  box-shadow:0 2px 3px rgba(60,35,10,.5);
+}
+.sticky-num{
+  position:absolute;top:6px;left:9px;font-size:.58rem;font-weight:800;
+  color:rgba(80,55,20,.45);
+}
+.sticky p{
+  margin:0;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.06rem;line-height:1.3;color:#4a3a1e;
+}
+.sticky.is-lifted{
+  transform:scale(1.1) translateY(-4px);rotate:0deg;z-index:5;
+  box-shadow:0 16px 26px -10px rgba(60,35,10,.6);
+}
+
+/* --- Our Little World: prints on a line ---------------------------------- */
+.memory-list{
+  position:relative;display:grid;grid-template-columns:repeat(2,1fr);
+  gap:22px 13px;padding:26px 10px 16px;
+}
+/* the string they hang from */
+.memory-list::before{
+  content:"";position:absolute;left:0;right:0;top:16px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,rgba(120,90,60,.5) 6%,rgba(120,90,60,.5) 94%,transparent);
+}
+.print{
+  position:relative;display:block;width:100%;cursor:pointer;text-align:center;
+  padding:9px 9px 12px;border:0;border-radius:2px;background:#fffdf6;
+  rotate:var(--r);margin-top:var(--drop);
+  box-shadow:0 8px 16px -8px rgba(60,30,60,.5);
+  transition:transform .3s cubic-bezier(.3,.9,.3,1.1),rotate .3s,box-shadow .3s;
+}
+.print-peg{
+  position:absolute;top:-11px;left:50%;translate:-50% 0;width:9px;height:19px;
+  border-radius:2px;background:linear-gradient(180deg,#e8c9a0,#c69a68);
+  box-shadow:0 2px 3px rgba(60,35,10,.45);
+}
+.print-photo{
+  display:block;aspect-ratio:1;border-radius:1px;overflow:hidden;
+  background:linear-gradient(150deg,var(--lav-200),var(--pink));
+}
+.print-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.print-photo.no-photo{background:linear-gradient(150deg,var(--lav-300),var(--pink-hot))}
+.print-cap{
+  display:block;margin-top:8px;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.04rem;line-height:1.2;color:#4b3a6b;
+}
+.print-note{
+  display:block;max-height:0;overflow:hidden;opacity:0;
+  font-size:.82rem;line-height:1.5;color:var(--ink-soft);text-align:left;
+  transition:max-height .36s cubic-bezier(.4,0,.2,1),opacity .28s,margin .3s;
+}
+.print.is-lifted{
+  transform:scale(1.04);rotate:0deg;z-index:5;
+  box-shadow:0 18px 30px -12px rgba(60,30,60,.6);
+}
+.print.is-lifted .print-note{max-height:22em;opacity:1;margin-top:7px}
+
+@media (prefers-reduced-motion:reduce){
+  .reason-slip,.sticky,.print,.reason-jar-fill,.cert-seal{transition:none}
+  .promise-cert.is-signing{animation:none}
+}
