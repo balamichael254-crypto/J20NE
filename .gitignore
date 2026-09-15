@@ -13,3 +13,5 @@ playwright-report/
 __pycache__/
 *.pyc
 _bouquet_base.jpg
+tools/_*.jpg
+tools/__pycache__/

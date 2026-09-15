@@ -759,172 +759,209 @@ body[data-world="care"] .topbar{background:linear-gradient(180deg,rgba(223,243,2
 /* ==========================================================================
    The envelopes.
 
-   The old one was a rounded rectangle with a triangle clipped out of the
-   top. It read as "a card with a shape on it", not as a letter. What makes
-   paper read as an envelope is the things nobody consciously looks at: the
-   two diagonal seams where the back flaps overlap, a stamp stuck slightly
-   crooked, a postmark landing half across it, an address written by hand,
-   and wax that sat down thick and uneven. All of that is drawn here in CSS.
+   The old one was a tall card with a small triangle on top, grain faked with
+   an SVG turbulence filter, and an emoji standing in for a stamp. Three
+   things were wrong with it and only one of them was the triangle.
 
-   Opening is a real fold: the wax cracks off, the flap rotates back on its
-   hinge in 3D, and the letter lifts out of the pocket.
+   An envelope is landscape. It is roughly three parts wide to two high, and
+   a portrait card never reads as one no matter what is drawn on it.
+
+   The back of an envelope is four flaps meeting in the middle: two sides
+   folded in, the bottom folded up over them, the top folded down over that.
+   So the shape is a V notch with a seam running to each bottom corner, not
+   a rectangle with a triangle resting on it.
+
+   And paper is photographed, not filtered. The sheets behind these are a
+   real sheet of handmade paper (assets/paper/sheet-*.webp), and the stamps
+   are real photographs of the places in Our Worlds, perforated
+   (tools/build_stationery.py).
+
+   Opening is the real mechanic: the wax cracks off, the flap falls back on
+   its hinge through 3D, and the letter rises out of the pocket behind the
+   front panel. preserve-3d handles the ordering on its own, so nothing has
+   to juggle z-index as the flap passes the halfway point.
    ========================================================================== */
 .envelope{
-  /* --paper/--paper-2 drive BOTH the flap and the body everywhere - a theme
-     that wants to look dark (moon) sets these to dark values instead of
-     overriding the envelope's own background separately. */
-  --paper:var(--lav-50); --paper-2:var(--lav-100); --seal:var(--pink-hot); --ink-on:var(--ink);
-  --soft-on:var(--ink-soft); --faint-on:var(--ink-faint);
-  position:relative;cursor:pointer;text-align:left;width:100%;
-  padding:108px 18px 20px;border-radius:10px;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E"),
-    linear-gradient(170deg,var(--paper) 0%,var(--paper-2) 100%);
-  background-blend-mode:multiply,normal;
-  border:2px solid var(--edge);
-  box-shadow:var(--sh),inset 0 -18px 26px -18px rgba(20,6,30,.22);
-  font-family:"Quicksand",sans-serif;color:var(--ink-on);
-  perspective:900px;
-  transition:transform .2s cubic-bezier(.2,.9,.3,1.2),box-shadow .2s;
+  --sheet:url("./assets/paper/sheet-cream.webp");
+  --tint:#f3e7cf; --seal:#d6486f; --ink-on:#4a3560;
+  --soft-on:rgba(74,53,96,.72); --faint-on:rgba(74,53,96,.5);
+  --hand:"Caveat","Dancing Script",cursive;
+  display:block;width:100%;border:0;padding:0;background:none;cursor:pointer;
+  text-align:left;font-family:"Quicksand",sans-serif;color:var(--ink-on);
+  transition:transform .2s cubic-bezier(.2,.9,.3,1.2);
 }
-.envelope:active{transform:translateY(2px) scale(.995);box-shadow:var(--sh-sm)}
+.envelope:active{transform:translateY(2px) scale(.994)}
 
-/* The two diagonal seams where the back flaps overlap. This is the single
-   detail that makes a rectangle read as an envelope, and the old design had
-   nothing like it. */
-.envelope::before{
+/* the envelope itself: landscape, and a 3D space for the flap to fall into */
+.env-stack{
+  position:relative;display:block;width:100%;aspect-ratio:1.58/1;
+  perspective:1100px;transform-style:preserve-3d;
+  filter:drop-shadow(0 10px 18px rgba(40,14,60,.22));
+}
+.env-stack > *{position:absolute;transform-style:preserve-3d}
+
+/* shared paper. Each layer takes the same sheet from a different offset, so
+   the fibres never line up and the layers read as separate pieces of paper
+   instead of one flat colour split into shapes. */
+.env-back,.env-front,.env-flap i{
+  background-image:var(--sheet);background-size:180% auto;
+  background-color:var(--tint);
+}
+.env-back{
+  inset:0;border-radius:5px;background-position:12% 30%;
+  filter:brightness(.93) saturate(1.04);
+  box-shadow:0 0 0 1px rgba(40,14,60,.14);
+}
+/* the pocket: the two side flaps and the bottom flap, as one piece, with the
+   V notch the top flap sits in */
+.env-front{
+  inset:0;border-radius:5px;background-position:64% 72%;
+  clip-path:polygon(0 0,50% 47%,100% 0,100% 100%,0 100%);
+  translate:0 0 2px;
+}
+.env-front::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(40,14,60,.16),transparent 34%);
+}
+/* the seams where the bottom flap overlaps the side flaps */
+.env-front::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:
-    linear-gradient(to bottom right,transparent calc(50% - .8px),rgba(20,6,30,.10) 50%,transparent calc(50% + .8px)),
-    linear-gradient(to bottom left, transparent calc(50% - .8px),rgba(20,6,30,.10) 50%,transparent calc(50% + .8px));
-  background-size:100% 60%,100% 60%;
-  background-position:top left,top right;
+    linear-gradient(to top right,transparent calc(50% - .7px),rgba(40,14,60,.13) 50%,transparent calc(50% + .7px)),
+    linear-gradient(to top left, transparent calc(50% - .7px),rgba(40,14,60,.13) 50%,transparent calc(50% + .7px));
+  background-size:50% 62%,50% 62%;
+  background-position:bottom left,bottom right;
   background-repeat:no-repeat;
 }
-
-/* the flap, hinged along the top edge, folded back in 3D on open */
-.envelope-flap{
-  position:absolute;top:-2px;left:-2px;right:-2px;height:52px;z-index:3;
-  background:linear-gradient(185deg,var(--paper-2) 0%,var(--paper) 74%);
+/* the top flap, hinged along the top edge */
+.env-flap{
+  top:0;left:0;right:0;height:50%;
+  transform-origin:top center;translate:0 0 1px;
+  filter:drop-shadow(0 3px 2px rgba(40,14,60,.34));
+  transition:transform .62s cubic-bezier(.45,.02,.2,1);
+}
+.env-flap i{
+  position:absolute;inset:0;
   clip-path:polygon(0 0,100% 0,50% 100%);
-  border-radius:10px 10px 0 0;
-  transform-origin:top center;transform-style:preserve-3d;
-  transition:transform .55s cubic-bezier(.4,0,.2,1),opacity .3s ease .25s;
-  filter:drop-shadow(0 3px 3px rgba(20,6,30,.18));
+  border-radius:5px 5px 0 0;
+  background-position:52% 8%;
+  /* lit from above and creased where it folds, so the flap is a different
+     piece of paper from the pocket rather than the same one */
+  box-shadow:inset 0 6px 10px -6px rgba(255,255,255,.8);
+  filter:brightness(1.05) saturate(.97);
 }
 
-/* wax: an uneven blob, not a circle - real wax spreads where it lands */
-.envelope-seal{
-  position:absolute;top:34px;left:50%;translate:-50% 0;z-index:4;
-  width:38px;height:36px;display:grid;place-items:center;
+/* the sheet inside, which rises out of the pocket when the flap falls */
+.env-letter{
+  left:7%;right:7%;top:16%;bottom:7%;border-radius:2px;
+  background:linear-gradient(180deg,#fffdf8,#f7f1e6);
+  box-shadow:0 1px 3px rgba(40,14,60,.18);
+  translate:0 0 1px;padding:9px 10px 0;overflow:hidden;
+  transition:transform .75s cubic-bezier(.3,.9,.25,1);
+}
+/* the ruled lines of the letter, visible as it comes up */
+.env-letter i{
+  display:block;height:2px;border-radius:2px;margin-bottom:7px;
+  background:rgba(74,53,96,.16);
+}
+.env-letter i:nth-child(1){width:44%;background:rgba(74,53,96,.3)}
+.env-letter i:nth-child(2){width:92%}
+.env-letter i:nth-child(3){width:86%}
+.env-letter i:nth-child(4){width:90%}
+.env-letter i:nth-child(5){width:62%}
+
+/* wax, sitting where the flap point lands. Real wax spreads unevenly, so
+   this is not a circle. */
+.env-seal{
+  top:41%;left:50%;translate:-50% 0 3px;
+  width:10.5%;aspect-ratio:1.06;display:grid;place-items:center;
   border-radius:47% 53% 44% 56% / 52% 46% 54% 48%;
-  background:radial-gradient(circle at 34% 26%,color-mix(in srgb,var(--seal) 30%,#fff),var(--seal) 62%,color-mix(in srgb,var(--seal) 70%,#000) 100%);
-  color:#fff;font-family:"Dancing Script",cursive;font-weight:700;font-size:.95rem;
-  text-shadow:0 1px 1px rgba(0,0,0,.35);
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.3),transparent 52%),
+    linear-gradient(158deg,color-mix(in srgb,var(--seal) 88%,#fff),var(--seal) 54%,color-mix(in srgb,var(--seal) 72%,#000));
+  color:rgba(255,255,255,.92);
+  font-family:"Dancing Script",cursive;font-weight:700;font-size:.74rem;
+  text-shadow:0 1px 1px rgba(0,0,0,.45);
+  /* a pressed rim and a shallow dish, the way a stamp leaves wax */
   box-shadow:
-    inset 0 2px 4px rgba(255,255,255,.35),
-    inset 0 -3px 5px rgba(0,0,0,.28),
-    0 3px 7px rgba(20,6,30,.32);
-  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;
+    inset 0 0 0 1.5px color-mix(in srgb,var(--seal) 60%,#000),
+    inset 0 -2px 3px rgba(0,0,0,.28),
+    inset 0 2px 3px rgba(255,255,255,.3),
+    0 2px 4px rgba(20,6,30,.36);
+  transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .26s ease;
 }
 
-/* a stamp, stuck on slightly crooked, with perforated edges bitten out */
-.envelope-stamp{
-  position:absolute;top:12px;right:14px;z-index:2;
-  width:44px;height:52px;rotate:3.5deg;padding:4px;background:#fffdf8;
-  -webkit-mask:
-    radial-gradient(circle 3px at 50% 0,transparent 96%,#000) 0 0/11px 100%,
-    radial-gradient(circle 3px at 50% 100%,transparent 96%,#000) 0 0/11px 100%,
-    radial-gradient(circle 3px at 0 50%,transparent 96%,#000) 0 0/100% 11px,
-    radial-gradient(circle 3px at 100% 50%,transparent 96%,#000) 0 0/100% 11px;
-  -webkit-mask-composite:source-in;
-  mask:
-    radial-gradient(circle 3px at 50% 0,transparent 96%,#000) 0 0/11px 100%,
-    radial-gradient(circle 3px at 50% 100%,transparent 96%,#000) 0 0/11px 100%,
-    radial-gradient(circle 3px at 0 50%,transparent 96%,#000) 0 0/100% 11px,
-    radial-gradient(circle 3px at 100% 50%,transparent 96%,#000) 0 0/100% 11px;
-  mask-composite:intersect;
-  filter:drop-shadow(0 2px 3px rgba(20,6,30,.2));
+/* a real stamp: a photograph of somewhere we are going, perforated */
+.env-stamp{
+  top:50%;right:6%;width:16%;rotate:3.5deg;translate:0 0 3px;
+  filter:drop-shadow(0 2px 3px rgba(20,6,30,.26));
 }
-.envelope-stamp span{
-  display:grid;place-items:center;width:100%;height:100%;font-size:1.15rem;
-  background:linear-gradient(160deg,var(--paper),var(--paper-2));
-  border:1px solid color-mix(in srgb,var(--ink-on) 18%,transparent);
-}
-/* the postmark, landing half across the stamp the way a real cancel does */
-.envelope-postmark{
-  position:absolute;top:22px;right:44px;z-index:3;width:46px;height:46px;
-  rotate:-12deg;opacity:.32;pointer-events:none;
+/* the cancel, landing half off the stamp the way a real one does */
+.env-postmark{
+  top:53%;right:23%;width:16%;aspect-ratio:1;translate:0 0 3px;
+  rotate:-13deg;opacity:.3;pointer-events:none;
   border:1.5px solid var(--ink-on);border-radius:50%;
   display:grid;place-items:center;
-  font-family:"Quicksand",sans-serif;font-size:.4rem;font-weight:800;
-  letter-spacing:.03em;color:var(--ink-on);text-align:center;line-height:1.15;
+  font-size:.38rem;font-weight:800;letter-spacing:.04em;
+  color:var(--ink-on);text-align:center;line-height:1.2;
 }
-.envelope-postmark::before,.envelope-postmark::after{
-  content:"";position:absolute;left:8%;right:8%;height:1.5px;background:var(--ink-on);
+.env-postmark::before,.env-postmark::after{
+  content:"";position:absolute;left:9%;right:9%;height:1.4px;background:var(--ink-on);
 }
-.envelope-postmark::before{top:28%}
-.envelope-postmark::after{bottom:28%}
+.env-postmark::before{top:27%}
+.env-postmark::after{bottom:27%}
 
-/* written by hand, on the ruled line every envelope has */
-.envelope-tab{
-  position:absolute;top:60px;left:18px;z-index:2;
-  font-family:"Caveat","Dancing Script",cursive;font-size:1rem;
-  color:var(--ink-on);opacity:.72;
+/* who it is for, written by hand on the ruled line */
+.env-to{
+  left:7%;bottom:15%;translate:0 0 3px;
+  font-family:var(--hand);font-size:clamp(.95rem,4.2vw,1.24rem);
+  color:var(--ink-on);line-height:1.1;
+  border-bottom:1.5px solid color-mix(in srgb,var(--ink-on) 20%,transparent);
+  padding:0 26px 3px 0;
 }
-.envelope-address{
-  position:absolute;top:78px;left:18px;right:96px;z-index:2;
-  font-family:"Caveat","Dancing Script",cursive;font-size:1.2rem;color:var(--ink-on);
-  border-bottom:1.5px solid color-mix(in srgb,var(--ink-on) 22%,transparent);
-  padding-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-
-.envelope-body{
-  position:relative;z-index:2;display:flex;flex-direction:column;gap:4px;
-  padding-top:11px;border-top:1px dashed color-mix(in srgb,var(--ink-on) 20%,transparent);
-}
-.envelope-body strong{font-family:"Baloo",sans-serif;font-size:1.06rem;font-weight:700;color:var(--ink-on)}
-.envelope-body small{font-size:.85rem;color:var(--soft-on)}
-.envelope-body em{
-  font-style:normal;color:var(--faint-on);margin-top:3px;
-  font-family:"Caveat","Dancing Script",cursive;font-size:.95rem;
+.env-tab{
+  left:7%;bottom:29%;translate:0 0 3px;
+  font-family:var(--hand);font-size:.86rem;color:var(--soft-on);
 }
 
-/* unsealing: the wax cracks off first, then the flap folds all the way back
-   on its hinge, and the letter lifts out of the pocket */
-.envelope.opening .envelope-seal{transform:translate(-50%,10px) scale(.55) rotate(-24deg);opacity:0}
-.envelope.opening .envelope-flap{transform:rotateX(-168deg)}
-.envelope.opening .envelope-tab,
-.envelope.opening .envelope-address{opacity:.25;transition:opacity .3s ease}
-.envelope.opening .envelope-body{animation:letterLift .6s cubic-bezier(.3,.9,.3,1) .18s both}
-@keyframes letterLift{
-  0%{transform:translateY(0);opacity:1}
-  100%{transform:translateY(-26px) scale(1.03);opacity:0}
+/* what the envelope is, printed under it rather than on it - an envelope
+   does not advertise its own contents */
+.env-caption{
+  display:block;margin-top:10px;padding-left:2px;
 }
-@media (prefers-reduced-motion:reduce){
-  .envelope-flap{transition:opacity .2s ease}
-  .envelope.opening .envelope-flap{transform:none;opacity:0}
-  .envelope.opening .envelope-body{animation:none}
+.env-caption strong{
+  display:block;font-family:"Baloo",sans-serif;font-size:1.04rem;
+  font-weight:700;color:var(--ink);
+}
+.env-caption small{display:block;font-size:.86rem;color:var(--ink-soft);margin-top:1px}
+.env-caption em{
+  display:block;font-style:normal;margin-top:3px;
+  font-family:"Caveat","Dancing Script",cursive;font-size:.95rem;color:var(--ink-faint);
 }
 
-/* one paper colour + seal colour per theme - every theme sets --paper and
-   --paper-2 and nothing else, so the flap and body always match */
-.envelope.theme-airport{--paper:#eaf2fb;--paper-2:#c9dff2;--seal:var(--lav-500)}
-.envelope.theme-birthday{--paper:#fff0f6;--paper-2:#ffcbe0;--seal:var(--pink-hot)}
-.envelope.theme-kitchen{--paper:#fff3ea;--paper-2:#ffd7b8;--seal:var(--peach)}
-.envelope.theme-lilies{--paper:#fdf1f7;--paper-2:#f6c9de;--seal:var(--red)}
-.envelope.theme-moon{--paper:#4a3878;--paper-2:#2f2054;--seal:var(--gold);
-  --ink-on:#f6f1ff;--soft-on:rgba(246,241,255,.8);--faint-on:rgba(246,241,255,.52)}
-.envelope.theme-safe{--paper:#eaf7f1;--paper-2:#b8e4cd;--seal:var(--mint)}
-.envelope.theme-stars{--paper:#e7e3fb;--paper-2:#b7abe8;--seal:var(--gold)}
-.envelope.theme-voice{--paper:#fdeaef;--paper-2:#f2b1c5;--seal:var(--red)}
-
-.letter-salutation{font-family:"Dancing Script",cursive;font-size:1.3rem;color:var(--pink-hot);margin-bottom:8px}
-.letter-closing{font-family:"Dancing Script",cursive;font-size:1.24rem;color:var(--lav-600);margin-top:14px}
+/* unsealing: wax off, flap back through the hinge, letter up out of the
+   pocket. The flap passes behind the front panel on its own because the
+   stack preserves 3D, so nothing has to swap z-index mid-animation. */
+.envelope.opening .env-seal{transform:translateY(12px) scale(.5) rotate(-26deg);opacity:0}
+.envelope.opening .env-flap{transform:rotateX(-174deg)}
+.envelope.opening .env-letter{transform:translateY(-32%)}
 
 @media (prefers-reduced-motion:reduce){
-  .envelope-flap,.envelope-seal,.envelope-tab{transition:none}
+  .env-flap,.env-letter,.env-seal{transition:none}
+  .envelope.opening .env-flap{transform:none;opacity:0}
 }
+
+/* One paper and one hand per theme. Four different hands across twelve
+   letters is what stops them reading as one letter printed twelve times. */
+.envelope.theme-airport{--sheet:url("./assets/paper/sheet-cream.webp");--tint:#eef0e4;--seal:#5b6fb8;--ink-on:#2f4463;--hand:"Indie Flower",cursive}
+.envelope.theme-birthday{--sheet:url("./assets/paper/sheet-blush.webp");--tint:#fbe4ec;--seal:#e0507f;--ink-on:#6b2f4c;--hand:"Gloria Hallelujah",cursive}
+.envelope.theme-kitchen{--sheet:url("./assets/paper/sheet-sand.webp");--tint:#f6e6cd;--seal:#c8763a;--ink-on:#5e4326;--hand:"Shadows Into Light",cursive}
+.envelope.theme-lilies{--sheet:url("./assets/paper/sheet-blush.webp");--tint:#fae2ea;--seal:#c8365f;--ink-on:#5c2f4c;--hand:"Caveat","Dancing Script",cursive}
+.envelope.theme-moon{--sheet:url("./assets/paper/sheet-midnight.webp");--tint:#3b2c63;--seal:#e5b45c;--ink-on:#f2ebff;
+  --soft-on:rgba(242,235,255,.78);--faint-on:rgba(242,235,255,.52);--hand:"Caveat","Dancing Script",cursive}
+.envelope.theme-safe{--sheet:url("./assets/paper/sheet-sage.webp");--tint:#e3ecdd;--seal:#5f9070;--ink-on:#33513c;--hand:"Indie Flower",cursive}
+.envelope.theme-stars{--sheet:url("./assets/paper/sheet-lilac.webp");--tint:#e8e1f6;--seal:#8a5fd4;--ink-on:#44317a;--hand:"Shadows Into Light",cursive}
+.envelope.theme-voice{--sheet:url("./assets/paper/sheet-blush.webp");--tint:#fbe0e8;--seal:#d6486f;--ink-on:#63304a;--hand:"Gloria Hallelujah",cursive}
 
 .poem-card{padding:21px;border-radius:var(--r-lg);background:linear-gradient(168deg,#fff,var(--lav-50));border:2px solid var(--edge);box-shadow:var(--sh)}
 .poem-card h3{margin-bottom:9px}
@@ -1117,11 +1154,7 @@ textarea{width:100%;padding:14px;border-radius:var(--r);resize:vertical;backgrou
 /* --------------------------------------------------------------- modals */
 dialog{width:min(calc(100% - 26px),520px);max-height:86dvh;padding:0;border:0;border-radius:var(--r-xl);background:transparent;overflow:visible}
 dialog::backdrop{background:rgba(75,45,122,.44);backdrop-filter:blur(5px)}
-#letter-modal,.world-dialog{padding:26px 22px 24px;overflow-y:auto;background:linear-gradient(168deg,#fff,var(--lav-50));border:3px solid var(--edge);box-shadow:var(--sh-lg);border-radius:var(--r-xl)}
-#letter-modal h2{margin:7px 0 13px;font-size:1.56rem}
-#modal-body{font-size:.97rem;line-height:1.76;color:var(--ink);font-family:"Lora",Georgia,serif}
-#modal-body p+p{margin-top:13px}
-.modal-close{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:50%;cursor:pointer;background:#fff;border:2px solid var(--lav-200);color:var(--lav-700);font-size:1.2rem}
+.world-dialog{padding:26px 22px 24px;overflow-y:auto;background:linear-gradient(168deg,#fff,var(--lav-50));border:3px solid var(--edge);box-shadow:var(--sh-lg);border-radius:var(--r-xl)}
 /* The hero carries the place's own photograph, which can be anything from a
    bright Santorini noon to a near-black Paris midnight - so the title sits on
    a real gradient scrim and is always white, rather than dark ink hoping the
@@ -1890,7 +1923,7 @@ body[data-world="vault"] .poo-companion{display:none}
    it's actually resting on a counter, walls just barely tinted so the paper
    cone reads as an object in a room, not a sticker on a page. */
 .bouquet-stage{
-  position:relative;padding:28px 14px 22px;border-radius:var(--r-lg);
+  position:relative;padding:26px 12px 14px;border-radius:var(--r-lg);
   background:
     radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,.5), transparent 65%),
     linear-gradient(180deg,#efe2f7 0%,#f7ecd8 72%,#ecd9b8 100%);
@@ -1906,42 +1939,112 @@ body[data-world="vault"] .poo-companion{display:none}
 }
 .bouquet-awning span:nth-child(even){background:linear-gradient(180deg,#fff,#ffe6f1)}
 
-.bouquet-wrap-shape{
-  position:relative;width:min(100%,260px);height:216px;margin:14px auto 0;
-  clip-path:polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-  background:
-    /* the grain of the paper stock, same trick as the page background */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E"),
-    linear-gradient(100deg,rgba(255,255,255,.35) 0%,transparent 18%,transparent 82%,rgba(0,0,0,.06) 100%),
-    linear-gradient(165deg,#f6ecd4 0%,#e9d09e 48%,#cfa869 100%);
-  background-blend-mode:multiply,normal,normal;
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 16px 22px -10px rgba(90,60,20,.4);
-  overflow:visible;touch-action:none;
+/* The arrangement box. It is the drop area, the coordinate space for every
+   stem, and it deliberately does NOT clip: the old version put a clip-path
+   cone on this element, which meant every bloom she dragged in got cut off
+   at the edge of the paper and the whole thing read as flowers printed on a
+   pink flag. A bouquet is blooms spilling out over paper, so the paper is a
+   layer underneath, drawn after the stems. */
+.bouquet-arrangement{
+  position:relative;width:min(100%,300px);height:clamp(288px,80vw,340px);
+  margin:10px auto 0;touch-action:none;
+  --wrap-a:#f6ecd4;--wrap-b:#e9d09e;--wrap-c:#cfa869;
+  --ribbon-a:#ff5f9e;--ribbon-b:#c62f6a;
 }
-/* a single fold crease down the middle, like real wrapping paper actually
-   creased around the stems rather than a flat printed cone */
-.bouquet-crease{
-  position:absolute;top:0;bottom:0;left:50%;width:2px;translate:-50% 0;
-  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(90,60,20,.18));
+
+/* Shared paper stock, photographed rather than drawn.
+
+   This was a turbulence filter over two gradients, which is a fair
+   description of a plastic sheet and no description at all of florist's
+   paper. It is a photograph of the real wrap from the arrival bouquet now
+   (tools/build_wrap_papers.py duotones one patch of it into each colour),
+   so the creases bend and catch light along their length the way creases
+   actually do. */
+.bouquet-cone,.bouquet-collar{
+  position:absolute;left:0;right:0;bottom:0;
+  background-image:
+    linear-gradient(101deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.04) 26%,transparent 60%,rgba(0,0,0,.1) 100%),
+    var(--wrap-paper,url("./assets/flowers/paper-kraft.webp"));
+  background-size:auto,cover;
+  background-position:center,center;
+  pointer-events:none;
+}
+
+/* the back sheet, set at an angle to the front one. Florists never wrap with
+   a single sheet, and two offset sheets is most of why a wrap reads as a
+   wrap instead of a cone. */
+.bouquet-collar{
+  left:8%;right:8%;height:41%;z-index:1;
+  clip-path:polygon(0% 8%, 100% 0%, 60% 100%, 40% 100%);
+  rotate:-6deg;transform-origin:50% 100%;
+  filter:brightness(.87) saturate(.9);
+}
+
+/* the front sheet */
+.bouquet-cone{
+  left:14%;right:14%;height:38%;z-index:4;
+  clip-path:polygon(0% 5%, 100% 0%, 61% 100%, 39% 100%);
+}
+/* the dark inside of the paper showing at the mouth, which is what stops it
+   looking like a flat triangle */
+.bouquet-cone::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:26%;
+  background:linear-gradient(180deg,rgba(60,34,10,.34),rgba(60,34,10,.1) 55%,transparent);
+}
+/* the rolled top edge of the paper */
+.bouquet-cone::after{
+  content:"";position:absolute;left:-2%;right:-2%;top:0;height:6px;
+  border-radius:50%;rotate:-2.4deg;
+  background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(0,0,0,.12));
+  opacity:.7;
+}
+/* fan folds running from the tie out to the mouth */
+.cone-folds{position:absolute;inset:0}
+.cone-folds span{
+  position:absolute;left:50%;bottom:0;width:2px;height:100%;
+  transform-origin:50% 100%;
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.12) 40%,rgba(80,48,14,.22));
   mix-blend-mode:overlay;
 }
+.cone-folds span:nth-child(1){rotate:-24deg}
+.cone-folds span:nth-child(2){rotate:-12deg}
+.cone-folds span:nth-child(3){rotate:0deg}
+.cone-folds span:nth-child(4){rotate:12deg}
+.cone-folds span:nth-child(5){rotate:24deg}
+
 .bouquet-shadow{
-  width:70%;height:16px;margin:-8px auto 0;border-radius:50%;
-  background:radial-gradient(closest-side,rgba(60,30,20,.28),transparent 75%);
+  width:40%;height:15px;margin:-6px auto 0;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(60,30,20,.3),transparent 76%);
 }
-.bouquet-ribbon{
-  position:absolute;left:0;right:0;bottom:26%;height:26px;
-  background:linear-gradient(180deg,var(--pink-hot),var(--red));
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);
+
+/* the tie: a band, a knot and two tails, sitting on the neck of the cone */
+.bouquet-ribbon{position:absolute;inset:0;z-index:5;pointer-events:none}
+.bouquet-ribbon span{position:absolute}
+.ribbon-band{
+  left:34%;right:34%;bottom:9%;height:13px;border-radius:2px;
+  background:linear-gradient(180deg,var(--ribbon-a),var(--ribbon-b));
+  box-shadow:0 2px 5px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.4);
 }
-.bouquet-ribbon span{font-size:1.05rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.ribbon-knot{
+  left:50%;bottom:10.5%;width:15px;height:12px;translate:-50% 0;border-radius:5px;
+  background:linear-gradient(150deg,var(--ribbon-a),var(--ribbon-b));
+  box-shadow:0 1px 3px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.ribbon-tail{
+  bottom:1%;width:8px;height:8.5%;
+  background:linear-gradient(180deg,var(--ribbon-a),var(--ribbon-b));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);
+}
+.tail-l{left:45.5%;clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);rotate:-11deg;transform-origin:50% 0}
+.tail-r{left:50.5%;clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);rotate:13deg;transform-origin:50% 0}
+
 .bouquet-vase-hint{
-  position:absolute;top:16px;left:0;right:0;text-align:center;margin:0;
-  font-size:.76rem;font-weight:700;color:rgba(80,50,20,.55);pointer-events:none;
+  position:absolute;top:24%;left:0;right:0;text-align:center;margin:0;z-index:6;
+  font-size:.78rem;font-weight:700;color:rgba(96,62,28,.6);pointer-events:none;
   transition:opacity .25s;
 }
-.bouquet-wrap-shape.has-items .bouquet-vase-hint{opacity:0}
+.bouquet-arrangement.has-items .bouquet-vase-hint{opacity:0}
+.bouquet-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 
 /* placed stems: absolutely positioned within the wrap by percentage, so
    they hold their spot regardless of viewport width */
@@ -2225,6 +2328,253 @@ body[data-world="vault"] .poo-companion{display:none}
 /* the stem layer: behind every bloom, in front of the paper */
 .bouquet-stems{
   position:absolute;inset:0;width:100%;height:100%;
-  pointer-events:none;overflow:visible;z-index:0;
+  pointer-events:none;overflow:visible;z-index:2;
 }
-.bouquet-placed{z-index:1}
+
+/* ==========================================================================
+   Opening a letter.
+
+   All the craft was going into the envelope, and then you opened it and got
+   a white rounded dialog with serif paragraphs in it. The envelope promised
+   a letter and delivered a webpage.
+
+   This is the sheet that was inside. The paper is a photograph of a real
+   sheet of handmade paper (assets/paper/sheet-*.webp) rather than a
+   gradient with a noise filter over it, so it has fibres and flecks and
+   uneven tone the way paper does. On top of that: the two creases where it
+   was folded into thirds to fit the envelope, the margin rule, and the
+   handwriting.
+
+   And it is written rather than printed. handwrite() in app.js fills the
+   paper a few characters per frame with the pen still on the line, which is
+   the difference between reading a letter and being written to.
+   ========================================================================== */
+#letter-modal{
+  --sheet:url("./assets/paper/sheet-cream.webp");
+  --ink-letter:#4b3a6b;
+  --hand:"Caveat","Dancing Script",cursive;
+  --hand-size:1.34rem;
+  padding:0;overflow:visible;background:transparent;border:0;box-shadow:none;
+  perspective:1400px;width:min(94vw,470px);max-width:none;
+}
+
+.letter-sheet{
+  position:relative;padding:34px 24px 30px;
+  /* a full sheet from the moment it opens: without this the paper grows
+     line by line as the letter writes itself, which reads as a loading page
+     rather than as paper */
+  min-height:min(62dvh,440px);
+  max-height:84dvh;overflow-y:auto;overflow-x:hidden;
+  border-radius:3px;                       /* paper has corners, not pills */
+  background-color:#fffdf5;
+  background-image:var(--sheet);
+  background-size:420px auto;
+  box-shadow:0 26px 60px rgba(40,14,60,.42),0 3px 0 rgba(255,255,255,.4) inset;
+  transform-origin:top center;
+  animation:letterUnfold .72s cubic-bezier(.3,.95,.32,1.02) both;
+}
+
+/* the two creases where it was folded in thirds to fit the envelope */
+.letter-sheet::before,.letter-sheet::after{
+  content:"";position:absolute;left:0;right:0;height:15px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(90,60,30,.12),rgba(255,255,255,.45) 55%,transparent);
+}
+.letter-sheet::before{top:33.3%}
+.letter-sheet::after{top:66.6%}
+
+/* the margin rule every sheet of letter paper has */
+.letter-sheet-rule{
+  position:absolute;top:0;bottom:0;left:16px;width:1.5px;
+  background:rgba(208,110,140,.3);pointer-events:none;
+}
+
+@keyframes letterUnfold{
+  0%{opacity:0;transform:translateY(-14px) rotateX(-78deg) scaleY(.42)}
+  55%{opacity:1}
+  100%{opacity:1;transform:none}
+}
+
+#letter-modal .eyebrow{position:relative;z-index:1;color:rgba(120,90,160,.75);margin-left:14px}
+#letter-modal h2{
+  position:relative;z-index:1;margin:4px 0 16px 14px;font-size:1.44rem;
+  font-family:"Baloo",sans-serif;color:var(--ink-letter);
+}
+#modal-body{
+  position:relative;z-index:1;margin-left:14px;
+  font-family:var(--hand);font-size:var(--hand-size);
+  line-height:1.62;color:var(--ink-letter);
+  min-height:5.2em;                        /* the sheet does not grow as it writes */
+}
+#modal-body p{margin:0}
+#modal-body p + p{margin-top:12px}
+#modal-body p:empty{margin:0}
+.letter-salutation{font-size:1.1em;margin-bottom:2px!important}
+.letter-closing{text-align:right;margin-top:18px!important}
+
+/* the pen, still on the line it is writing */
+.writing-now::after{
+  content:"";display:inline-block;width:2px;height:.94em;
+  margin-left:1px;vertical-align:-.13em;background:currentColor;opacity:.75;
+  animation:penBlink .56s steps(1,end) infinite;
+}
+@keyframes penBlink{50%{opacity:0}}
+.is-writing{cursor:pointer}
+
+/* the paper changes with the letter, the way the envelope does. Each theme
+   sets the sheet, the ink and the hand together, so a letter about the moon
+   is written on midnight paper in a different hand from one about the
+   kitchen - twelve letters instead of one letter twelve times. */
+#letter-modal.theme-lilies{--sheet:url("./assets/paper/sheet-blush.webp");--ink-letter:#5c2f4c}
+#letter-modal.theme-airport{--sheet:url("./assets/paper/sheet-cream.webp");--ink-letter:#2f4463;--hand:"Indie Flower",cursive;--hand-size:1.16rem}
+#letter-modal.theme-birthday{--sheet:url("./assets/paper/sheet-blush.webp");--ink-letter:#6b2f4c;--hand:"Gloria Hallelujah",cursive;--hand-size:1.03rem}
+#letter-modal.theme-kitchen{--sheet:url("./assets/paper/sheet-sand.webp");--ink-letter:#5e4326;--hand:"Shadows Into Light",cursive;--hand-size:1.24rem}
+#letter-modal.theme-safe{--sheet:url("./assets/paper/sheet-sage.webp");--ink-letter:#33513c;--hand:"Indie Flower",cursive;--hand-size:1.16rem}
+#letter-modal.theme-stars{--sheet:url("./assets/paper/sheet-lilac.webp");--ink-letter:#44317a;--hand:"Shadows Into Light",cursive;--hand-size:1.24rem}
+#letter-modal.theme-voice{--sheet:url("./assets/paper/sheet-blush.webp");--ink-letter:#63304a;--hand:"Gloria Hallelujah",cursive;--hand-size:1.03rem}
+#letter-modal.theme-moon{
+  --sheet:url("./assets/paper/sheet-midnight.webp");
+  --ink-letter:#f2ebff;
+}
+#letter-modal.theme-moon .letter-sheet-rule{background:rgba(255,220,150,.28)}
+#letter-modal.theme-moon .eyebrow{color:rgba(255,220,150,.75)}
+#letter-modal.theme-moon .letter-sheet{box-shadow:0 26px 60px rgba(10,4,26,.6)}
+
+.modal-close{
+  position:absolute;top:-14px;right:-8px;z-index:3;width:40px;height:40px;
+  border-radius:50%;cursor:pointer;background:#fff;border:2px solid var(--lav-200);
+  color:var(--lav-700);font-size:1.2rem;box-shadow:var(--sh-sm);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .letter-sheet{animation:none}
+  .writing-now::after{animation:none;opacity:0}
+}
+
+
+/* ==========================================================================
+   Wrapping paper, and the motion of a bouquet.
+
+   One fixed kraft cone made every bouquet the same object in a different
+   order. These are five papers, and each one changes the cone, its creases
+   and the ribbon together, so the whole thing reads as that paper rather
+   than a recoloured rectangle.
+   ========================================================================== */
+.bouquet-wraps{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px;justify-content:center}
+.bouquet-wrap-pick{
+  display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;
+  border-radius:999px;cursor:pointer;border:2px solid var(--edge);
+  background:rgba(255,255,255,.85);color:var(--lav-700);
+  font-family:"Quicksand",sans-serif;font-size:.74rem;font-weight:700;
+  box-shadow:var(--sh-sm);transition:transform .16s,background .2s,color .2s;
+}
+.bouquet-wrap-pick:active{transform:scale(.95)}
+.bouquet-wrap-pick.is-on{background:linear-gradient(150deg,var(--pink),var(--lav-300));color:#fff}
+.bouquet-wrap-pick span{width:16px;height:16px;border-radius:5px;border:1.5px solid rgba(0,0,0,.14)}
+.bouquet-wrap-pick.wrap-kraft span{background:linear-gradient(160deg,#e2ceae,#c9a870)}
+.bouquet-wrap-pick.wrap-blush span{background:linear-gradient(160deg,#ffe3ef,#f7b9d2)}
+.bouquet-wrap-pick.wrap-lilac span{background:linear-gradient(160deg,#eee2ff,#c9aef0)}
+.bouquet-wrap-pick.wrap-sage  span{background:linear-gradient(160deg,#dfe9db,#a8bfa0)}
+.bouquet-wrap-pick.wrap-lace  span{background:repeating-linear-gradient(45deg,#fff 0 3px,#f2e6f2 3px 6px)}
+
+/* each paper sets both sheets, the folds and the ribbon together, so the
+   whole wrap reads as that paper rather than a recoloured rectangle */
+.bouquet-arrangement.wrap-kraft{--wrap-paper:url("./assets/flowers/paper-kraft.webp");--wrap-a:#f6ecd4;--wrap-b:#e9d09e;--wrap-c:#cfa869;--ribbon-a:#ff5f9e;--ribbon-b:#c62f6a}
+.bouquet-arrangement.wrap-blush{--wrap-paper:url("./assets/flowers/paper-blush.webp");--wrap-a:#fff4f9;--wrap-b:#f6c4da;--wrap-c:#e492b8;--ribbon-a:#e0537f;--ribbon-b:#9e2f55}
+.bouquet-arrangement.wrap-lilac{--wrap-paper:url("./assets/flowers/paper-lilac.webp");--wrap-a:#f9f3ff;--wrap-b:#ddc8f5;--wrap-c:#b493dd;--ribbon-a:#8a5fd4;--ribbon-b:#563593}
+.bouquet-arrangement.wrap-sage {--wrap-paper:url("./assets/flowers/paper-sage.webp");--wrap-a:#f4f8f1;--wrap-b:#cadcc2;--wrap-c:#9db593;--ribbon-a:#e8c46a;--ribbon-b:#b08a2e}
+.bouquet-arrangement.wrap-lace {--wrap-paper:url("./assets/flowers/paper-lace.webp");--wrap-a:#fffdff;--wrap-b:#f6eff8;--wrap-c:#ded2e3;--ribbon-a:#d3a9e0;--ribbon-b:#9a76ad}
+
+/* lace is not a colour, it is a pattern punched through the paper */
+.bouquet-arrangement.wrap-lace .bouquet-cone::after,
+.bouquet-arrangement.wrap-lace .bouquet-collar::after{
+  content:"";position:absolute;inset:0;border-radius:0;rotate:none;opacity:.55;
+  background:repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.95) 8px 10px),
+             repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.95) 8px 10px);
+}
+/* kraft is the only one with a matte, unglazed face */
+.bouquet-arrangement.wrap-kraft .bouquet-cone{filter:saturate(.95)}
+
+/* --- motion ------------------------------------------------------------- */
+/* a stem lands rather than appears */
+.bouquet-placed.just-placed{animation:bloomLand .6s cubic-bezier(.2,1.1,.3,1.05)}
+@keyframes bloomLand{
+  0%{opacity:0;scale:.55;filter:blur(2px)}
+  55%{opacity:1;scale:1.12;filter:none}
+  100%{scale:1}
+}
+
+/* and then it moves. Not all the same way: a sunflower on a thick stem does
+   not move like baby's breath, so each kind gets its own motion, and every
+   stem gets its own clock on top of that. The aim rotation stays on
+   `transform` (set inline) while these use `rotate` and `translate`, which
+   are separate properties, so the two never fight. */
+.bouquet-placed{
+  animation:bloomNod var(--sway-span,3.4s) ease-in-out var(--sway-delay,0s) infinite alternate;
+}
+.bouquet-placed.dragging{animation:none}
+
+/* lilies and tulips: a long stem, so a slow lean from the base */
+@keyframes bloomNod{ from{rotate:-1.6deg;translate:0 0} to{rotate:1.8deg;translate:1px -2px} }
+/* daisies and baby's breath: light heads, a quick little bob */
+.kind-daisy,.kind-filler{animation-name:bloomBob}
+@keyframes bloomBob{ from{translate:0 1px;rotate:-2.4deg} to{translate:-1px -3px;rotate:2.6deg} }
+/* sunflower and hydrangea: heavy heads that swing slowly and barely tilt */
+.kind-sunflower,.kind-hydrangea{animation-name:bloomHeavy}
+@keyframes bloomHeavy{ from{translate:-2px 0;rotate:-.7deg} to{translate:2px -1px;rotate:.9deg} }
+/* eucalyptus: a sprig, so it flutters */
+.kind-greenery{animation-name:bloomFlutter}
+@keyframes bloomFlutter{ from{rotate:-3.4deg;translate:0 0} to{rotate:3.8deg;translate:1px -1px} }
+/* roses and carnations: tight heads that open and close as they breathe */
+.kind-rose,.kind-carnation{animation-name:bloomBreathe}
+@keyframes bloomBreathe{ from{scale:.98;translate:0 0} to{scale:1.035;translate:0 -1.5px} }
+/* the bow just wobbles */
+.bow-placed{animation-name:bowWobble}
+@keyframes bowWobble{ from{rotate:-4deg} to{rotate:4deg} }
+
+@media (prefers-reduced-motion:reduce){
+  .bouquet-placed,.bouquet-placed.just-placed{animation:none}
+}
+
+/* --- sizes -------------------------------------------------------------- */
+/* one size for every flower made a daisy the same object as a sunflower.
+   These are roughly their real proportions to each other. */
+.bouquet-placed{width:84px;height:84px;margin:-42px 0 0 -42px;z-index:3}
+.kind-lily{width:96px;height:96px;margin:-48px 0 0 -48px}
+.kind-sunflower{width:90px;height:90px;margin:-45px 0 0 -45px}
+.kind-hydrangea{width:86px;height:86px;margin:-43px 0 0 -43px}
+.kind-rose,.kind-carnation{width:74px;height:74px;margin:-37px 0 0 -37px}
+.kind-tulip{width:78px;height:78px;margin:-39px 0 0 -39px}
+.kind-daisy{width:62px;height:62px;margin:-31px 0 0 -31px}
+.kind-greenery{width:104px;height:104px;margin:-52px 0 0 -52px;opacity:.95}
+.kind-filler{width:80px;height:80px;margin:-40px 0 0 -40px;opacity:.9}
+
+/* --- the composer's own paper -------------------------------------------- */
+/* the sheet she types on, and the preview of it, are the same photographed
+   paper the finished letter uses, so what she picks is what it becomes */
+.compose-sheet,.letter-paper{
+  background-color:#fffdf5;background-repeat:repeat;
+  position:relative;
+}
+/* ruled and grid are printed ON the paper, not instead of it */
+.compose-sheet[data-rule="ruled"]::before,.letter-paper[data-rule="ruled"]::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:repeating-linear-gradient(180deg,transparent 0 26px,rgba(120,90,170,.26) 26px 27px);
+}
+.compose-sheet[data-rule="grid"]::before,.letter-paper[data-rule="grid"]::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:repeating-linear-gradient(0deg,transparent 0 21px,rgba(120,90,170,.2) 21px 22px),
+             repeating-linear-gradient(90deg,transparent 0 21px,rgba(120,90,170,.2) 21px 22px);
+}
+.letter-paper > *{position:relative;z-index:1}
+.letter-paper-text p{margin:0}
+.letter-paper-text p + p{margin-top:11px}
+.letter-paper-to{font-size:1.06em}
+.letter-paper-from{text-align:right;margin-top:16px!important}
+
+/* the stamp chips are the stamps themselves */
+.chip-stamp{display:block;width:26px;height:32px;object-fit:contain}
+.compose-chip:has(.chip-stamp){padding:5px 8px}
+.chip-swatch{
+  width:20px;height:20px;border-radius:5px;display:inline-block;
+  border:1.5px solid rgba(0,0,0,.12);background-position:center;
+}

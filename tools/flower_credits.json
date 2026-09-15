@@ -40,5 +40,47 @@
   "creator": "Fiona Murray-deGraaff",
   "page": "https://unsplash.com/photos/a-large-white-flower-is-in-a-vase-BSktCGbhERk",
   "licence": "Unsplash Licence"
+ },
+ "sunflower": {
+  "file": "cut-sunflower.webp",
+  "unsplash_id": "XiHmMxoNzUU",
+  "creator": "Cindy Bonfini-Hotlosz",
+  "page": "https://unsplash.com/photos/yellow-sunflower-XiHmMxoNzUU",
+  "licence": "Unsplash Licence"
+ },
+ "carnation": {
+  "file": "cut-carnation.webp",
+  "unsplash_id": "sL4E-wKU47U",
+  "creator": "Lucy",
+  "page": "https://unsplash.com/photos/a-red-flower-with-green-stem-sL4E-wKU47U",
+  "licence": "Unsplash Licence"
+ },
+ "hydrangea": {
+  "file": "cut-hydrangea.webp",
+  "unsplash_id": "H6B7TxTvBew",
+  "creator": "Sharon Pittaway",
+  "page": "https://unsplash.com/photos/a-bouquet-of-purple-flowers-on-a-white-background-H6B7TxTvBew",
+  "licence": "Unsplash Licence"
+ },
+ "eucalyptus": {
+  "file": "cut-eucalyptus.webp",
+  "unsplash_id": "lmZWG0H_jao",
+  "creator": "Klara Kulikova",
+  "page": "https://unsplash.com/photos/a-plant-with-green-leaves-on-a-white-background-lmZWG0H_jao",
+  "licence": "Unsplash Licence"
+ },
+ "babysbreath": {
+  "file": "cut-babysbreath.webp",
+  "unsplash_id": "JWmNS05a_Hs",
+  "creator": "Tijana Drndarski",
+  "page": "https://unsplash.com/photos/white-cherry-blossom-in-close-up-photography-JWmNS05a_Hs",
+  "licence": "Unsplash Licence"
+ },
+ "lavender": {
+  "file": "cut-lavender.webp",
+  "unsplash_id": "O_H20jpMyMQ",
+  "creator": "laura adai",
+  "page": "https://unsplash.com/photos/a-small-plant-is-shown-in-the-middle-of-a-white-background-O_H20jpMyMQ",
+  "licence": "Unsplash Licence"
  }
 }

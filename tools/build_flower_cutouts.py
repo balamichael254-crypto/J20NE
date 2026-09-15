@@ -30,10 +30,17 @@ UA = {"User-Agent": "MoonpieApp/1.0 (private gift project)"}
 # background, so it is only safe on flowers that are not themselves pale -
 # on the daisy it would eat the petals.
 PICKS = {
-    "rose":       ("3rDPHZ7_gCA", 45, True),
-    "tulip":      ("4DcNlb77Ln0", 45, True),
-    "tulip-pink": ("x4pYSbKPtzA", 45, True),
-    "daisy":      ("kFK54FCIB3U", 32, False),  # white on white: flood only
+    "rose":        ("3rDPHZ7_gCA", 45, True),
+    "tulip":       ("4DcNlb77Ln0", 45, True),
+    "tulip-pink":  ("x4pYSbKPtzA", 45, True),
+    "daisy":       ("kFK54FCIB3U", 32, False),  # white on white: flood only
+    "sunflower":   ("XiHmMxoNzUU", 55, True),
+    "carnation":   ("sL4E-wKU47U", 45, True),
+    "hydrangea":   ("H6B7TxTvBew", 40, False),  # pale petals
+    # greenery and filler: a bouquet without these is a fistful of blooms
+    "eucalyptus":  ("lmZWG0H_jao", 45, True),
+    "babysbreath": ("JWmNS05a_Hs", 30, False),  # white on white
+    "lavender":    ("O_H20jpMyMQ", 40, True),
 }
 
 MAX_EDGE = 900
