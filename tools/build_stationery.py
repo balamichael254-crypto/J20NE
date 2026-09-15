@@ -48,7 +48,11 @@ SHEETS = {
     "lilac":    ((142, 118, 186), (250, 246, 255)),
     "sage":     ((118, 148, 116), (247, 252, 245)),
     "sand":     ((168, 128,  78), (253, 244, 228)),
-    "midnight": (( 28,  20,  58), (126, 110, 178)),
+    # midnight has to be dark enough to carry near-white ink. The first
+    # pass highlighted to a mid purple, which put pale lilac handwriting on
+    # a lilac sheet at about 3.6:1 - readable in a screenshot, not readable
+    # in bed at night, which is when this one gets opened.
+    "midnight": (( 14,   9,  34), ( 74,  60, 120)),
 }
 
 # theme -> (photo file, what to print under it)

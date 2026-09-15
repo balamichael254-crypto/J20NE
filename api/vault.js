@@ -1,8 +1,23 @@
 const crypto = require("crypto");
 
-const TABLE = "moonpie_vault_items";
+/* The vault used to want a table of its own, moonpie_vault_items, which had
+   to be created by hand in the Supabase dashboard and never was - so every
+   send failed while the notes and letters beside it worked fine, because
+   those ride a table that does exist.
+
+   It rides that same table now. Scores and duel sessions already do exactly
+   this (api/scores.js, api/duel.js): one generic room/id/value store, with
+   the shape of the thing kept inside `value`. The vault sits in its own room
+   (moonpie-vault-2504), so its rows can never collide with a note.
+
+   Nothing about the privacy changes. `ct` is still ciphertext encrypted on
+   the sending phone with a passphrase the server never sees. */
+const TABLE = "moonpie_widgets";
 const PROFILES = ["Michelle", "Michael"];
-const MAX_CT_LEN = 6_500_000; // base64 ciphertext; keeps requests under Vercel's body limit
+// base64 ciphertext. A 1600px JPEG at the quality prepareImage() uses lands
+// around 400-700KB encoded, so this is roughly double the worst real case and
+// still well under what a serverless function will accept as a body.
+const MAX_CT_LEN = 1_500_000;
 
 const json = (response, status, body) => {
   response.statusCode = status;
@@ -91,16 +106,22 @@ module.exports = async function handler(request, response) {
 
       const query = new URLSearchParams({
         room_hash: `eq.${roomHash}`,
-        to_profile: `eq.${to}`,
-        select: "id,to_profile,from_profile,type,iv,ct,created_at",
+        select: "id,value,sender,created_at",
         order: "created_at.desc",
-        limit: "80"
+        limit: "200"
       });
       const rows = await supabaseFetch(`${endpoint}?${query}`);
-      const items = rows.map(row => ({
-        id: row.id, to: row.to_profile, from: row.from_profile,
-        type: row.type, iv: row.iv, ct: row.ct, createdAt: Number(row.created_at),
-      }));
+      const items = [];
+      for (const row of rows) {
+        let held = null;
+        try { held = JSON.parse(row.value); } catch { continue; }
+        if (!held || held.to !== to) continue;   // the filter that makes a send one-way
+        items.push({
+          id: row.id, to: held.to, from: held.from || row.sender,
+          type: held.type, iv: held.iv, ct: held.ct, createdAt: Number(row.created_at),
+        });
+        if (items.length >= 80) break;
+      }
       return json(response, 200, { items });
     }
 
@@ -108,9 +129,13 @@ module.exports = async function handler(request, response) {
       const item = normalizeItem(readBody(request).item);
       if (!item) return json(response, 400, { error: "invalid item" });
       const row = {
-        room_hash: roomHash, id: item.id,
-        to_profile: item.to, from_profile: item.from,
-        type: item.type, iv: item.iv, ct: item.ct,
+        room_hash: roomHash,
+        id: item.id,
+        type: "text",           // the store's own column, not the photo's type
+        value: JSON.stringify({
+          to: item.to, from: item.from, type: item.type, iv: item.iv, ct: item.ct,
+        }),
+        sender: item.from,
         created_at: item.createdAt,
       };
       const query = new URLSearchParams({ on_conflict: "room_hash,id" });
@@ -127,9 +152,18 @@ module.exports = async function handler(request, response) {
       const id = String(body.id || "").slice(0, 120);
       const to = String(body.to || "");
       if (!id || !validTo(to)) return json(response, 400, { error: "missing id or to" });
-      // scoped to `to` as well as `id` - a client can only ever delete an
-      // item addressed to the identity it's claiming to be
-      const query = new URLSearchParams({ room_hash: `eq.${roomHash}`, id: `eq.${id}`, to_profile: `eq.${to}` });
+      // A client can only ever delete an item addressed to the identity it is
+      // claiming to be. That used to be a `to_profile` column the query could
+      // filter on; now it lives inside `value`, so it has to be read first.
+      const check = new URLSearchParams({
+        room_hash: `eq.${roomHash}`, id: `eq.${id}`, select: "value", limit: "1",
+      });
+      const found = await supabaseFetch(`${endpoint}?${check}`);
+      let held = null;
+      try { held = JSON.parse(found?.[0]?.value || "null"); } catch { held = null; }
+      if (!held || held.to !== to) return json(response, 404, { error: "not found" });
+
+      const query = new URLSearchParams({ room_hash: `eq.${roomHash}`, id: `eq.${id}` });
       await supabaseFetch(`${endpoint}?${query}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
       return json(response, 200, { deleted: id });
     }

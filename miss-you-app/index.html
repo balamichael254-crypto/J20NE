@@ -9,7 +9,7 @@
   <title>Moonpie - private universe</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=128">
+  <link rel="stylesheet" href="./styles.css?v=137">
   <link rel="stylesheet" href="./poo.css?v=6">
   <link rel="stylesheet" href="./games/sudoku.css?v=1">
   <link rel="stylesheet" href="./games/memory.css?v=1">
@@ -23,10 +23,10 @@
       <div class="locket" id="entry-locket" aria-hidden="true">
         <span class="locket-chain"></span>
         <span class="locket-bail"></span>
-        <span class="locket-inside">ours<br>25.02</span>
+        <span class="locket-inside">ours<br>always</span>
         <span class="locket-half left"></span>
         <span class="locket-half right"></span>
-        <span class="locket-engraving">25.02</span>
+        <span class="locket-engraving">&#9825;</span>
       </div>
       <p class="eyebrow">one date opens our universe</p>
       <h2>Hi, my love.</h2>
@@ -36,7 +36,7 @@
       <p class="gate-hint" id="passkey-hint">Four numbers. One very important day.</p>
       <div class="profile-choice" aria-label="who is opening the app">
         <button class="profile-option active" type="button" data-profile="Michelle">Moonpie</button>
-        <button class="profile-option" type="button" data-profile="Michael">Michael</button>
+        <button class="profile-option" type="button" data-profile="Michael">Sunstone</button>
       </div>
       <p class="gate-error" id="passkey-error" role="alert"></p>
       <button class="primary-btn wide" type="submit">open what I made for you</button>
@@ -111,7 +111,7 @@
     <header class="topbar">
       <button class="topbar-back hidden" id="back-button" type="button" aria-label="go back"><span>←</span><small>back</small></button>
       <div>
-        <p class="eyebrow">Moonpie's private universe</p>
+        <p class="eyebrow"><span data-voice-name="me">Moonpie</span>'s private universe</p>
         <h1>Open when you miss me</h1>
       </div>
       <span class="topbar-spacer" aria-hidden="true"></span>
@@ -136,7 +136,7 @@
           <span class="tape tl" aria-hidden="true"></span>
           <div class="garden-copy">
             <p class="script-kicker" id="hero-kicker">hi, my favourite person</p>
-            <h2>Moonpie</h2>
+            <h2 data-voice-name="me">Moonpie</h2>
             <p id="hero-line">A little world folded into your phone, for whenever you want me closer.</p>
             <button class="primary-btn" data-open="garden" type="button">open the garden</button>
           </div>
@@ -181,7 +181,7 @@
         <article class="hero-card">
           <div class="hero-copy">
             <p class="mini">right now</p>
-            <h2>Hi, my Moonpie.</h2>
+            <h2>Hi, my <span data-voice-name="me">Moonpie</span>.</h2>
             <p id="daily-line">If missing me feels loud today, come sit here for a minute. I left the light on.</p>
             <p class="presence-line" id="presence-line" hidden></p>
             <p class="streak-line" id="streak-line" hidden></p>
@@ -233,7 +233,7 @@
         <div class="section-head">
           <p class="eyebrow">not basic cards</p>
           <h2>Your universe atlas</h2>
-          <p>Every part of the little world I made for you, gathered here for the moments you miss me.</p>
+          <p>All of it, in one place.</p>
           <img class="head-charm" src="./assets/mood/window-scene-1.webp" alt="">
         </div>
         <div class="atlas-grid" id="atlas-grid"></div>
@@ -313,42 +313,39 @@
             <div class="bouquet-wraps" id="bouquet-wraps" role="group" aria-label="wrapping paper"></div>
 
             <div class="bouquet-tray" id="bouquet-tray" role="group" aria-label="flowers to drag into the wrap">
-            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily">
-              <img src="./assets/flowers/lily-3.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily">
-              <img src="./assets/flowers/lily-5.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose.webp" type="button" aria-label="add a rose">
-              <img src="./assets/flowers/cut-rose.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip.webp" type="button" aria-label="add a red tulip">
-              <img src="./assets/flowers/cut-tulip.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip-pink.webp" type="button" aria-label="add a pink tulip">
-              <img src="./assets/flowers/cut-tulip-pink.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="daisy" data-bouquet-src="./assets/flowers/cut-daisy.webp" type="button" aria-label="add a daisy">
-              <img src="./assets/flowers/cut-daisy.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="carnation" data-bouquet-src="./assets/flowers/cut-carnation.webp" type="button" aria-label="add a carnation">
-              <img src="./assets/flowers/cut-carnation.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/cut-sunflower.webp" type="button" aria-label="add a sunflower">
-              <img src="./assets/flowers/cut-sunflower.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="hydrangea" data-bouquet-src="./assets/flowers/cut-hydrangea.webp" type="button" aria-label="add a hydrangea">
-              <img src="./assets/flowers/cut-hydrangea.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="greenery" data-bouquet-src="./assets/flowers/cut-eucalyptus.webp" type="button" aria-label="add a eucalyptus sprig">
-              <img src="./assets/flowers/cut-eucalyptus.webp" alt="">
-            </button>
-            <button class="bouquet-pick" data-bouquet-kind="filler" data-bouquet-src="./assets/flowers/cut-babysbreath.webp" type="button" aria-label="add baby's breath">
-              <img src="./assets/flowers/cut-babysbreath.webp" alt="">
-            </button>
-              <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow">
-                <span>&#127872;</span>
-              </button>
+              <p class="bouquet-tray-label">her lilies</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-3.webp" type="button" aria-label="add a stargazer lily"><img src="./assets/flowers/lily-3.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/lily-5.webp" type="button" aria-label="add a stargazer lily"><img src="./assets/flowers/lily-5.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="lily" data-bouquet-src="./assets/flowers/cut-lily-white.webp" type="button" aria-label="add a white lily"><img src="./assets/flowers/cut-lily-white.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="calla" data-bouquet-src="./assets/flowers/cut-lily-calla.webp" type="button" aria-label="add a calla lily"><img src="./assets/flowers/cut-lily-calla.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="calla" data-bouquet-src="./assets/flowers/cut-lily-calla-2.webp" type="button" aria-label="add a calla lily"><img src="./assets/flowers/cut-lily-calla-2.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">roses</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose.webp" type="button" aria-label="add a red rose"><img src="./assets/flowers/cut-rose.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose-red-2.webp" type="button" aria-label="add a long-stem rose"><img src="./assets/flowers/cut-rose-red-2.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="rose" data-bouquet-src="./assets/flowers/cut-rose-pink.webp" type="button" aria-label="add a pink rose"><img src="./assets/flowers/cut-rose-pink.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">the rest of the shop</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="peony" data-bouquet-src="./assets/flowers/cut-peony.webp" type="button" aria-label="add a peony"><img src="./assets/flowers/cut-peony.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="ranunculus" data-bouquet-src="./assets/flowers/cut-ranunculus.webp" type="button" aria-label="add a ranunculus"><img src="./assets/flowers/cut-ranunculus.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="anemone" data-bouquet-src="./assets/flowers/cut-anemone.webp" type="button" aria-label="add an anemone"><img src="./assets/flowers/cut-anemone.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="chrysanthemum" data-bouquet-src="./assets/flowers/cut-chrysanthemum.webp" type="button" aria-label="add a chrysanthemum"><img src="./assets/flowers/cut-chrysanthemum.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip.webp" type="button" aria-label="add a red tulip"><img src="./assets/flowers/cut-tulip.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="tulip" data-bouquet-src="./assets/flowers/cut-tulip-pink.webp" type="button" aria-label="add a pink tulip"><img src="./assets/flowers/cut-tulip-pink.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="carnation" data-bouquet-src="./assets/flowers/cut-carnation.webp" type="button" aria-label="add a carnation"><img src="./assets/flowers/cut-carnation.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="daisy" data-bouquet-src="./assets/flowers/cut-daisy.webp" type="button" aria-label="add a daisy"><img src="./assets/flowers/cut-daisy.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="sunflower" data-bouquet-src="./assets/flowers/cut-sunflower.webp" type="button" aria-label="add a sunflower"><img src="./assets/flowers/cut-sunflower.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="hydrangea" data-bouquet-src="./assets/flowers/cut-hydrangea.webp" type="button" aria-label="add a hydrangea"><img src="./assets/flowers/cut-hydrangea.webp" alt=""></button>
+              </div>
+              <p class="bouquet-tray-label">green and filler</p>
+              <div class="bouquet-tray-row">
+                <button class="bouquet-pick" data-bouquet-kind="greenery" data-bouquet-src="./assets/flowers/cut-eucalyptus.webp" type="button" aria-label="add a eucalyptus sprig"><img src="./assets/flowers/cut-eucalyptus.webp" alt=""></button>
+                <button class="bouquet-pick" data-bouquet-kind="filler" data-bouquet-src="./assets/flowers/cut-babysbreath.webp" type="button" aria-label="add baby's breath"><img src="./assets/flowers/cut-babysbreath.webp" alt=""></button>
+                <button class="bouquet-pick bouquet-pick-bow" data-bouquet-kind="bow" type="button" aria-label="add a ribbon bow"><span>&#127872;</span></button>
+              </div>
             </div>
           </div>
         </article>
@@ -367,7 +364,7 @@
         <div class="section-head">
           <p class="eyebrow">tiny notes from me</p>
           <h2>Widget studio</h2>
-          <p>Little notes and doodles you can come back to whenever missing me gets loud.</p>
+          <p>Notes and doodles, both our phones.</p>
           <img class="head-charm" src="./assets/mood/bunny-sleep-1.webp" alt="">
         </div>
 
@@ -424,7 +421,10 @@
           <p class="card-label">our shared little shelf</p>
           <h3>What you leave here reaches the other phone.</h3>
           <p id="sync-status">Connecting our two phones...</p>
-          <button class="secondary-btn" id="refresh-widgets" type="button">check for a new note</button>
+          <div class="sync-actions">
+            <button class="secondary-btn" id="refresh-widgets" type="button">check for a new note</button>
+            <button class="secondary-btn" id="sign-out" type="button">sign out of this phone</button>
+          </div>
         </article>
       </section>
 
@@ -432,7 +432,7 @@
         <div class="section-head">
           <p class="eyebrow">for the nights you want to disappear into something</p>
           <h2>What are we watching?</h2>
-          <p>Pick a mood, tap the heart to save it for later, tap the tick if you have already seen it.</p>
+          <p>Save one for later, tick one you have seen.</p>
           <img class="head-charm" src="./assets/mood/window-rain-4.webp" alt="">
         </div>
 
@@ -532,7 +532,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-games" aria-label="games">
-        <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>I made you a few tiny games for the moments you want something sweet to tap while you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">tiny chaos, very in love</p><h2>Love Arcade</h2><p>Something to tap when you miss me.</p><img class="head-charm" src="./assets/mood/drink-4.webp" alt=""></div>
         <!-- The three real games. Each module owns its own DOM inside
              #game-stage and is mounted only while chosen, so none of them
              runs a timer or a rAF loop while you are on another screen. -->
@@ -593,7 +593,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-letters" aria-label="letters">
-        <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Open these slowly whenever you need my voice to stay with you a little longer.</p><img class="head-charm" src="./assets/mood/notebook-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">open slowly</p><h2>Letters</h2><p>Open one whenever you need me closer.</p><img class="head-charm" src="./assets/mood/notebook-4.webp" alt=""></div>
 
         <!-- letters that arrived from the other phone, sealed until opened -->
         <div class="letter-inbox" id="letter-inbox"></div>
@@ -677,7 +677,7 @@
         <!-- 4. send ------------------------------------------------------- -->
         <div class="compose-pane hidden" data-compose-pane="send">
           <h2 class="compose-title">Send it</h2>
-          <p class="compose-hint" id="compose-send-hint">It arrives sealed. They choose when to open it.</p>
+          <p class="compose-hint" id="compose-send-hint">It arrives sealed.</p>
           <div class="compose-final" id="compose-final"></div>
           <button class="primary-btn wide" id="compose-send" type="button">seal it and send</button>
           <p class="compose-status" id="compose-status" hidden></p>
@@ -692,21 +692,41 @@
 
       <section class="screen world-screen" id="screen-poems" aria-label="poems">
         <div class="section-head"><p class="eyebrow">after midnight</p><h2>Poems</h2><p>Small poems with room to breathe.</p><img class="head-charm" src="./assets/mood/moon-sky-1.webp" alt=""></div>
-        <div class="poem-list" id="poem-list"></div>
+        <!-- one poem to a page, and the page actually turns -->
+        <div class="notebook">
+          <div class="notebook-pages" id="notebook-pages"></div>
+        </div>
+        <div class="notebook-nav">
+          <button id="poem-prev" type="button" aria-label="previous poem">&larr;</button>
+          <span id="poem-count">1 / 1</span>
+          <button id="poem-next" type="button" aria-label="next poem">&rarr;</button>
+        </div>
       </section>
 
       <section class="screen world-screen" id="screen-notices" aria-label="tiny things">
-        <div class="section-head"><p class="eyebrow">I notice everything</p><h2>Tiny Things</h2><p>All the little details that make you wonderfully, unmistakably you.</p><img class="head-charm" src="./assets/mood/jar-note-4.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">I notice everything</p><h2>Tiny Things</h2><p>Things I notice.</p><img class="head-charm" src="./assets/mood/jar-note-4.webp" alt=""></div>
         <div class="notice-list" id="notice-list"></div>
       </section>
 
       <section class="screen world-screen" id="screen-day" aria-label="one perfect day">
-        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>Scroll through one of the beautiful ordinary days I cannot wait to share with you.</p><img class="head-charm" src="./assets/mood/window-rain-4.webp" alt=""></div>
+        <!-- the sky, the sun and the stars sit behind everything and are
+             driven by --day-t, which tracks whichever hour she is reading -->
+        <div class="day-sky" aria-hidden="true">
+          <span class="sky-dawn"></span>
+          <span class="sky-noon"></span>
+          <span class="sky-gold"></span>
+          <span class="sky-night"></span>
+        </div>
+        <div class="day-stars" aria-hidden="true"></div>
+        <div class="day-sun" aria-hidden="true"></div>
+        <div class="day-moon" aria-hidden="true"></div>
+
+        <div class="section-head"><p class="eyebrow">come live it with me</p><h2>One Perfect Day</h2><p>One ordinary day, hour by hour.</p></div>
         <div class="day-timeline" id="day-timeline"></div>
       </section>
 
       <section class="screen world-screen" id="screen-places" aria-label="places">
-        <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Tap a place and step inside. Every world holds its own gallery, atmosphere, and little life waiting for us.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">twenty portals for us</p><h2>Our Worlds</h2><p>Twenty places. Tap one and step in.</p><img class="head-charm" src="./assets/mood/bunny-field-2.webp" alt=""></div>
         <p class="places-progress" id="places-progress"></p>
         <!-- filled by renderPlaces() when she has pinned one world as the one
              they are actually doing next, with the moments she picked in it -->
@@ -714,10 +734,50 @@
         <div class="place-rail" id="place-rail"></div>
       </section>
 
+      <!-- One player, not a stack of embeds. Artwork and a thirty second
+           preview come from api/music.js; the note for each song sits with
+           it, because the note is the actual point of this screen. -->
       <section class="screen world-screen" id="screen-songs" aria-label="songs">
-        <div class="section-head"><p class="eyebrow">press play and stay awhile</p><h2>Songs That Are You</h2><p>Real Spotify players, with the reason each song keeps finding its way back to you.</p><img class="head-charm" src="./assets/mood/vinyl-2.webp" alt=""></div>
-        <div class="song-featured" id="song-featured"></div>
-        <p class="card-label song-list-label">the rest of the playlist</p>
+        <div class="section-head">
+          <p class="eyebrow">press play and stay awhile</p>
+          <h2>Songs That Are You</h2>
+          <p>Every one of these got added for a reason. The reason is under each one.</p>
+          <img class="head-charm" src="./assets/mood/vinyl-2.webp" alt="">
+        </div>
+
+        <article class="player-card premium-card">
+          <div class="player-art is-empty" id="player-art" aria-hidden="true"></div>
+          <div class="player-meta">
+            <h3 id="player-title">&nbsp;</h3>
+            <strong id="player-artist">&nbsp;</strong>
+            <p class="player-note" id="player-note">&nbsp;</p>
+          </div>
+
+          <div class="player-progress" id="player-progress" role="presentation">
+            <span class="player-progress-fill" id="player-progress-fill"></span>
+          </div>
+          <div class="player-times">
+            <span id="player-elapsed">0:00</span>
+            <span class="player-status" id="player-status">tap a song</span>
+            <span id="player-total"></span>
+          </div>
+
+          <div class="player-controls">
+            <button class="player-skip" id="player-prev" type="button" aria-label="previous song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M20 5 9 12l11 7z"/></svg>
+            </button>
+            <button class="player-toggle" id="player-toggle" type="button" data-playing="no" aria-label="play">
+              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
+            </button>
+            <button class="player-skip" id="player-next" type="button" aria-label="next song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5v14M4 5l11 7-11 7z"/></svg>
+            </button>
+          </div>
+          <a class="player-link" id="player-link" href="#" target="_blank" rel="noopener" hidden>hear the whole thing</a>
+        </article>
+
+        <p class="card-label song-list-label">the whole playlist</p>
         <div class="song-list" id="song-list"></div>
       </section>
 
@@ -727,7 +787,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-distance" aria-label="distance">
-        <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>Little beacons for when the distance starts acting too powerful.</p></div>
+        <div class="section-head"><p class="eyebrow">two dots, one thread</p><h2>While Apart</h2><p>For when the distance gets loud.</p></div>
 
         <!-- A real thread you can actually pull, not just a decoration - one
              tap sends a pulse across it that lands on the other phone. -->
@@ -756,7 +816,7 @@
       </section>
 
       <section class="screen world-screen" id="screen-memory" aria-label="memories">
-        <div class="section-head"><p class="eyebrow">the bits I keep</p><h2>Our Little World</h2><p>Memory polaroids for the tiny private mythology.</p><img class="head-charm" src="./assets/mood/polaroid-2.webp" alt=""></div>
+        <div class="section-head"><p class="eyebrow">the bits I keep</p><h2>Our Little World</h2><p>The bits only we would keep.</p><img class="head-charm" src="./assets/mood/polaroid-2.webp" alt=""></div>
         <div class="memory-list" id="memory-list"></div>
       </section>
 
@@ -853,7 +913,7 @@
         <div class="section-head">
           <p class="eyebrow">our eyes only</p>
           <h2>Just for us</h2>
-          <p>Encrypted on this phone before it goes anywhere.</p>
+          <p>Locked. Only the two of us.</p>
           <img class="head-charm" src="./assets/mood/bunny-loveheart-hero.webp" alt="">
         </div>
 
@@ -868,7 +928,6 @@
           <input class="vault-input" id="vault-pass" type="password" autocomplete="new-password" placeholder="our thing">
           <label class="field-label" for="vault-new-pin">a PIN for this phone</label>
           <input class="vault-input" id="vault-new-pin" type="password" inputmode="numeric" maxlength="8" placeholder="4&ndash;8 digits">
-          <p class="tiny vault-note">The PIN just skips retyping it here. The passphrase is what actually locks things.</p>
           <button class="primary-btn wide" type="submit">lock it</button>
         </form>
 
@@ -876,7 +935,6 @@
         <form class="premium-card vault-panel hidden" id="vault-unlock-form" data-phase="locked">
           <div class="vault-bigmark" aria-hidden="true">🔒</div>
           <h3>Locked.</h3>
-          <p class="tiny" id="vault-lock-note">Enter your PIN for this phone.</p>
           <input class="vault-input" id="vault-pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN">
           <button class="holdlock" id="vault-holdlock" type="button" aria-label="press and hold to open">
             <span class="holdlock-ring" aria-hidden="true"></span>
@@ -897,7 +955,7 @@
               </label>
               <button class="secondary-btn" id="vault-lock-now" type="button">lock</button>
             </div>
-            <p class="tiny vault-note">One-way. Once it's sent, it's theirs &mdash; you don't get it back, and they can't send it back to you either.</p>
+            <p class="tiny vault-note">One-way. Once it&rsquo;s sent, it&rsquo;s theirs.</p>
             <div class="vault-grid" id="vault-inbox-grid"></div>
           </article>
 
@@ -905,7 +963,6 @@
             <span class="tape tr" aria-hidden="true"></span>
             <p class="card-label">both of you, one collection</p>
             <h3>Collective Memories</h3>
-            <p class="tiny">Anything either of you wants to keep &mdash; still just for the two of you.</p>
             <div class="vault-actions">
               <label class="primary-btn vault-add">
                 add a memory
@@ -915,10 +972,6 @@
             <div class="vault-grid" id="memories-grid"></div>
           </article>
 
-          <article class="premium-card vault-truth">
-            <p class="card-label">the fine print</p>
-            <p>Encrypted, hold-to-view, locks itself the second you switch apps. It can&rsquo;t stop a screenshot &mdash; nothing on the web can &mdash; but it reacts instantly instead of pretending.</p>
-          </article>
         </div>
 
         <div class="vault-viewer" id="vault-viewer" hidden>
@@ -929,7 +982,7 @@
       </section>
 
       <section class="screen" id="screen-care" aria-label="care">
-        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>You do not have to scroll around hoping to find the right comfort. Tell me what kind of moment this is and let me meet you there.</p></div>
+        <div class="section-head"><p class="eyebrow">when the missing gets loud</p><h2>Come here, babyy.</h2><p>Tell me what kind of moment this is.</p></div>
         <article class="care-checkin premium-card">
           <p class="card-label">what does your heart need?</p>
           <div class="care-modes">
@@ -1033,7 +1086,7 @@
   <script src="./content.js?v=48"></script>
   <script src="./movies.js?v=1"></script>
   <script src="./push.js?v=2"></script>
-  <script src="./app.js?v=84"></script>
+  <script src="./app.js?v=90"></script>
   <script src="./bloom.js?v=5"></script>
   <script src="./galaxy.js?v=1"></script>
   <script src="./vault.js?v=3"></script>

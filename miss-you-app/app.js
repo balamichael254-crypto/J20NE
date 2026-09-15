@@ -9,6 +9,45 @@ const expansion = window.MOONPIE_EXPANSION || {};
 const PROFILE_NICK = { Michelle: "Moonpie", Michael: "Sunstone" };
 const nickOf = name => PROFILE_NICK[name] || name;
 
+/* ---------------------------------------------------------------------------
+   Two sides.
+
+   This app is a gift in both directions. Whoever unlocked it is "me"; the
+   other one is "them". Everything the app says about the two of us - the
+   greeting, the streak, who a letter is being sent to, whose score is whose
+   - runs through here, so on her phone it speaks to Moonpie about Sunstone
+   and on his it speaks to Sunstone about Moonpie. It used to assume the
+   reader was always her, which meant he came back three days running and
+   was congratulated for her streak.
+
+   The written content is deliberately NOT flipped. The twelve letters, the
+   hundred reasons and the songs were written by one of us for the other,
+   and they stay addressed the way they were written, the same way a letter
+   in a drawer still has a name on it when the person who wrote it reads it
+   back.
+   ------------------------------------------------------------------------ */
+function meId() { return state.profile === "Michael" ? "Michael" : "Michelle"; }
+function themId() { return meId() === "Michael" ? "Michelle" : "Michael"; }
+function myName() { return nickOf(meId()); }
+function theirName() { return nickOf(themId()); }
+function readerIsHer() { return meId() === "Michelle"; }
+
+/* Markup carries both readings inline rather than needing a template:
+     data-voice-name="me|them"         prints the right nickname
+     data-voice-hers / data-voice-his  swaps a whole line
+   One pass at boot and again whenever the profile changes. */
+function applyVoice(root = document) {
+  $$("[data-voice-name]", root).forEach(el => {
+    el.textContent = el.dataset.voiceName === "them" ? theirName() : myName();
+  });
+  $$("[data-voice-hers]", root).forEach(el => {
+    el.textContent = readerIsHer()
+      ? el.dataset.voiceHers
+      : (el.dataset.voiceHis || el.dataset.voiceHers);
+  });
+  document.body.dataset.side = readerIsHer() ? "hers" : "his";
+}
+
 const STORE_KEY = "moonpie-miss-you-v9";
 const defaultState = { mood: "soft", widgets: [], widgetCloudMigrated: false, openedReasons: [], softMode: false, lastWorld: "home", hasEnteredUniverse: false, bestBubbleScore: 0, bubbleBestByProfile: {}, challengeIndex: 0, profile: "Michelle", reasonDeck: [], reasonCursor: 0, lastReasonIndex: -1, lastComfortByMood: {}, handDeck: [], handCursor: 0, visitLog: [], giftMemory: {}, watchSaved: [], watchSeen: [], lockOpened: false, bouquetItems: [], bouquetWrap: "kraft", bouquetRecipe: 0, localDailyAnswers: {}, worldPicks: {}, worldNext: "", openedLetters: [] };
 let state = loadState();
@@ -698,6 +737,7 @@ function openScreen(name, options = {}) {
   // jigsaw holds object URLs and a drag listener on document; neither should
   // outlive the screen they belong to.
   if (name !== "games") unmountGame();
+  if (name !== "day") stopDayClock();
   // The galaxy canvas runs its own continuous rAF loop - that has to stop
   // the instant she leaves the screen (not just when she navigates away
   // from the app entirely), or it keeps drawing at full rate behind whatever
@@ -707,11 +747,7 @@ function openScreen(name, options = {}) {
   else window.MoonpieGalaxy?.unmount();
   if (name === "us") refreshHearth();
   if (name === "letters") renderLetterInbox();
-  if (name === "songs") {
-    $$(".spotify-card iframe[data-src]").forEach(frame => {
-      if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.src);
-    });
-  }
+  window.dispatchEvent(new CustomEvent("moonpie:screen", { detail: name }));
   if (changed) flowerPageTransition();
   revealNav(2600);
 }
@@ -1361,36 +1397,48 @@ function bouquetRemoveItem(id) {
    breaking the outline - so it is a different bouquet each time she asks.
    ------------------------------------------------------------------------ */
 const BOUQUET_SOURCES = {
-  lily:      ["./assets/flowers/lily-3.webp", "./assets/flowers/lily-5.webp"],
-  rose:      ["./assets/flowers/cut-rose.webp"],
-  tulip:     ["./assets/flowers/cut-tulip.webp", "./assets/flowers/cut-tulip-pink.webp"],
-  daisy:     ["./assets/flowers/cut-daisy.webp"],
-  carnation: ["./assets/flowers/cut-carnation.webp"],
-  sunflower: ["./assets/flowers/cut-sunflower.webp"],
-  hydrangea: ["./assets/flowers/cut-hydrangea.webp"],
-  greenery:  ["./assets/flowers/cut-eucalyptus.webp"],
-  filler:    ["./assets/flowers/cut-babysbreath.webp"],
+  lily:          ["./assets/flowers/lily-3.webp", "./assets/flowers/lily-5.webp",
+                  "./assets/flowers/cut-lily-white.webp"],
+  calla:         ["./assets/flowers/cut-lily-calla.webp", "./assets/flowers/cut-lily-calla-2.webp"],
+  rose:          ["./assets/flowers/cut-rose.webp", "./assets/flowers/cut-rose-red-2.webp",
+                  "./assets/flowers/cut-rose-pink.webp"],
+  tulip:         ["./assets/flowers/cut-tulip.webp", "./assets/flowers/cut-tulip-pink.webp"],
+  peony:         ["./assets/flowers/cut-peony.webp"],
+  ranunculus:    ["./assets/flowers/cut-ranunculus.webp"],
+  anemone:       ["./assets/flowers/cut-anemone.webp"],
+  chrysanthemum: ["./assets/flowers/cut-chrysanthemum.webp"],
+  daisy:         ["./assets/flowers/cut-daisy.webp"],
+  carnation:     ["./assets/flowers/cut-carnation.webp"],
+  sunflower:     ["./assets/flowers/cut-sunflower.webp"],
+  hydrangea:     ["./assets/flowers/cut-hydrangea.webp"],
+  greenery:      ["./assets/flowers/cut-eucalyptus.webp"],
+  filler:        ["./assets/flowers/cut-babysbreath.webp"],
 };
 
 /* how far back in the bunch a kind belongs: high numbers go to the middle */
 const BOUQUET_DEPTH = {
-  lily: 5, sunflower: 5, hydrangea: 4, rose: 4,
-  carnation: 3, tulip: 3, daisy: 2, filler: 1, greenery: 0, bow: -1,
+  lily: 5, calla: 5, sunflower: 5, peony: 4, hydrangea: 4, rose: 4,
+  anemone: 3, chrysanthemum: 3, ranunculus: 3, carnation: 3, tulip: 3,
+  daisy: 2, filler: 1, greenery: 0, bow: -1,
 };
 
 const BOUQUET_RECIPES = [
   { wrap: "blush", note: "stargazers, the way they came the first time",
     stems: ["lily","lily","lily","lily","lily","filler","filler","greenery","greenery","greenery"] },
-  { wrap: "lilac", note: "a soft one: lilies, hydrangea, a lot of greenery",
-    stems: ["lily","lily","lily","hydrangea","hydrangea","carnation","filler","greenery","greenery","greenery","greenery"] },
+  { wrap: "lace", note: "all white: callas, lilies and nothing shouting",
+    stems: ["calla","calla","calla","lily","lily","chrysanthemum","filler","filler","greenery","greenery"] },
+  { wrap: "lilac", note: "a soft one: peonies, ranunculus, a lot of greenery",
+    stems: ["peony","peony","ranunculus","ranunculus","lily","hydrangea","filler","greenery","greenery","greenery"] },
   { wrap: "kraft", note: "a garden bunch, picked rather than bought",
-    stems: ["rose","rose","tulip","tulip","daisy","daisy","daisy","carnation","filler","filler","greenery","greenery"] },
+    stems: ["rose","rose","tulip","tulip","daisy","daisy","anemone","carnation","filler","greenery","greenery"] },
   { wrap: "sage", note: "the loud one, for a day that needs it",
-    stems: ["sunflower","sunflower","sunflower","tulip","tulip","daisy","daisy","greenery","greenery","greenery"] },
-  { wrap: "lace", note: "white on white, nothing shouting",
-    stems: ["lily","lily","daisy","daisy","daisy","hydrangea","filler","filler","filler","greenery","greenery"] },
+    stems: ["sunflower","sunflower","sunflower","tulip","tulip","daisy","chrysanthemum","greenery","greenery","greenery"] },
+  { wrap: "blush", note: "a dozen roses, because sometimes that is the answer",
+    stems: ["rose","rose","rose","rose","rose","rose","filler","filler","greenery","greenery"] },
+  { wrap: "lilac", note: "anemones and callas, the strange elegant one",
+    stems: ["anemone","anemone","calla","calla","ranunculus","peony","filler","greenery","greenery"] },
   { wrap: "blush", note: "everything, because why pick",
-    stems: ["lily","rose","tulip","tulip","sunflower","daisy","carnation","hydrangea","filler","greenery","greenery"] },
+    stems: ["lily","calla","rose","peony","tulip","sunflower","daisy","anemone","hydrangea","filler","greenery"] },
 ];
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
@@ -1753,8 +1801,134 @@ function stampSrc(name) {
   return `./assets/paper/stamp-${id}.webp`;
 }
 
-function envelopeHtml(opts) {
+/* ============================================================================
+   How a letter is folded.
+
+   Every letter in here opened the same way: one envelope, one flap, one
+   animation, sixteen times. Changing the paper colour under it does not make
+   it a different letter, it makes it the same letter in a different shirt.
+
+   Before envelopes were mass produced in the 1800s, a letter WAS its own
+   envelope, and how you folded it was part of what you were saying. The
+   field that studies this is called letterlocking (Dambrogio and Smith's
+   work at MIT and Yale catalogues hundreds of formats). A letter sewn shut
+   with thread and booby-trapped so it tore if opened wrong is a different
+   object from one tied in a love knot, and both are different from a heart
+   folded out of the page it is written on.
+
+   So there are seven folds here, and each one comes apart its own way:
+
+     envelope   the flap falls back and the sheet rises out of the pocket
+     heart      two lobes open, then the square unfolds from its corners
+     knot       a woven tab pulls free and the paper unrolls in two stages
+     scroll     the ribbon unties and the roll runs down the screen
+     accordion  concertina panels fan out one after another
+     dagger     sewn shut: cut the thread first, then pry the flap
+     pleat      folded so half of it is hidden, and the hidden half unfolds
+
+   The dagger one is the only one that asks for something back: you have to
+   drag across the stitching to cut it before it will open, the way the real
+   format made a reader work for it.
+   ========================================================================= */
+const LETTER_FOLDS = {
+  envelope:  { tag: "sealed with wax",            openMs: 620 },
+  heart:     { tag: "folded into a heart",        openMs: 980 },
+  knot:      { tag: "tied in a love knot",        openMs: 880 },
+  scroll:    { tag: "rolled and tied",            openMs: 960 },
+  accordion: { tag: "folded like a concertina",   openMs: 900 },
+  dagger:    { tag: "sewn shut",                  openMs: 1050, cut: true },
+  pleat:     { tag: "folded to hide half of it",  openMs: 940 },
+};
+const FOLD_ORDER = ["envelope", "heart", "knot", "scroll", "accordion", "dagger", "pleat"];
+
+/* A letter keeps the same fold forever - it is part of which letter it is,
+   not a surprise that changes between visits. Content can name one; anything
+   that does not gets one from its position, so the list never shows the same
+   fold twice in a row. */
+function foldFor(letter, index) {
+  if (letter?.fold && LETTER_FOLDS[letter.fold]) return letter.fold;
+  return FOLD_ORDER[index % FOLD_ORDER.length];
+}
+
+/* --------------------------------------------------------------- markup */
+
+function foldInnerHtml(fold, opts) {
   const stamp = stampSrc(opts.stamp || opts.theme);
+  const to = escapeHtml(opts.to || "");
+  const tab = escapeHtml(opts.tab || "");
+  const seal = escapeHtml(opts.initial || "M");
+
+  if (fold === "heart") {
+    // a square of paper folded corner to corner, with the two lobes of the
+    // heart on top. The lobes swing away, then the corners drop.
+    return `
+      <span class="fold-heart">
+        <span class="heart-lobe left"></span>
+        <span class="heart-lobe right"></span>
+        <span class="heart-body"></span>
+        <span class="heart-corner tl"></span>
+        <span class="heart-corner tr"></span>
+        <span class="heart-corner bl"></span>
+        <span class="heart-corner br"></span>
+        <span class="heart-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "knot") {
+    return `
+      <span class="fold-knot">
+        <span class="knot-sheet"></span>
+        <span class="knot-band"></span>
+        <span class="knot-tab" aria-hidden="true"></span>
+        <span class="knot-ink">${to}</span>
+        <span class="knot-hint">pull the tab</span>
+      </span>`;
+  }
+
+  if (fold === "scroll") {
+    return `
+      <span class="fold-scroll">
+        <span class="scroll-paper"></span>
+        <span class="scroll-roll top"></span>
+        <span class="scroll-roll bottom"></span>
+        <span class="scroll-ribbon"></span>
+        <span class="scroll-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "accordion") {
+    return `
+      <span class="fold-accordion">
+        ${"<i></i>".repeat(7)}
+        <span class="acc-ink">${to}</span>
+      </span>`;
+  }
+
+  if (fold === "dagger") {
+    // the historical booby-trapped lock: sewn shut, then sealed. The stitch
+    // is a real target - dragging across it is what opens this one.
+    return `
+      <span class="fold-dagger">
+        <span class="dagger-sheet"></span>
+        <span class="dagger-flap"></span>
+        <svg class="dagger-thread" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M6 20 L18 8 L30 32 L42 8 L54 32 L66 8 L78 32 L94 20"/>
+        </svg>
+        <span class="dagger-wax">${seal}</span>
+        <span class="dagger-ink">${to}</span>
+        <span class="dagger-hint">drag across the stitching</span>
+      </span>`;
+  }
+
+  if (fold === "pleat") {
+    return `
+      <span class="fold-pleat">
+        ${"<i></i>".repeat(6)}
+        <span class="pleat-ink">${to}</span>
+      </span>`;
+  }
+
+  // the envelope, which is still the right answer for a lot of them
   return `
     <span class="env-stack">
       <span class="env-back" aria-hidden="true"></span>
@@ -1762,25 +1936,65 @@ function envelopeHtml(opts) {
       <span class="env-front" aria-hidden="true"></span>
       <img class="env-stamp" src="${stamp}" alt="" aria-hidden="true">
       <span class="env-postmark" aria-hidden="true">OURS<br>25 FEB</span>
-      <span class="env-tab">${escapeHtml(opts.tab || "")}</span>
-      <span class="env-to">${escapeHtml(opts.to || "")}</span>
+      <span class="env-tab">${tab}</span>
+      <span class="env-to">${to}</span>
       <span class="env-flap" aria-hidden="true"><i></i></span>
-      <span class="env-seal" aria-hidden="true">${escapeHtml(opts.initial || "M")}</span>
-    </span>
-    <span class="env-caption">
-      <strong>${escapeHtml(opts.title || "")}</strong>
-      ${opts.preview ? `<small>${escapeHtml(opts.preview)}</small>` : ""}
-      <em>${escapeHtml(opts.cta || "tap to unseal")}</em>
+      <span class="env-seal" aria-hidden="true">${seal}</span>
     </span>`;
 }
 
+function envelopeHtml(opts) {
+  const fold = opts.fold || "envelope";
+  return `
+    ${foldInnerHtml(fold, opts)}
+    <span class="env-caption">
+      <strong>${escapeHtml(opts.title || "")}</strong>
+      ${opts.preview ? `<small>${escapeHtml(opts.preview)}</small>` : ""}
+      <em>${escapeHtml(opts.cta || LETTER_FOLDS[fold].tag)}</em>
+    </span>`;
+}
+
+/* ------------------------------------------------------------- unfolding */
+
+/* The dagger fold will not open until the thread is cut. One drag across the
+   stitching does it - pointer events, so a finger and a mouse are the same
+   code, and the stitch redraws as it parts rather than just vanishing. */
+function armThreadCutting(card) {
+  const thread = card.querySelector(".dagger-thread");
+  if (!thread || thread.dataset.armed) return;
+  thread.dataset.armed = "1";
+  let from = null;
+  const start = event => {
+    from = event.clientX;
+    try { thread.setPointerCapture(event.pointerId); } catch { /* not always allowed */ }
+  };
+  const move = event => {
+    if (from === null) return;
+    if (Math.abs(event.clientX - from) < 42) return;
+    from = null;
+    card.classList.add("thread-cut");
+    window.Poo?.react?.("excited");
+    // the letter opens on its own once it is actually cut
+    setTimeout(() => card.click(), 420);
+  };
+  const end = () => { from = null; };
+  thread.addEventListener("pointerdown", start);
+  thread.addEventListener("pointermove", move);
+  thread.addEventListener("pointerup", end);
+  thread.addEventListener("pointercancel", end);
+}
+
 function renderLetters() {
-  const me = nickOf(window.MoonpiePush?.myProfile?.() || "Michelle");
-  const them = nickOf(window.MoonpiePush?.otherProfile?.() || "Michael");
-  $("#letter-list").innerHTML = letters.map((letter, i) => `
-    <button class="envelope theme-${letter.theme}" type="button" data-letter="${i}"
-            aria-label="${escapeHtml(letter.title)} - tap to unseal">
+  // These twelve were written by Sunstone for Moonpie. They keep her name on
+  // the envelope whoever opens the app, the way a letter in a drawer does.
+  const me = nickOf("Michelle"), them = nickOf("Michael");
+  $("#letter-list").innerHTML = letters.map((letter, i) => {
+    const fold = foldFor(letter, i);
+    return `
+    <button class="envelope theme-${letter.theme} fold-is-${fold}" type="button" data-letter="${i}"
+            data-fold="${fold}" aria-label="${escapeHtml(letter.title)} - ${LETTER_FOLDS[fold].tag}">
       ${envelopeHtml({
+        fold,
         theme: letter.theme,
         tab: letter.tab,
         to: `for ${me}`,
@@ -1788,8 +2002,10 @@ function renderLetters() {
         title: letter.title,
         preview: letter.preview,
       })}
-    </button>
-  `).join("");
+    </button>`;
+  }).join("");
+  // the sewn one has to be cut before it will open
+  $$("#letter-list .fold-is-dagger").forEach(armThreadCutting);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1874,14 +2090,104 @@ function handwrite(host, blocks) {
   handwriting.raf = requestAnimationFrame(step);
 }
 
+/* ============================================================================
+   Poems: a notebook, not a list.
+
+   Twelve poems as twelve stacked cards means she scrolls past eleven of them
+   to reach the twelfth, and a poem read while scrolling past it is not read.
+   A poem wants one page and nothing else on it.
+
+   So it is a real notebook. One poem to a page, in handwriting on the same
+   photographed paper the letters use, and the page turns - a rotateY around
+   the spine with the sheet's own weight behind it. Turn by tapping the corner
+   or dragging the page across, the way you would with paper.
+   ========================================================================= */
+let poemPage = 0;
+
+function poemPageHtml(poem, i, total) {
+  // content.js carries [title, form, body]; the originals in app.js are just
+  // [title, body]. Taking the last element as the body handles both, which
+  // matters because reading it as [title, body] printed the form line where
+  // the poem should be and dropped the poem entirely.
+  const title = poem[0];
+  const form = poem.length > 2 ? poem[1] : "";
+  const body = poem[poem.length - 1];
+  const lines = String(body).split("\n");
+  return `
+    <article class="nb-page" data-page="${i}" style="z-index:${total - i}">
+      <div class="nb-face">
+        <span class="nb-rule" aria-hidden="true"></span>
+        <p class="nb-num">${String(i + 1).padStart(2, "0")} of ${total}</p>
+        <h3>${escapeHtml(title)}</h3>
+        ${form ? `<p class="nb-form">${escapeHtml(form)}</p>` : ""}
+        <div class="nb-body">${lines.map(line =>
+          `<span>${escapeHtml(line) || "&nbsp;"}</span>`).join("")}</div>
+        <span class="nb-corner" aria-hidden="true"></span>
+      </div>
+      <div class="nb-back" aria-hidden="true"></div>
+    </article>`;
+}
+
+function paintPoemPages() {
+  const total = poems.length;
+  $$(".nb-page").forEach(page => {
+    const i = Number(page.dataset.page);
+    const turned = i < poemPage;
+    page.classList.toggle("is-turned", turned);
+    // turned pages stack up on the left in the order they were turned;
+    // untouched ones keep the original stack with the current one on top
+    page.style.zIndex = turned ? i : total - i;
+  });
+  const label = $("#poem-count");
+  if (label) label.textContent = `${Math.min(poemPage + 1, total)} / ${total}`;
+  const prev = $("#poem-prev"), next = $("#poem-next");
+  if (prev) prev.disabled = poemPage === 0;
+  if (next) next.disabled = poemPage >= total - 1;
+}
+
+function turnPoem(delta) {
+  const next = poemPage + delta;
+  if (next < 0 || next > poems.length - 1) return;
+  poemPage = next;
+  paintPoemPages();
+}
+
 function renderPoems() {
-  $("#poem-list").innerHTML = poems.map(([title, form, body]) => `
-    <article class="poem-card premium-card">
-      <p class="card-label">${escapeHtml(form || "after midnight")}</p>
-      <h3>${escapeHtml(title)}</h3>
-      <pre>${escapeHtml(body)}</pre>
-    </article>
-  `).join("");
+  const host = $("#notebook-pages");
+  if (!host) return;
+  host.innerHTML = poems.map((poem, i) => poemPageHtml(poem, i, poems.length)).join("");
+  paintPoemPages();
+  bindPoemDrag(host);
+}
+
+/* Dragging the page. A horizontal drag past a threshold turns it; anything
+   shorter springs back, so a scroll down the screen never turns a page by
+   accident. */
+function bindPoemDrag(host) {
+  if (host.dataset.bound) return;
+  host.dataset.bound = "1";
+  let startX = null, startY = null;
+  host.addEventListener("pointerdown", event => {
+    startX = event.clientX; startY = event.clientY;
+  });
+  host.addEventListener("pointerup", event => {
+    if (startX === null) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    startX = startY = null;
+    if (Math.abs(dx) < 46 || Math.abs(dy) > Math.abs(dx)) return;
+    turnPoem(dx < 0 ? 1 : -1);
+  });
+  host.addEventListener("pointercancel", () => { startX = startY = null; });
+}
+
+function initPoems() {
+  $("#poem-prev")?.addEventListener("click", () => turnPoem(-1));
+  $("#poem-next")?.addEventListener("click", () => turnPoem(1));
+  // tapping the page itself turns it forward, the corner included
+  $("#notebook-pages")?.addEventListener("click", event => {
+    if (event.target.closest(".nb-corner")) turnPoem(1);
+  });
 }
 
 function renderNotices() {
@@ -1893,13 +2199,101 @@ function renderNotices() {
   `).join("");
 }
 
+/* ============================================================================
+   One Perfect Day.
+
+   Twelve rows of "time, then a sentence" is a bus timetable. The whole point
+   of this screen is that it is a DAY - it starts at 7:42 in the morning and
+   ends two minutes before midnight - and none of that was on screen.
+
+   So the day actually runs now. The sky behind it moves from dawn through
+   noon and golden hour into night as she scrolls, the sun climbs and sets
+   along an arc, stars come out for the last few hours, and every stop knows
+   what time of day it belongs to. Scrolling from the top to the bottom of
+   this screen is sixteen hours passing.
+
+   All of it hangs off one number: --day-t, zero at 7:42am and one at 11:58pm.
+   The sky layers cross-fade on it, the sun is positioned by it, and each card
+   carries its own so it can be tinted to its own hour.
+   ========================================================================= */
+
+/* "9:15 PM" -> minutes since midnight */
+function dayMinutes(label) {
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(label).trim());
+  if (!match) return 0;
+  let hour = Number(match[1]) % 12;
+  if (/pm/i.test(match[3])) hour += 12;
+  return hour * 60 + Number(match[2]);
+}
+
+/* Where a stop sits in this particular day, 0 at the first stop and 1 at the
+   last. Not "fraction of 24 hours": the day starts when we wake up. */
+function dayFraction(label) {
+  const first = dayMinutes(dayPlan[0][0]);
+  const last = dayMinutes(dayPlan[dayPlan.length - 1][0]);
+  const span = Math.max(1, last - first);
+  return Math.min(1, Math.max(0, (dayMinutes(label) - first) / span));
+}
+
 function renderDay() {
-  $("#day-timeline").innerHTML = dayPlan.map(([time, text]) => `
-    <article class="timeline-row">
-      <time>${time}</time>
-      <p>${text}</p>
-    </article>
-  `).join("");
+  const host = $("#day-timeline");
+  if (!host) return;
+  host.innerHTML = dayPlan.map(([time, text], i) => {
+    const t = dayFraction(time);
+    return `
+      <article class="day-stop" style="--t:${t.toFixed(3)}" data-t="${t.toFixed(3)}">
+        <span class="day-stop-dot" aria-hidden="true"></span>
+        <time>${escapeHtml(time)}</time>
+        <p>${escapeHtml(text)}</p>
+      </article>`;
+  }).join("");
+  startDayClock();
+}
+
+/* The sky follows whichever stop is nearest the middle of the screen, so it
+   tracks reading position rather than raw scroll offset - the card she is
+   actually looking at is the hour the sky is showing. */
+let dayClockRaf = 0;
+function startDayClock() {
+  stopDayClock();
+  const screen = $("#screen-day");
+  const stops = $$(".day-stop");
+  if (!screen || !stops.length) return;
+
+  let last = -1;
+  const tick = () => {
+    const middle = window.innerHeight * 0.45;
+    let best = stops[0], bestGap = Infinity;
+    for (const stop of stops) {
+      const box = stop.getBoundingClientRect();
+      const gap = Math.abs(box.top + box.height / 2 - middle);
+      if (gap < bestGap) { bestGap = gap; best = stop; }
+    }
+    // ease between neighbours instead of snapping, so the sky drifts
+    const box = best.getBoundingClientRect();
+    const own = Number(best.dataset.t);
+    const index = stops.indexOf(best);
+    const above = box.top + box.height / 2 < middle;
+    const neighbour = stops[index + (above ? 1 : -1)];
+    let t = own;
+    if (neighbour) {
+      const span = Math.max(1, box.height + 22);
+      const lean = Math.min(1, bestGap / span) * 0.5;
+      t = own + (Number(neighbour.dataset.t) - own) * lean;
+    }
+    if (Math.abs(t - last) > 0.001) {
+      screen.style.setProperty("--day-t", t.toFixed(4));
+      last = t;
+    }
+    stops.forEach(stop => stop.classList.toggle("is-now", stop === best));
+    dayClockRaf = requestAnimationFrame(tick);
+  };
+  dayClockRaf = requestAnimationFrame(tick);
+}
+
+function stopDayClock() {
+  if (dayClockRaf) cancelAnimationFrame(dayClockRaf);
+  dayClockRaf = 0;
 }
 
 // Places she has actually stepped into, by name (stable across a reorder or
@@ -2134,33 +2528,209 @@ function openFutureWorld(index) {
   flowerPageTransition();
 }
 
-function songCardHtml([name, artist, note, spotifyId], i) {
+/* ============================================================================
+   Songs That Are You: a player, rather than a list of players.
+
+   This screen was a column of Spotify embeds. A Spotify embed does not play
+   to somebody who is not signed in to Spotify on that device - it shows the
+   artwork and puts the song behind a login, and on a phone with the app
+   installed it tries to hand off instead. So a playlist that could not be
+   played, which is the one thing a playlist has to do.
+
+   It is one real audio player now. Album art and a thirty second preview
+   come from api/music.js (Apple's keyless search endpoint), the deck plays
+   straight through and advances on its own, and the full track is one tap
+   away for whoever wants the whole thing. The note for each song sits with
+   it, because the note is the actual point of this screen.
+   ========================================================================= */
+const MUSIC_API = "../api/music";
+
+/* Lookups are stable forever and cost a round trip, so they are remembered
+   between visits. A miss is remembered too, otherwise a song Apple does not
+   carry re-asks on every single visit. */
+const musicCache = (() => {
+  const KEY = "moonpie-music-v1";
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch { map = {}; }
+  return {
+    get: key => map[key],
+    set(key, value) {
+      map[key] = value;
+      try { localStorage.setItem(KEY, JSON.stringify(map)); } catch { /* private mode */ }
+    },
+  };
+})();
+
+async function musicLookup(title, artist) {
+  const key = `${title}|${artist}`.toLowerCase();
+  const cached = musicCache.get(key);
+  if (cached !== undefined) return cached;
+  try {
+    const query = new URLSearchParams({ title, artist: artist || "" });
+    const result = await fetch(`${MUSIC_API}?${query}`);
+    const found = result.ok ? await result.json() : null;
+    musicCache.set(key, found);
+    return found;
+  } catch {
+    return null;   // offline: the notes still read, there is just no sound
+  }
+}
+
+const player = {
+  audio: null,
+  index: -1,
+  loading: false,
+  deck: [],
+};
+
+function playerAudio() {
+  if (player.audio) return player.audio;
+  const audio = new Audio();
+  audio.preload = "none";
+  audio.addEventListener("timeupdate", paintPlayerProgress);
+  audio.addEventListener("ended", () => playSongAt(player.index + 1));
+  audio.addEventListener("play", paintPlayerState);
+  audio.addEventListener("pause", paintPlayerState);
+  player.audio = audio;
+  return audio;
+}
+
+function paintPlayerProgress() {
+  const audio = player.audio;
+  const fill = $("#player-progress-fill");
+  if (!audio || !fill) return;
+  const ratio = audio.duration ? audio.currentTime / audio.duration : 0;
+  fill.style.width = `${Math.min(100, ratio * 100)}%`;
+  const elapsed = $("#player-elapsed");
+  if (elapsed) elapsed.textContent = formatClock(audio.currentTime);
+}
+
+function formatClock(seconds) {
+  if (!Number.isFinite(seconds)) return "0:00";
+  const whole = Math.floor(seconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}
+
+function paintPlayerState() {
+  const playing = player.audio && !player.audio.paused;
+  const button = $("#player-toggle");
+  if (button) {
+    button.dataset.playing = playing ? "yes" : "no";
+    button.setAttribute("aria-label", playing ? "pause" : "play");
+  }
+  $$(".song-row").forEach(row => {
+    const on = Number(row.dataset.songIndex) === player.index;
+    row.classList.toggle("is-playing", on && playing);
+    row.classList.toggle("is-current", on);
+  });
+}
+
+async function playSongAt(index) {
+  if (!player.deck.length) return;
+  const wrapped = ((index % player.deck.length) + player.deck.length) % player.deck.length;
+  const song = player.deck[wrapped];
+  player.index = wrapped;
+  player.loading = true;
+  paintNowPlaying(song, null);
+
+  const found = await musicLookup(song[0], song[1]);
+  player.loading = false;
+  // she may have tapped another track while this one was still resolving
+  if (player.index !== wrapped) return;
+  paintNowPlaying(song, found);
+  if (!found?.preview) { paintPlayerState(); return; }
+
+  const audio = playerAudio();
+  audio.src = found.preview;
+  audio.currentTime = 0;
+  try { await audio.play(); } catch { /* autoplay blocked until she taps */ }
+  paintPlayerState();
+}
+
+function paintNowPlaying(song, found) {
+  const [title, artist, note] = song;
+  const art = $("#player-art");
+  if (art) {
+    if (found?.artwork) {
+      art.style.backgroundImage = `url("${found.artwork}")`;
+      art.classList.remove("is-empty");
+    } else if (!found) {
+      art.classList.add("is-empty");
+    }
+  }
+  const set = (sel, text) => { const el = $(sel); if (el) el.textContent = text; };
+  set("#player-title", title);
+  set("#player-artist", artist);
+  set("#player-note", note);
+  set("#player-total", found?.preview ? "0:30" : "");
+  const status = $("#player-status");
+  if (status) {
+    status.textContent = player.loading ? "finding it..."
+      : found?.preview ? "thirty second preview"
+      : "no preview for this one, but the words still count";
+  }
+  const link = $("#player-link");
+  if (link) {
+    link.hidden = !found?.link;
+    if (found?.link) link.href = found.link;
+  }
+  paintPlayerState();
+}
+
+function togglePlayer() {
+  const audio = player.audio;
+  if (player.index < 0) return playSongAt(0);
+  if (!audio || !audio.src) return playSongAt(player.index);
+  if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+}
+
+function songRowHtml([title, artist, note], i) {
   return `
-    <article class="song-card spotify-card premium-card">
-      <div class="song-note">
-        <p class="card-label">track ${String(i + 1).padStart(2, "0")}</p>
-        <h3>${escapeHtml(name)}</h3>
-        <strong>${escapeHtml(artist)}</strong>
-        <p>${escapeHtml(note)}</p>
-      </div>
-      ${spotifyId ? `<iframe title="Play ${escapeHtml(name)} on Spotify" data-src="https://open.spotify.com/embed/track/${encodeURIComponent(spotifyId)}?utm_source=generator&theme=0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
-    </article>
-  `;
+    <button class="song-row" type="button" data-song-index="${i}">
+      <span class="song-row-num">${String(i + 1).padStart(2, "0")}</span>
+      <span class="song-row-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="song-row-text">
+        <strong>${escapeHtml(title)}</strong>
+        <small>${escapeHtml(artist)}</small>
+        <em>${escapeHtml(note)}</em>
+      </span>
+    </button>`;
 }
 
 function renderSongs() {
-  // A featured pick up top, stable for the whole day and different tomorrow -
-  // so opening this screen twice in an hour doesn't reshuffle it, but coming
-  // back next week finds something new leading the list.
+  // The deck leads with a different song each day, so opening this twice in
+  // an hour finds the same one and coming back next week does not.
   const day = Math.floor(Date.now() / 86400000);
-  const featuredIndex = day % songs.length;
-  const featured = songs[featuredIndex];
-  const rest = songs.filter((_, i) => i !== featuredIndex);
-  $("#song-featured").innerHTML = `
-    <p class="card-label">playing for you tonight</p>
-    ${songCardHtml(featured, featuredIndex).replace('class="song-card spotify-card premium-card"', 'class="song-card spotify-card premium-card song-featured-card"')}
-  `;
-  $("#song-list").innerHTML = rest.map(songCardHtml).join("");
+  const lead = day % songs.length;
+  player.deck = songs.slice(lead).concat(songs.slice(0, lead));
+
+  const list = $("#song-list");
+  if (list) list.innerHTML = player.deck.map(songRowHtml).join("");
+
+  if (player.index < 0) paintNowPlaying(player.deck[0], undefined);
+  else paintPlayerState();
+}
+
+function initSongPlayer() {
+  $("#player-toggle")?.addEventListener("click", togglePlayer);
+  $("#player-prev")?.addEventListener("click", () => playSongAt(player.index - 1));
+  $("#player-next")?.addEventListener("click", () => playSongAt(player.index + 1));
+  $("#song-list")?.addEventListener("click", event => {
+    const row = event.target.closest("[data-song-index]");
+    if (row) playSongAt(Number(row.dataset.songIndex));
+  });
+  // scrubbing the preview
+  $("#player-progress")?.addEventListener("click", event => {
+    const audio = player.audio;
+    if (!audio?.duration) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((event.clientX - box.left) / box.width) * audio.duration;
+  });
+  // leaving the screen stops the music; nothing should keep playing from a
+  // screen she has walked away from
+  window.addEventListener("moonpie:screen", event => {
+    if (event.detail !== "songs") player.audio?.pause();
+  });
 }
 
 function renderPromises() {
@@ -3904,8 +4474,15 @@ function setupEvents() {
     const card = event.target.closest("[data-letter]");
     if (!card || card.classList.contains("opening")) return;
     const letter = letters[Number(card.dataset.letter)];
-    // the flap lifts and the seal breaks before the letter itself appears -
-    // a beat of "unsealing" instead of instantly popping a modal open
+    const fold = card.dataset.fold || "envelope";
+    // the sewn one is the only fold that asks for something back: it stays
+    // shut until the thread has actually been cut
+    if (LETTER_FOLDS[fold]?.cut && !card.classList.contains("thread-cut")) {
+      toast("this one is sewn shut. cut the stitching first");
+      return;
+    }
+    // the fold comes apart before the letter appears, and they take different
+    // lengths of time to do it
     card.classList.add("opening");
     const rect = card.getBoundingClientRect();
     burstAt(rect.left + rect.width / 2, rect.top + 18, 8);
@@ -3920,8 +4497,10 @@ function setupEvents() {
       ]);
       document.body.classList.add("focus-mode");
       modal.showModal();
-      setTimeout(() => card.classList.remove("opening"), 400);
-    }, 620);
+      setTimeout(() => {
+        card.classList.remove("opening", "thread-cut");
+      }, 400);
+    }, LETTER_FOLDS[fold]?.openMs || 620);
   });
   $("#letter-modal").addEventListener("close", () => {
     handwriteFinish();
@@ -4011,12 +4590,14 @@ function trackVisit() {
   const streak = computeStreak(state.visitLog);
   const el = $("#streak-line");
   if (!el) return;
-  if (streak >= 2) {
-    el.hidden = false;
-    el.textContent = `🔥 day ${streak} in a row you've come back to me. ${state.visitLog.length} visits and counting.`;
-  } else {
-    el.hidden = true;
-  }
+  if (streak < 2) { el.hidden = true; return; }
+  el.hidden = false;
+  // the visit log lives on this phone, so the streak is always the streak of
+  // whoever is holding it. It used to be written as though that were always
+  // her, which congratulated him for her run of days.
+  el.textContent = readerIsHer()
+    ? `\u{1F525} day ${streak} in a row you've come back to me. ${state.visitLog.length} visits and counting.`
+    : `\u{1F525} day ${streak} in a row you've come back to her. ${state.visitLog.length} visits and counting.`;
 }
 
 /* ============================================================================
@@ -4088,10 +4669,8 @@ function composeFont() { return COMPOSE_FONTS.find(f => f.id === composeState.fo
 
 function openComposer() {
   composeState.step = 0;
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
-  const them = window.MoonpiePush?.otherProfile?.(me) || (me === "Michelle" ? "Michael" : "Michelle");
-  if (!composeState.to) composeState.to = `Dear ${nickOf(them)},`;
-  if (!composeState.from) composeState.from = `Always, ${nickOf(me)}`;
+  if (!composeState.to) composeState.to = `Dear ${theirName()},`;
+  if (!composeState.from) composeState.from = `Always, ${myName()}`;
   openScreen("compose");
   renderComposer();
 }
@@ -4190,18 +4769,16 @@ function renderComposeSealStep() {
 }
 
 function composeEnvelopeHtml(title) {
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
-  const them = window.MoonpiePush?.otherProfile?.(me) || "Michelle";
   return `
     <div class="envelope theme-${composeState.envelope}" aria-hidden="true">
       ${envelopeHtml({
         theme: composeState.envelope,
         stamp: composeState.stamp,
-        tab: `from ${nickOf(me)}`,
-        to: `for ${nickOf(them)}`,
-        initial: nickOf(me).charAt(0),
+        tab: `from ${myName()}`,
+        to: `for ${theirName()}`,
+        initial: myName().charAt(0),
         title,
-        cta: "sealed, waiting for her",
+        cta: `sealed, waiting for ${theirName()}`,
       })}
     </div>`;
 }
@@ -4211,14 +4788,14 @@ function renderComposeFinal() {
   const ready = composeState.body.trim().length > 0;
   $("#compose-send").disabled = !ready;
   $("#compose-send-hint").textContent = ready
-    ? "It arrives sealed. They choose when to open it."
+    ? `It arrives on ${theirName()}'s phone sealed. They choose when to open it.`
     : "Write something first, then you can send it.";
 }
 
 async function sendComposedLetter() {
   const body = composeState.body.trim();
   if (!body) return toast("write something first");
-  const me = window.MoonpiePush?.myProfile?.() || "Michael";
+  const me = meId();
   const status = $("#compose-status");
   const button = $("#compose-send");
   button.disabled = true;
@@ -4294,7 +4871,7 @@ function renderLetterInbox() {
           theme: letter.envelope || "lilies",
           stamp: letter.stamp,
           tab: `from ${from}`,
-          to: `for ${nickOf(window.MoonpiePush?.myProfile?.() || "Michelle")}`,
+          to: `for ${myName()}`,
           initial: from.charAt(0),
           title: opened ? "a letter you have read" : "a letter arrived",
           cta: opened ? "read it again" : "tap to unseal",
@@ -4407,8 +4984,23 @@ function initComposer() {
   });
 }
 
+/* Signing out.
+
+   Not a logout in the account sense - there are no accounts here, and the
+   two of us share one passcode. It puts the gate back and forgets which
+   side of the app this phone was reading as, which is what you actually
+   want when you hand the phone over or when one of us opens it on the
+   other's device by mistake. Everything saved on the phone stays saved. */
+function signOut() {
+  state.hasEnteredUniverse = false;
+  state.lockOpened = false;
+  saveState();
+  location.reload();
+}
+
 function init() {
   document.body.dataset.world = "home";
+  applyVoice();
   trackVisit();
   renderMoon();
   document.body.classList.toggle("soft-mode", state.softMode);
@@ -4419,8 +5011,11 @@ function init() {
   setupEvents();
   setupSmartNav();
   initGamePicker();
+  initSongPlayer();
+  initPoems();
   initComposer();
   initWatchlist();
+  $("#sign-out")?.addEventListener("click", signOut);
   setupInstall();
   setupOpeningRitual();
   if (state.hasEnteredUniverse) setupWidgetSync();

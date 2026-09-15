@@ -2063,10 +2063,18 @@ body[data-world="vault"] .poo-companion{display:none}
 .bouquet-placed.removing{animation:bouquetPoof .22s ease-out forwards}
 @keyframes bouquetPoof{to{transform:scale(0.2) rotate(20deg);opacity:0}}
 
+/* Twenty flowers in one undivided pile is a spare-parts bin. Named rows,
+   her lilies first, so picking one is browsing a shop rather than scanning. */
 .bouquet-tray{
-  display:flex;flex-wrap:wrap;gap:9px;padding:10px;border-radius:var(--r-lg);
+  padding:10px 10px 12px;border-radius:var(--r-lg);
   background:rgba(255,255,255,.55);border:2px dashed rgba(168,130,224,.35);
 }
+.bouquet-tray-label{
+  margin:9px 0 5px 3px;font-family:"Quicksand",sans-serif;font-size:.7rem;
+  font-weight:800;letter-spacing:.06em;text-transform:lowercase;color:var(--lav-600);
+}
+.bouquet-tray-label:first-child{margin-top:0}
+.bouquet-tray-row{display:flex;flex-wrap:wrap;gap:8px}
 .bouquet-pick{
   width:50px;height:50px;border-radius:12px;cursor:grab;touch-action:none;
   border:2px solid var(--edge);background:#fff;display:grid;place-items:center;
@@ -2519,13 +2527,13 @@ body[data-world="vault"] .poo-companion{display:none}
 .kind-daisy,.kind-filler{animation-name:bloomBob}
 @keyframes bloomBob{ from{translate:0 1px;rotate:-2.4deg} to{translate:-1px -3px;rotate:2.6deg} }
 /* sunflower and hydrangea: heavy heads that swing slowly and barely tilt */
-.kind-sunflower,.kind-hydrangea{animation-name:bloomHeavy}
+.kind-sunflower,.kind-hydrangea,.kind-peony{animation-name:bloomHeavy}
 @keyframes bloomHeavy{ from{translate:-2px 0;rotate:-.7deg} to{translate:2px -1px;rotate:.9deg} }
 /* eucalyptus: a sprig, so it flutters */
 .kind-greenery{animation-name:bloomFlutter}
 @keyframes bloomFlutter{ from{rotate:-3.4deg;translate:0 0} to{rotate:3.8deg;translate:1px -1px} }
 /* roses and carnations: tight heads that open and close as they breathe */
-.kind-rose,.kind-carnation{animation-name:bloomBreathe}
+.kind-rose,.kind-carnation,.kind-ranunculus,.kind-anemone{animation-name:bloomBreathe}
 @keyframes bloomBreathe{ from{scale:.98;translate:0 0} to{scale:1.035;translate:0 -1.5px} }
 /* the bow just wobbles */
 .bow-placed{animation-name:bowWobble}
@@ -2545,6 +2553,11 @@ body[data-world="vault"] .poo-companion{display:none}
 .kind-rose,.kind-carnation{width:74px;height:74px;margin:-37px 0 0 -37px}
 .kind-tulip{width:78px;height:78px;margin:-39px 0 0 -39px}
 .kind-daisy{width:62px;height:62px;margin:-31px 0 0 -31px}
+.kind-calla{width:92px;height:92px;margin:-46px 0 0 -46px}
+.kind-peony{width:86px;height:86px;margin:-43px 0 0 -43px}
+.kind-anemone{width:80px;height:80px;margin:-40px 0 0 -40px}
+.kind-chrysanthemum{width:78px;height:78px;margin:-39px 0 0 -39px}
+.kind-ranunculus{width:70px;height:70px;margin:-35px 0 0 -35px}
 .kind-greenery{width:104px;height:104px;margin:-52px 0 0 -52px;opacity:.95}
 .kind-filler{width:80px;height:80px;margin:-40px 0 0 -40px;opacity:.9}
 
@@ -2577,4 +2590,632 @@ body[data-world="vault"] .poo-companion{display:none}
 .chip-swatch{
   width:20px;height:20px;border-radius:5px;display:inline-block;
   border:1.5px solid rgba(0,0,0,.12);background-position:center;
+}
+
+/* ==========================================================================
+   The song player.
+
+   This screen used to be a column of Spotify iframes, which meant it looked
+   like a playlist and could not be played by anyone not signed in to
+   Spotify on that device. One player now: real album art, a real thirty
+   second preview from api/music.js, and the reason each song is here
+   sitting with it rather than under an embed.
+   ========================================================================== */
+.player-card{
+  display:grid;gap:14px;padding:18px;border-radius:var(--r-lg);
+  background:linear-gradient(168deg,#fff,var(--lav-50));
+  border:2px solid var(--edge);box-shadow:var(--sh);
+}
+.player-art{
+  width:min(100%,238px);aspect-ratio:1;margin:2px auto 0;border-radius:14px;
+  background:linear-gradient(150deg,var(--lav-200),var(--pink));
+  background-size:cover;background-position:center;
+  box-shadow:0 14px 28px -12px rgba(60,20,80,.5);
+  transition:background-image .3s;
+}
+/* before anything is chosen, and for the few songs Apple has no art for */
+.player-art.is-empty{
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.7) 0 8%,transparent 9%),
+    repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.14) 0 3px,transparent 3px 7px),
+    linear-gradient(150deg,var(--lav-300),var(--pink-hot));
+}
+.player-meta{text-align:center}
+.player-meta h3{margin:0;font-size:1.22rem;line-height:1.2;color:var(--ink)}
+.player-meta strong{
+  display:block;margin-top:2px;font-size:.92rem;font-weight:700;color:var(--lav-600);
+}
+.player-note{
+  margin:9px auto 0;max-width:34ch;font-size:.92rem;line-height:1.5;
+  color:var(--ink-soft);
+}
+
+.player-progress{
+  height:7px;border-radius:99px;cursor:pointer;
+  background:rgba(168,130,224,.22);overflow:hidden;
+}
+.player-progress-fill{
+  display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--pink-hot),var(--lav-500));
+  transition:width .18s linear;
+}
+.player-times{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  margin-top:-6px;font-size:.72rem;font-weight:700;color:var(--ink-faint);
+}
+.player-status{flex:1;text-align:center;color:var(--lav-600)}
+
+.player-controls{display:flex;align-items:center;justify-content:center;gap:20px}
+.player-toggle,.player-skip{
+  display:grid;place-items:center;border:0;cursor:pointer;border-radius:50%;
+  background:transparent;color:var(--lav-600);transition:transform .15s,background .2s;
+}
+.player-skip{width:44px;height:44px}
+.player-skip svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.player-skip:active{transform:scale(.9)}
+.player-toggle{
+  width:62px;height:62px;color:#fff;
+  background:linear-gradient(150deg,var(--pink-hot),var(--lav-500));
+  box-shadow:0 8px 18px -6px rgba(180,60,140,.6);
+}
+.player-toggle:active{transform:scale(.93)}
+.player-toggle svg{width:26px;height:26px;fill:currentColor}
+.player-toggle .icon-pause,
+.player-toggle[data-playing="yes"] .icon-play{display:none}
+.player-toggle[data-playing="yes"] .icon-pause{display:block}
+.player-link{
+  justify-self:center;font-size:.8rem;font-weight:700;color:var(--lav-600);
+  text-decoration:underline;text-underline-offset:3px;
+}
+
+/* --- the playlist ------------------------------------------------------- */
+.song-list{display:flex;flex-direction:column;gap:8px}
+.song-row{
+  display:flex;align-items:flex-start;gap:11px;width:100%;cursor:pointer;
+  padding:11px 13px;border-radius:var(--r-md);text-align:left;
+  background:rgba(255,255,255,.72);border:2px solid var(--edge);
+  transition:transform .15s,border-color .2s,background .2s;
+}
+.song-row:active{transform:scale(.99)}
+.song-row.is-current{border-color:var(--lav-400);background:#fff}
+.song-row-num{
+  min-width:22px;font-size:.78rem;font-weight:800;color:var(--ink-faint);
+  padding-top:2px;
+}
+.song-row.is-current .song-row-num{color:var(--pink-hot)}
+.song-row-text{display:block;min-width:0}
+.song-row-text strong{display:block;font-size:.98rem;color:var(--ink);line-height:1.25}
+.song-row-text small{display:block;font-size:.8rem;color:var(--lav-600);font-weight:700;margin-top:1px}
+.song-row-text em{
+  display:block;font-style:normal;margin-top:4px;font-size:.84rem;
+  line-height:1.45;color:var(--ink-soft);
+}
+
+/* the four bars that move only on the song actually playing */
+.song-row-bars{display:none;align-items:flex-end;gap:2px;height:15px;padding-top:4px}
+.song-row.is-playing .song-row-bars{display:flex}
+.song-row.is-playing .song-row-num{display:none}
+.song-row-bars i{
+  display:block;width:3px;border-radius:2px;background:var(--pink-hot);
+  animation:songBar .9s ease-in-out infinite alternate;
+}
+.song-row-bars i:nth-child(1){height:6px;animation-delay:0s}
+.song-row-bars i:nth-child(2){height:13px;animation-delay:.18s}
+.song-row-bars i:nth-child(3){height:9px;animation-delay:.36s}
+.song-row-bars i:nth-child(4){height:15px;animation-delay:.1s}
+@keyframes songBar{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+
+@media (prefers-reduced-motion:reduce){
+  .song-row-bars i{animation:none}
+  .player-progress-fill{transition:none}
+}
+
+/* ==========================================================================
+   Seven ways a letter can be folded.
+
+   Before mass-produced envelopes, a letter was its own envelope and the fold
+   was part of the message. Letterlocking (Dambrogio and Smith, MIT/Yale)
+   catalogues hundreds of formats; six of them are here alongside the plain
+   envelope, and each one comes apart its own way rather than being the same
+   flap in a different colour.
+
+   All of them share the envelope's paper variables, so a theme still sets
+   the stock and the ink once and everything downstream follows.
+   ========================================================================== */
+.fold-heart,.fold-knot,.fold-scroll,.fold-accordion,.fold-dagger,.fold-pleat{
+  position:relative;display:block;width:100%;
+  transform-style:preserve-3d;perspective:1100px;
+}
+.fold-heart > *,.fold-knot > *,.fold-scroll > *,
+.fold-accordion > *,.fold-dagger > *,.fold-pleat > *{position:absolute}
+
+/* paper, shared with the envelope */
+.heart-body,.heart-lobe,.heart-corner,
+.knot-sheet,.knot-band,.scroll-paper,
+.fold-accordion i,.dagger-sheet,.dagger-flap,.fold-pleat i{
+  background-image:var(--sheet);background-size:200% auto;
+  background-color:var(--tint);
+}
+.fold-heart .heart-ink,.fold-knot .knot-ink,.fold-scroll .scroll-ink,
+.fold-accordion .acc-ink,.fold-dagger .dagger-ink,.fold-pleat .pleat-ink{
+  z-index:6;font-family:var(--hand);color:var(--ink-on);
+  font-size:clamp(.95rem,4vw,1.2rem);pointer-events:none;
+}
+.fold-knot .knot-hint,.fold-dagger .dagger-hint{
+  z-index:6;font-size:.68rem;font-weight:800;letter-spacing:.05em;
+  color:var(--soft-on);pointer-events:none;
+}
+
+/* --- 1. heart ----------------------------------------------------------- */
+/* A square folded corner to corner with the two lobes on top. The lobes
+   swing away first, then the four corners drop outward and it is a sheet. */
+.fold-heart{aspect-ratio:1.5/1}
+.heart-body{
+  left:26%;right:26%;top:10%;bottom:20%;
+  clip-path:polygon(50% 100%,0 46%,0 14%,18% 0,50% 14%,82% 0,100% 14%,100% 46%);
+  filter:brightness(.97);
+  box-shadow:0 8px 16px -8px rgba(40,14,60,.45);
+}
+.heart-lobe{
+  top:8%;width:17%;aspect-ratio:1;border-radius:50% 50% 0 0;
+  filter:brightness(1.06);
+  box-shadow:inset 0 3px 6px -3px rgba(255,255,255,.9);
+  transition:transform .46s cubic-bezier(.4,0,.2,1),opacity .3s ease .2s;
+}
+.heart-lobe.left{left:27.5%;transform-origin:100% 100%;rotate:-14deg}
+.heart-lobe.right{right:27.5%;transform-origin:0 100%;rotate:14deg}
+.heart-corner{
+  width:22%;aspect-ratio:1;opacity:0;
+  transition:transform .5s cubic-bezier(.4,0,.2,1) .3s,opacity .3s ease .3s;
+}
+.heart-corner.tl{left:24%;top:10%;clip-path:polygon(0 0,100% 0,0 100%);transform-origin:100% 100%}
+.heart-corner.tr{right:24%;top:10%;clip-path:polygon(0 0,100% 0,100% 100%);transform-origin:0 100%}
+.heart-corner.bl{left:24%;bottom:18%;clip-path:polygon(0 0,0 100%,100% 100%);transform-origin:100% 0}
+.heart-corner.br{right:24%;bottom:18%;clip-path:polygon(100% 0,0 100%,100% 100%);transform-origin:0 0}
+.heart-ink{left:0;right:0;bottom:1%;text-align:center}
+
+.envelope.opening .heart-lobe.left{transform:rotate(-96deg) translateY(-6px);opacity:0}
+.envelope.opening .heart-lobe.right{transform:rotate(96deg) translateY(-6px);opacity:0}
+.envelope.opening .heart-corner{opacity:1}
+.envelope.opening .heart-corner.tl{transform:rotate(-78deg)}
+.envelope.opening .heart-corner.tr{transform:rotate(78deg)}
+.envelope.opening .heart-corner.bl{transform:rotate(78deg)}
+.envelope.opening .heart-corner.br{transform:rotate(-78deg)}
+.envelope.opening .heart-body{transform:scale(1.06);transition:transform .5s ease .28s}
+
+/* --- 2. love knot ------------------------------------------------------- */
+/* A band woven through the sheet with a tab tucked under it. The tab slides
+   out, the band goes slack, and the paper unrolls in two stages. */
+.fold-knot{aspect-ratio:1.7/1}
+.knot-sheet{
+  inset:12% 6%;border-radius:4px;
+  box-shadow:0 8px 16px -8px rgba(40,14,60,.42);
+  transform-origin:center top;
+  transition:transform .44s cubic-bezier(.4,0,.2,1) .22s;
+}
+.knot-band{
+  left:6%;right:6%;top:42%;height:17%;
+  filter:brightness(.9) saturate(1.1);
+  box-shadow:0 2px 5px rgba(40,14,60,.24),inset 0 2px 0 rgba(255,255,255,.4);
+  transition:transform .4s cubic-bezier(.4,0,.2,1) .14s,opacity .3s ease .3s;
+}
+.knot-tab{
+  left:46%;top:36%;width:15%;height:29%;border-radius:3px;
+  background:linear-gradient(160deg,var(--seal),color-mix(in srgb,var(--seal) 60%,#000));
+  box-shadow:0 2px 5px rgba(20,6,30,.36);
+  transition:transform .38s cubic-bezier(.3,.9,.3,1.1),opacity .25s ease .2s;
+}
+.knot-ink{left:10%;top:20%}
+.knot-hint{left:10%;bottom:16%}
+
+.envelope.opening .knot-tab{transform:translateX(150%) rotate(18deg);opacity:0}
+.envelope.opening .knot-band{transform:translateY(60%) rotate(-5deg);opacity:0}
+.envelope.opening .knot-sheet{transform:scaleY(1.22) translateY(-5%)}
+
+/* --- 3. scroll ---------------------------------------------------------- */
+/* Tied with a ribbon. The ribbon drops and the roll runs down the screen,
+   the bottom roller travelling with the growing paper. */
+.fold-scroll{aspect-ratio:1.5/1;overflow:hidden}
+.scroll-paper{
+  left:11%;right:11%;top:21%;height:12%;border-radius:2px;
+  box-shadow:0 6px 14px -8px rgba(40,14,60,.5);
+  transform-origin:center top;
+  transition:height .58s cubic-bezier(.35,.9,.3,1) .2s;
+}
+.scroll-roll{
+  left:8%;right:8%;height:8.5%;border-radius:99px;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--tint) 70%,#fff),
+    var(--tint) 45%,
+    color-mix(in srgb,var(--tint) 62%,#000));
+  box-shadow:0 3px 7px rgba(40,14,60,.34),inset 0 2px 3px rgba(255,255,255,.5);
+}
+.scroll-roll.top{top:16%}
+.scroll-roll.bottom{top:30%;transition:top .58s cubic-bezier(.35,.9,.3,1) .2s}
+.scroll-ribbon{
+  left:44%;top:8%;width:12%;height:34%;border-radius:2px;z-index:5;
+  background:linear-gradient(180deg,var(--seal),color-mix(in srgb,var(--seal) 62%,#000));
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);
+  box-shadow:0 2px 5px rgba(20,6,30,.34);
+  transition:transform .46s cubic-bezier(.4,.1,.3,1),opacity .3s ease .24s;
+}
+.scroll-ink{left:0;right:0;bottom:8%;text-align:center}
+
+.envelope.opening .scroll-ribbon{transform:translateY(190%) rotate(-24deg);opacity:0}
+.envelope.opening .scroll-paper{height:60%}
+.envelope.opening .scroll-roll.bottom{top:78%}
+
+/* --- 4. accordion ------------------------------------------------------- */
+/* Concertina panels, alternating which way they face, fanning out one after
+   another rather than all at once. */
+.fold-accordion{aspect-ratio:1.7/1;display:flex;align-items:center;justify-content:center;gap:0}
+.fold-accordion i{
+  position:relative;display:block;width:11%;height:56%;
+  transform-origin:left center;
+  box-shadow:inset 0 0 0 1px rgba(40,14,60,.08);
+  transition:transform .42s cubic-bezier(.4,0,.2,1),width .42s cubic-bezier(.4,0,.2,1);
+}
+.fold-accordion i:nth-child(odd){filter:brightness(1.05)}
+.fold-accordion i:nth-child(even){filter:brightness(.9)}
+.fold-accordion i:nth-child(1){transition-delay:0s}
+.fold-accordion i:nth-child(2){transition-delay:.05s}
+.fold-accordion i:nth-child(3){transition-delay:.1s}
+.fold-accordion i:nth-child(4){transition-delay:.15s}
+.fold-accordion i:nth-child(5){transition-delay:.2s}
+.fold-accordion i:nth-child(6){transition-delay:.25s}
+.fold-accordion i:nth-child(7){transition-delay:.3s}
+.acc-ink{left:0;right:0;bottom:12%;text-align:center}
+
+.envelope .fold-accordion i:nth-child(odd){transform:rotateY(52deg)}
+.envelope .fold-accordion i:nth-child(even){transform:rotateY(-52deg)}
+.envelope.opening .fold-accordion i{transform:rotateY(0deg);width:13%}
+
+/* --- 5. dagger trap ----------------------------------------------------- */
+/* The booby-trapped lock: sewn shut with thread and sealed over the stitch.
+   It does not open on a tap. Drag across the stitching and the thread parts,
+   then the flap pries up. */
+.fold-dagger{aspect-ratio:1.55/1}
+.dagger-sheet{inset:8%;border-radius:4px;box-shadow:0 8px 16px -8px rgba(40,14,60,.45)}
+.dagger-flap{
+  left:8%;right:8%;top:8%;height:44%;
+  clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);
+  filter:brightness(1.05);transform-origin:top center;
+  box-shadow:0 3px 5px -3px rgba(40,14,60,.5);
+  transition:transform .55s cubic-bezier(.45,.02,.2,1) .25s;
+}
+.dagger-thread{
+  position:absolute;left:14%;right:14%;top:38%;height:22%;z-index:5;
+  cursor:grab;touch-action:none;overflow:visible;
+}
+.dagger-thread path{
+  fill:none;stroke:color-mix(in srgb,var(--ink-on) 70%,transparent);
+  stroke-width:2.4;stroke-linecap:round;
+  stroke-dasharray:240;stroke-dashoffset:0;
+  transition:stroke-dashoffset .45s ease,opacity .3s ease .25s;
+}
+.envelope.thread-cut .dagger-thread path{stroke-dashoffset:240;opacity:0}
+.envelope.thread-cut .dagger-hint{opacity:0;transition:opacity .2s}
+.dagger-wax{
+  left:50%;top:44%;translate:-50% 0;z-index:6;
+  width:13%;aspect-ratio:1.06;display:grid;place-items:center;
+  border-radius:47% 53% 44% 56% / 52% 46% 54% 48%;
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.3),transparent 52%),
+    linear-gradient(158deg,color-mix(in srgb,var(--seal) 88%,#fff),var(--seal) 54%,color-mix(in srgb,var(--seal) 72%,#000));
+  color:rgba(255,255,255,.92);
+  font-family:"Dancing Script",cursive;font-weight:700;font-size:.74rem;
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb,var(--seal) 60%,#000),
+    inset 0 -2px 3px rgba(0,0,0,.28),0 2px 4px rgba(20,6,30,.36);
+  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .25s;
+}
+.dagger-ink{left:12%;bottom:16%}
+.dagger-hint{left:12%;bottom:10%}
+.envelope.thread-cut .dagger-wax{transform:translateY(14px) scale(.5) rotate(-24deg);opacity:0}
+.envelope.opening .dagger-flap{transform:rotateX(-168deg)}
+
+/* --- 6. pleat ----------------------------------------------------------- */
+/* Folded so half of it is hidden between the folds. Flattening the pleats
+   brings the hidden bands back into view. */
+.fold-pleat{aspect-ratio:1.5/1;display:flex;flex-direction:column;justify-content:center;gap:0}
+.fold-pleat i{
+  position:relative;display:block;width:82%;margin:0 auto;height:8%;
+  transform-origin:center top;
+  box-shadow:inset 0 0 0 1px rgba(40,14,60,.08);
+  transition:height .46s cubic-bezier(.4,0,.2,1),transform .46s cubic-bezier(.4,0,.2,1),filter .4s;
+}
+.fold-pleat i:nth-child(odd){filter:brightness(1.04)}
+.fold-pleat i:nth-child(even){filter:brightness(.82);transform:rotateX(62deg)}
+.fold-pleat i:nth-child(1){transition-delay:0s}
+.fold-pleat i:nth-child(2){transition-delay:.06s}
+.fold-pleat i:nth-child(3){transition-delay:.12s}
+.fold-pleat i:nth-child(4){transition-delay:.18s}
+.fold-pleat i:nth-child(5){transition-delay:.24s}
+.fold-pleat i:nth-child(6){transition-delay:.3s}
+.pleat-ink{left:0;right:0;bottom:10%;text-align:center}
+.envelope.opening .fold-pleat i{height:13%;transform:rotateX(0deg);filter:brightness(1)}
+
+@media (prefers-reduced-motion:reduce){
+  .heart-lobe,.heart-corner,.heart-body,.knot-sheet,.knot-band,.knot-tab,
+  .scroll-paper,.scroll-roll,.scroll-ribbon,.fold-accordion i,
+  .dagger-flap,.dagger-wax,.fold-pleat i,.dagger-thread path{transition:none}
+}
+
+/* ==========================================================================
+   One Perfect Day: a day that actually passes.
+
+   This was twelve rows of "time, then a sentence", which is a timetable. The
+   point of the screen is that it IS a day - 7:42am to two minutes before
+   midnight - and none of that was ever on screen.
+
+   Everything here hangs off one number, --day-t, which app.js keeps pointed
+   at whichever hour she is currently reading: 0 at the first stop, 1 at the
+   last. The sky layers cross-fade on it, the sun rides an arc by it, and the
+   stars wait until the evening to come out.
+   ========================================================================== */
+#screen-day{
+  --day-t:0;
+  position:relative;isolation:isolate;
+  padding-top:112px;                 /* room for the sky and the sun */
+}
+
+/* the sky: four skies stacked, each fading in over its own part of the day */
+.day-sky{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+body[data-world="day"] .day-sky{opacity:1}
+.day-sky span{position:absolute;inset:0;transition:opacity .25s linear}
+
+/* dawn, held at the start and gone by mid-morning */
+.day-sky .sky-dawn{
+  background:linear-gradient(180deg,#f7c9d8 0%,#ffd9c0 38%,#fff0e2 70%,#fdf6ee 100%);
+  opacity:clamp(0,calc(1 - var(--day-t) / .22),1);
+}
+/* midday, widest and brightest */
+.day-sky .sky-noon{
+  background:linear-gradient(180deg,#bfe0f7 0%,#dbeefb 44%,#fdf6ee 100%);
+  opacity:clamp(0,calc(1 - abs(var(--day-t) - .38) / .3),1);
+}
+/* golden hour, narrow and warm */
+.day-sky .sky-gold{
+  background:linear-gradient(180deg,#f8b27a 0%,#f9cf9a 40%,#fde6cf 74%,#fbeee0 100%);
+  opacity:clamp(0,calc(1 - abs(var(--day-t) - .66) / .22),1);
+}
+/* night, arriving after dinner and staying */
+.day-sky .sky-night{
+  background:linear-gradient(180deg,#221a46 0%,#33265e 42%,#553a72 78%,#7b5480 100%);
+  opacity:clamp(0,calc((var(--day-t) - .72) / .18),1);
+}
+
+/* the sun, climbing and setting along an arc across the top. The x runs left
+   to right with the day; the y is a parabola, highest at noon. */
+.day-sun{
+  position:fixed;top:66px;left:0;z-index:-1;pointer-events:none;
+  width:46px;height:46px;border-radius:50%;
+  translate:
+    calc(var(--day-t) * (100vw - 46px))
+    calc(-1 * (1 - 4 * (var(--day-t) - .5) * (var(--day-t) - .5)) * 46px);
+  background:radial-gradient(circle at 36% 34%,#fff8d8,#ffd166 58%,#f7a13d);
+  box-shadow:0 0 34px 12px rgba(255,196,94,.42);
+  opacity:clamp(0,calc(1 - (var(--day-t) - .68) / .16),1);
+  transition:opacity .3s;
+}
+/* and the moon, taking over where the sun leaves off */
+.day-moon{
+  position:fixed;top:60px;left:0;z-index:-1;pointer-events:none;
+  width:38px;height:38px;border-radius:50%;
+  translate:calc(.24 * 100vw + var(--day-t) * 42vw) calc((1 - var(--day-t)) * 30px);
+  background:radial-gradient(circle at 62% 34%,#fffdf2,#e6ddf6 60%,#cfc3ea);
+  box-shadow:0 0 26px 8px rgba(233,224,255,.4);
+  opacity:clamp(0,calc((var(--day-t) - .7) / .18),1);
+}
+.day-stars{
+  position:fixed;inset:0 0 auto;height:44vh;z-index:-1;pointer-events:none;
+  opacity:clamp(0,calc((var(--day-t) - .74) / .16),1);
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 22%,#fff,transparent),
+    radial-gradient(1.4px 1.4px at 28% 44%,#fff,transparent),
+    radial-gradient(1.8px 1.8px at 44% 14%,#fff,transparent),
+    radial-gradient(1.3px 1.3px at 58% 38%,#fff,transparent),
+    radial-gradient(1.7px 1.7px at 71% 20%,#fff,transparent),
+    radial-gradient(1.4px 1.4px at 84% 47%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 92% 28%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 20% 62%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 64% 66%,#fff,transparent);
+  animation:dayTwinkle 4s ease-in-out infinite alternate;
+}
+@keyframes dayTwinkle{from{opacity:inherit}to{filter:brightness(.72)}}
+
+/* --- the hours ----------------------------------------------------------- */
+.day-timeline{
+  position:relative;display:flex;flex-direction:column;gap:16px;
+  padding-left:26px;
+}
+/* the thread the day runs down */
+.day-timeline::before{
+  content:"";position:absolute;left:9px;top:10px;bottom:10px;width:2px;
+  border-radius:2px;
+  background:linear-gradient(180deg,
+    rgba(247,161,61,.55) 0%,
+    rgba(191,224,247,.6) 34%,
+    rgba(248,178,122,.7) 66%,
+    rgba(120,92,170,.65) 100%);
+}
+.day-stop{
+  position:relative;padding:15px 17px;border-radius:var(--r-lg);
+  background:rgba(255,255,255,.82);border:2px solid var(--edge);
+  box-shadow:var(--sh-sm);
+  transition:transform .3s cubic-bezier(.3,.9,.3,1),box-shadow .3s,background .4s,border-color .4s;
+}
+/* whichever hour is being read lifts slightly and brightens */
+.day-stop.is-now{
+  transform:scale(1.015);
+  box-shadow:var(--sh);
+  border-color:var(--lav-300);
+  background:#fff;
+}
+.day-stop-dot{
+  position:absolute;left:-22px;top:20px;width:11px;height:11px;border-radius:50%;
+  border:2px solid #fff;
+  /* each hour's own dot is the colour of its own time of day */
+  background:
+    color-mix(in srgb,
+      color-mix(in srgb,#f7a13d, #6fb3e0 calc(var(--t) * 100%)),
+      #5b4293 calc(max(0, (var(--t) - .62)) * 240%));
+  box-shadow:0 0 0 3px rgba(255,255,255,.7);
+  transition:scale .3s;
+}
+.day-stop.is-now .day-stop-dot{scale:1.35}
+.day-stop time{
+  display:block;font-family:"Baloo",sans-serif;font-weight:700;
+  font-size:.92rem;color:var(--lav-600);letter-spacing:.01em;
+}
+.day-stop p{margin:5px 0 0;font-size:.96rem;line-height:1.55;color:var(--ink-soft)}
+
+/* after dark the cards have to sit on a dark sky and still read */
+body[data-world="day"] #screen-day{transition:color .4s}
+.day-stop{
+  --night:clamp(0,calc((var(--day-t,0) - .72) / .18),1);
+}
+#screen-day .day-stop{
+  background:color-mix(in srgb,rgba(255,255,255,.82),rgba(42,30,74,.86) calc(var(--night) * 100%));
+  border-color:color-mix(in srgb,var(--edge),rgba(190,168,240,.5) calc(var(--night) * 100%));
+}
+#screen-day .day-stop.is-now{
+  background:color-mix(in srgb,#fff,rgba(52,38,88,.95) calc(var(--night) * 100%));
+}
+#screen-day .day-stop time{
+  color:color-mix(in srgb,var(--lav-600),#f0c98a calc(var(--night) * 100%));
+}
+#screen-day .day-stop p{
+  color:color-mix(in srgb,var(--ink-soft),rgba(244,238,255,.92) calc(var(--night) * 100%));
+}
+#screen-day .section-head h2,
+#screen-day .section-head p{
+  color:color-mix(in srgb,var(--ink),rgba(246,241,255,.95) calc(var(--night) * 100%));
+}
+
+@media (prefers-reduced-motion:reduce){
+  .day-stars{animation:none}
+  .day-stop{transition:none}
+}
+
+/* ==========================================================================
+   Poems: a notebook.
+
+   Twelve poems as twelve stacked cards means scrolling past eleven of them to
+   reach the twelfth, and a poem read while scrolling past it is not read. A
+   poem wants one page and nothing else on it.
+
+   So: one poem to a page, handwritten on the same photographed paper the
+   letters use, and the page turns around its spine with the sheet's weight
+   behind it.
+   ========================================================================== */
+.notebook{
+  position:relative;margin-top:4px;
+  perspective:1600px;
+}
+/* the cover the pages are bound into */
+.notebook::before{
+  content:"";position:absolute;inset:-9px -7px -13px;border-radius:12px;
+  background:linear-gradient(150deg,#6b4a8f,#4a3270 55%,#3a2559);
+  box-shadow:0 16px 30px -14px rgba(32,10,54,.7),inset 0 1px 0 rgba(255,255,255,.18);
+}
+/* the stitched spine down the left edge */
+.notebook::after{
+  content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:7px;z-index:40;
+  border-radius:3px;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,transparent 0 13px,rgba(255,225,190,.5) 13px 22px),
+    linear-gradient(90deg,rgba(0,0,0,.34),rgba(0,0,0,.05));
+}
+
+.notebook-pages{
+  position:relative;width:100%;aspect-ratio:.72/1;
+  transform-style:preserve-3d;touch-action:pan-y;
+}
+.nb-page{
+  position:absolute;inset:0;
+  transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .66s cubic-bezier(.4,.02,.2,1);
+  cursor:pointer;
+}
+.nb-page.is-turned{transform:rotateY(-174deg)}
+
+.nb-face,.nb-back{
+  position:absolute;inset:0;border-radius:3px 9px 9px 3px;
+  backface-visibility:hidden;overflow:hidden;
+  background-color:#fffdf5;
+  background-image:url("./assets/paper/sheet-cream.webp");
+  background-size:340px auto;
+}
+.nb-face{
+  padding:26px 22px 22px 30px;
+  /* the long ones run past the bottom of the page rather than being cut off
+     at it; a fixed page that silently clips a poem is worse than one that
+     scrolls */
+  overflow-y:auto;overscroll-behavior:contain;
+  box-shadow:inset 13px 0 18px -14px rgba(60,30,20,.55),0 3px 10px -6px rgba(40,14,60,.5);
+}
+/* the reverse of the sheet, seen while it is mid-turn */
+.nb-back{
+  transform:rotateY(180deg);
+  filter:brightness(.94);
+  box-shadow:inset -13px 0 18px -14px rgba(60,30,20,.5);
+}
+/* the margin rule every notebook page has */
+.nb-rule{
+  position:absolute;top:0;bottom:0;left:20px;width:1.5px;
+  background:rgba(208,110,140,.32);
+}
+.nb-num{
+  margin:0 0 3px;font-family:"Quicksand",sans-serif;font-size:.66rem;
+  font-weight:800;letter-spacing:.08em;color:rgba(120,90,160,.65);
+}
+.nb-form{
+  margin:-10px 0 14px;font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.02rem;color:rgba(120,90,160,.75);
+}
+.nb-face h3{
+  margin:0 0 16px;font-family:"Baloo",sans-serif;font-size:1.2rem;
+  color:#4b3a6b;
+}
+.nb-body{
+  display:flex;flex-direction:column;gap:3px;
+  font-family:"Caveat","Dancing Script",cursive;
+  font-size:1.42rem;line-height:1.5;color:#4b3a6b;
+}
+.nb-body span{display:block}
+
+/* the corner you lift to turn the page */
+.nb-corner{
+  position:absolute;right:0;bottom:0;width:46px;height:46px;
+  background:linear-gradient(135deg,transparent 48%,rgba(90,60,30,.16) 50%,rgba(255,255,255,.85) 54%);
+  border-radius:0 0 9px 0;
+  transition:width .2s,height .2s;
+}
+.nb-page:hover .nb-corner,
+.nb-page:active .nb-corner{width:62px;height:62px}
+
+.notebook-nav{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-top:26px;
+}
+.notebook-nav button{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;display:grid;
+  place-items:center;border:2px solid var(--edge);background:#fff;
+  color:var(--lav-600);font-size:1.1rem;box-shadow:var(--sh-sm);
+  transition:transform .15s,opacity .2s;
+}
+.notebook-nav button:active{transform:scale(.92)}
+.notebook-nav button:disabled{opacity:.34;cursor:default}
+#poem-count{
+  min-width:62px;text-align:center;font-family:"Quicksand",sans-serif;
+  font-size:.82rem;font-weight:800;color:var(--lav-600);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .nb-page{transition:none}
 }
